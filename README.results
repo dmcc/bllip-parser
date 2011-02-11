@@ -1,0 +1,22 @@
+
+README.results:
+==============
+
+This file records the results of the n-best parser under VERSION=nonfinal, training on
+sections 2-19, using 20-21 as dev and testing on section 22 (test1) and section 24 (test2).
+
+version of 4th September 2006
+=============================
+
+# Evaluating second-stage/features/ec50spnonfinal/dev.gz
+# 1219273 features in second-stage/models/ec50spnonfinal/features.gz
+# 3984 sentences in second-stage/features/ec50spnonfinal/dev.gz
+# ncorrect = 66991, ngold = 73905, nparse = 73397, f-score = 0.909574, -log P = 18859.3, 1219273 nonzero features, mean w = 0.000210852, sd w = 0.000403686
+# Evaluating second-stage/features/ec50spnonfinal/test1.gz
+# 1219273 features in second-stage/models/ec50spnonfinal/features.gz
+# 1700 sentences in second-stage/features/ec50spnonfinal/test1.gz
+# ncorrect = 28022, ngold = 30633, nparse = 30460, f-score = 0.917356, -log P = 8087.09, 1219273 nonzero features, mean w = 0.000210852, sd w = 0.000403686
+# Evaluating second-stage/features/ec50spnonfinal/test2.gz
+# 1219273 features in second-stage/models/ec50spnonfinal/features.gz
+# 1346 sentences in second-stage/features/ec50spnonfinal/test2.gz
+# ncorrect = 23121, ngold = 25729, nparse = 25327, f-score = 0.905711, -log P = 6257.9, 1219273 nonzero features, mean w = 0.000210852, sd w = 0.000403686

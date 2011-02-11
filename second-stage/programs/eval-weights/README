@@ -1,0 +1,49 @@
+~mj/research/rerank/programs/eval-weights/README
+
+Mark Johnson, 23rd September 2003
+
+eval-weights is a method of evaluating the importance of classes of
+features in fully trained models.
+
+It reads in a dev file, a feature file and a weights file and returns
+the results of deleting one feature class at a time.
+
+eval-weights [-i identifier-length] feature-file.bz2 dev-file.bz2 < weights
+
+writes out one line per feature class, with entries
+
+delta-fscore    delta-neglogP   nfeatures       feature-class
+
+where:
+
+ delta-fscore is the change in f-score when these features are zeroed
+ delta-neglogP is the change in - log probability when these features are zeroed
+ nfeatures is the number of features in the feature class
+ feature-class is the class of features zeroed.
+
+
+ilanga [14] % eval-weights ../../fcounts/feat.bz2 ../../fcounts/dev.bz2 < ../../model-avper/weights | sort -k1,1 -n
+-8.01251e-05    -902.91 38712   LexR:2:1:1:0:0
+-6.95822e-05    -54.3538        7726    SynCHn:3:1:1
+-5.69246e-05    -1639.28        13840   LexR:1:1:0:0:0
+-0.0182848      -18149.5        1       LogProb
+-0.0037234      1249.06 2       RightBranch
+-0.00249536     480.807 1877    NeighbourPTs
+-0.00089152     -1836.32        26544   Rule:3
+-0.000723284    -856.387        9006    LexR:0:1:0:0:0
+-0.000651379    -1174.38        15116   LexPTR:0
+-0.000622069    -880.293        766     SynCHn:2:0:0
+-0.000562777    -804.276        5711    SemCHn:3:0:0
+-0.000487445    -1417.08        20730   LexPTR:1
+-0.000378581    -1331.12        7179    Rule:0
+-0.000343902    -444.716        754     SemCHn:2:0:0
+-0.000181109    -1018.97        6366    SynCHn:3:0:0
+-0.000129434    -278.319        12318   SemCHn:2:1:1
+-0.000113744    -421.752        11937   SynCHn:2:1:1
+-0.000106239    -13.8397        4689    SemCHn:3:1:1
+0.000114455     -652.407        26528   LexR:0:1:1:0:0
+0.000153377     -2382.95        21563   LexR:2:1:0:0:0
+0.000341934     -2395.63        18097   Rule:2
+0.000385311     -1187.79        32672   LexR:1:1:1:0:0
+3.20906e-05     -1673.15        11199   Rule:1
+41.570u 0.940s 0:42.84 99.2%    0+0k 0+0io 1011pf+0w

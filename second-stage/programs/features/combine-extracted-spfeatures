@@ -1,0 +1,46 @@
+#!/usr/bin/env python
+"""Concatenate many "extracted features" files into one file.  This is
+actually very simple -- the only item of notice is that first line must be
+the total number of sentences, so we read the number of sentences in each
+file, then read the remaining contents of each input file in order."""
+# David McClosky 3.14.2008
+
+import sys
+import gzip, bz2
+
+def opener(filename):
+    """Open files based on their extension."""
+    if filename.endswith('.gz'):
+        return gzip.GzipFile(filename)
+    elif filename.endswith('.bz2'):
+        return bz2.BZ2File(filename)
+    else:
+        return file(filename)
+
+def parse_num_sentences(text):
+    """e.g. parse_num_sentences('S=3\n') => 3"""
+    text = text.strip()
+    _, length = text.split('=')
+    length = int(length)
+    return length
+
+filenames = sys.argv[1:]
+
+print >>sys.stderr, "Input filenames:", ' '.join(filenames)
+sys.stderr.flush()
+
+files = [opener(filename) for filename in filenames]
+# read the first line of each file to get the total number of sentences
+lengths = [parse_num_sentences(f.readline()) for f in files]
+total_num_sentences = sum(lengths)
+print >>sys.stderr, "Total sentences:", total_num_sentences
+sys.stderr.flush()
+
+# print the new header
+print 'S=%d' % total_num_sentences
+for f, filename in zip(files, filenames):
+    print >>sys.stderr, "Processing", filename
+    sys.stderr.flush()
+    # now read all remaining lines and print those to stdout
+    for line in f:
+        print line.rstrip()

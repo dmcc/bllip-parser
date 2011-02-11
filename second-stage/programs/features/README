@@ -1,0 +1,16 @@
+research/collins/features/README 
+
+Mark Johnson, 27th August 2003
+
+This directory contains code for extracting features from the data files
+in ../data, for use with various estimation programs.
+
+Usage:
+
+extract-features train.trees.bz2 dev.trees.bz2 train.fc.bz2 dev.fc.bz2
+
+where:
+ train.trees.bz2 and dev.trees.bz2 are the training/development trees,
+ train.fc.bz2 and dev.fc.bz2 are the training/development feature count files.
+
+The features are written to standard output.

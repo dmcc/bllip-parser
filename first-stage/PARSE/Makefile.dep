@@ -1,0 +1,131 @@
+AnsHeap.o: AnsHeap.C AnsHeap.h AnswerTree.h Edge.h Term.h ECString.h \
+  Feature.h utils.h CntxArray.h
+AnsStrCounts.o: AnsStrCounts.C
+AnswerTree.o: AnswerTree.C AnswerTree.h Edge.h Term.h ECString.h \
+  Feature.h utils.h CntxArray.h
+auxify.o: auxify.C auxify.h ECString.h InputTree.h utils.h ParseStats.h \
+  SentRep.h Wrd.h ewDciTokStrm.h Term.h Feature.h
+Bchart.o: Bchart.C Bchart.h ChartBase.h Edge.h Term.h ECString.h \
+  Feature.h utils.h Item.h Wrd.h ewDciTokStrm.h AnswerTree.h CntxArray.h \
+  Bst.h ValHeap.h SentRep.h EdgeHeap.h FullHist.h UnitRules.h InputTree.h \
+  ParseStats.h ExtPos.h GotIter.h FeatureTree.h Feat.h FBinaryArray.h
+BchartSm.o: BchartSm.C Bchart.h ChartBase.h Edge.h Term.h ECString.h \
+  Feature.h utils.h Item.h Wrd.h ewDciTokStrm.h AnswerTree.h CntxArray.h \
+  Bst.h ValHeap.h SentRep.h EdgeHeap.h FullHist.h UnitRules.h InputTree.h \
+  ParseStats.h ExtPos.h FeatureTree.h Feat.h FBinaryArray.h GotIter.h
+Bst.o: Bst.C Bst.h Edge.h Term.h ECString.h Feature.h utils.h ValHeap.h \
+  CntxArray.h
+ChartBase.o: ChartBase.C ChartBase.h Edge.h Term.h ECString.h Feature.h \
+  utils.h Item.h Wrd.h ewDciTokStrm.h AnswerTree.h CntxArray.h Bst.h \
+  ValHeap.h SentRep.h GotIter.h InputTree.h ParseStats.h
+ClassRule.o: ClassRule.C ClassRule.h FullHist.h Edge.h Term.h ECString.h \
+  Feature.h utils.h Wrd.h ewDciTokStrm.h AnswerTree.h CntxArray.h Bst.h \
+  ValHeap.h Item.h MeChart.h Bchart.h ChartBase.h SentRep.h EdgeHeap.h \
+  UnitRules.h InputTree.h ParseStats.h ExtPos.h FeatureTree.h Feat.h \
+  FBinaryArray.h
+CntxArray.o: CntxArray.C CntxArray.h ECString.h
+CombineBests.o: CombineBests.C CombineBests.h AnswerTree.h Edge.h Term.h \
+  ECString.h Feature.h utils.h CntxArray.h AnsHeap.h
+ECArgs.o: ECArgs.C ECArgs.h ECString.h utils.h
+Edge.o: Edge.C Edge.h Term.h ECString.h Feature.h utils.h Item.h Wrd.h \
+  ewDciTokStrm.h AnswerTree.h CntxArray.h Bst.h ValHeap.h GotIter.h \
+  Bchart.h ChartBase.h SentRep.h EdgeHeap.h FullHist.h UnitRules.h \
+  InputTree.h ParseStats.h ExtPos.h
+EdgeHeap.o: EdgeHeap.C Edge.h Term.h ECString.h Feature.h utils.h \
+  EdgeHeap.h
+edgeSubFns.o: edgeSubFns.C Term.h ECString.h Feature.h utils.h Edge.h \
+  headFinder.h InputTree.h ParseStats.h SentRep.h Wrd.h ewDciTokStrm.h \
+  GotIter.h Item.h AnswerTree.h CntxArray.h Bst.h ValHeap.h FullHist.h \
+  Bchart.h ChartBase.h EdgeHeap.h UnitRules.h ExtPos.h
+EgsFromTree.o: EgsFromTree.C Bchart.h ChartBase.h Edge.h Term.h \
+  ECString.h Feature.h utils.h Item.h Wrd.h ewDciTokStrm.h AnswerTree.h \
+  CntxArray.h Bst.h ValHeap.h SentRep.h EdgeHeap.h FullHist.h UnitRules.h \
+  InputTree.h ParseStats.h ExtPos.h headFinder.h GotIter.h
+evalTree.o: evalTree.C Field.h utils.h ECString.h GotIter.h Edge.h Term.h \
+  Feature.h Item.h Wrd.h ewDciTokStrm.h AnswerTree.h CntxArray.h Bst.h \
+  ValHeap.h InputTree.h ParseStats.h SentRep.h Bchart.h ChartBase.h \
+  EdgeHeap.h FullHist.h UnitRules.h ExtPos.h ECArgs.h MeChart.h \
+  FeatureTree.h Feat.h FBinaryArray.h headFinder.h Params.h AnsHeap.h \
+  TimeIt.h extraMain.h Link.h ClassRule.h ScoreTree.h
+ewDciTokStrm.o: ewDciTokStrm.C Wrd.h ECString.h ewDciTokStrm.h
+ExtPos.o: ExtPos.C ExtPos.h Term.h ECString.h Feature.h utils.h SentRep.h \
+  Wrd.h ewDciTokStrm.h
+extraMain.o: extraMain.C extraMain.h AnswerTree.h Edge.h Term.h \
+  ECString.h Feature.h utils.h CntxArray.h InputTree.h ParseStats.h \
+  SentRep.h Wrd.h ewDciTokStrm.h Bst.h ValHeap.h Item.h MeChart.h \
+  Bchart.h ChartBase.h EdgeHeap.h FullHist.h UnitRules.h ExtPos.h \
+  FeatureTree.h Feat.h FBinaryArray.h headFinder.h ClassRule.h
+FBinaryArray.o: FBinaryArray.C FBinaryArray.h Feat.h Feature.h ECString.h \
+  FeatureTree.h
+Feat.o: Feat.C Feat.h Feature.h ECString.h utils.h
+Feature.o: Feature.C Feature.h ECString.h utils.h FeatureTree.h Feat.h \
+  FBinaryArray.h
+FeatureTree.o: FeatureTree.C FeatureTree.h Feat.h Feature.h ECString.h \
+  FBinaryArray.h
+fhSubFns.o: fhSubFns.C Term.h ECString.h Feature.h utils.h FullHist.h \
+  Edge.h Wrd.h ewDciTokStrm.h headFinder.h InputTree.h ParseStats.h \
+  SentRep.h Bchart.h ChartBase.h Item.h AnswerTree.h CntxArray.h Bst.h \
+  ValHeap.h EdgeHeap.h UnitRules.h ExtPos.h GotIter.h ClassRule.h
+Field.o: Field.C Field.h utils.h ECString.h
+FullHist.o: FullHist.C FullHist.h Edge.h Term.h ECString.h Feature.h \
+  utils.h Wrd.h ewDciTokStrm.h GotIter.h Item.h AnswerTree.h CntxArray.h \
+  Bst.h ValHeap.h
+GotIter.o: GotIter.C GotIter.h Edge.h Term.h ECString.h Feature.h utils.h \
+  Item.h Wrd.h ewDciTokStrm.h AnswerTree.h CntxArray.h Bst.h ValHeap.h
+headFinder.o: headFinder.C headFinder.h ECString.h InputTree.h utils.h \
+  ParseStats.h SentRep.h Wrd.h ewDciTokStrm.h headFinderCh.h Term.h \
+  Feature.h
+headFinderCh.o: headFinderCh.C headFinderCh.h ECString.h InputTree.h \
+  utils.h ParseStats.h SentRep.h Wrd.h ewDciTokStrm.h Term.h Feature.h
+InputTree.o: InputTree.C InputTree.h ECString.h utils.h ParseStats.h \
+  SentRep.h Wrd.h ewDciTokStrm.h headFinder.h Term.h Feature.h
+Item.o: Item.C Item.h Wrd.h ECString.h ewDciTokStrm.h Edge.h Term.h \
+  Feature.h utils.h AnswerTree.h CntxArray.h Bst.h ValHeap.h
+Link.o: Link.C Link.h ECString.h InputTree.h utils.h ParseStats.h \
+  SentRep.h Wrd.h ewDciTokStrm.h Term.h Feature.h
+MeChart.o: MeChart.C MeChart.h Bchart.h ChartBase.h Edge.h Term.h \
+  ECString.h Feature.h utils.h Item.h Wrd.h ewDciTokStrm.h AnswerTree.h \
+  CntxArray.h Bst.h ValHeap.h SentRep.h EdgeHeap.h FullHist.h UnitRules.h \
+  InputTree.h ParseStats.h ExtPos.h FeatureTree.h Feat.h FBinaryArray.h \
+  fhSubFns.h edgeSubFns.h GotIter.h headFinder.h
+oparseIt.o: oparseIt.C GotIter.h Edge.h Term.h ECString.h Feature.h \
+  utils.h Item.h Wrd.h ewDciTokStrm.h AnswerTree.h CntxArray.h Bst.h \
+  ValHeap.h InputTree.h ParseStats.h SentRep.h Bchart.h ChartBase.h \
+  EdgeHeap.h FullHist.h UnitRules.h ExtPos.h ECArgs.h MeChart.h \
+  FeatureTree.h Feat.h FBinaryArray.h extraMain.h AnsHeap.h Params.h \
+  Field.h TimeIt.h Link.h
+Params.o: Params.C Params.h Field.h utils.h ECString.h ECArgs.h Bchart.h \
+  ChartBase.h Edge.h Term.h Feature.h Item.h Wrd.h ewDciTokStrm.h \
+  AnswerTree.h CntxArray.h Bst.h ValHeap.h SentRep.h EdgeHeap.h \
+  FullHist.h UnitRules.h InputTree.h ParseStats.h ExtPos.h ClassRule.h
+parseAndEval.o: parseAndEval.C Field.h utils.h ECString.h GotIter.h \
+  Edge.h Term.h Feature.h Item.h Wrd.h ewDciTokStrm.h AnswerTree.h \
+  CntxArray.h Bst.h ValHeap.h InputTree.h ParseStats.h SentRep.h Bchart.h \
+  ChartBase.h EdgeHeap.h FullHist.h UnitRules.h ExtPos.h ECArgs.h \
+  MeChart.h FeatureTree.h Feat.h FBinaryArray.h headFinder.h Params.h \
+  AnsHeap.h TimeIt.h extraMain.h Link.h ClassRule.h ScoreTree.h
+parseIt.o: parseIt.C GotIter.h Edge.h Term.h ECString.h Feature.h utils.h \
+  Item.h Wrd.h ewDciTokStrm.h AnswerTree.h CntxArray.h Bst.h ValHeap.h \
+  InputTree.h ParseStats.h SentRep.h Bchart.h ChartBase.h EdgeHeap.h \
+  FullHist.h UnitRules.h ExtPos.h ECArgs.h MeChart.h FeatureTree.h Feat.h \
+  FBinaryArray.h extraMain.h AnsHeap.h Params.h Field.h TimeIt.h Link.h
+ParseStats.o: ParseStats.C ECString.h ParseStats.h utils.h
+ReadTree.o: ReadTree.C ReadTree.h InputTree.h ECString.h utils.h \
+  ParseStats.h SentRep.h Wrd.h ewDciTokStrm.h Term.h Feature.h \
+  headFinder.h
+ScoreTree.o: ScoreTree.C ScoreTree.h InputTree.h ECString.h utils.h \
+  ParseStats.h SentRep.h Wrd.h ewDciTokStrm.h Term.h Feature.h
+SentRep.o: SentRep.C Bchart.h ChartBase.h Edge.h Term.h ECString.h \
+  Feature.h utils.h Item.h Wrd.h ewDciTokStrm.h AnswerTree.h CntxArray.h \
+  Bst.h ValHeap.h SentRep.h EdgeHeap.h FullHist.h UnitRules.h InputTree.h \
+  ParseStats.h ExtPos.h Params.h Field.h ECArgs.h
+Term.o: Term.C Term.h ECString.h Feature.h utils.h
+TimeIt.o: TimeIt.C TimeIt.h Bchart.h ChartBase.h Edge.h Term.h ECString.h \
+  Feature.h utils.h Item.h Wrd.h ewDciTokStrm.h AnswerTree.h CntxArray.h \
+  Bst.h ValHeap.h SentRep.h EdgeHeap.h FullHist.h UnitRules.h InputTree.h \
+  ParseStats.h ExtPos.h
+UnitRules.o: UnitRules.C UnitRules.h InputTree.h ECString.h utils.h \
+  ParseStats.h SentRep.h Wrd.h ewDciTokStrm.h Feature.h Term.h
+utils.o: utils.C utils.h ECString.h Term.h Feature.h
+ValHeap.o: ValHeap.C Bst.h Edge.h Term.h ECString.h Feature.h utils.h \
+  ValHeap.h CntxArray.h

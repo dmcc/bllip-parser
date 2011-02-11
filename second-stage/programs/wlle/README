@@ -1,0 +1,70 @@
+wlle/README
+
+Mark Johnson, 25th August 2003
+
+wlle version of 25th August 2003
+
+wlle estimates feature weights that estimate the parameters of a
+log-linear model by minimizing the regularized log loss of the feature
+weights using the LVLM or BLVLM optimizer from the Petsc/Tao
+optimization package (see http://www-fp.mcs.anl.gov/tao/ for details).
+It can deal with partially labeled data (i.e., training instances
+consist of one or more "winners" and one or more "losers").
+
+Usage: wlle [-help] [-debug debug_level] [-c c] [-p p] [-r r] [-s s] [-cv] 
+       tao-options* [-o weights-file]  [-e eval-file] < train-file
+
+where:
+
+ debug_level > 0 controls the amount of output produced
+
+ data respectively (best if slight over-estimates, ignored if the data
+ specifies NS),
+
+ train-file and eval-file are files from which training and evaluation
+ data are read (if no eval-file is specified, then the program tests
+ on the training data),
+
+ weights-file is a file to which the estimated weights are written,
+
+ r specifies that the weights are initialized to random values in
+ [-r ... +r],
+
+ and the function optimized is:
+
+   Q(w) = s * (- L(w) + c * sum_j pow(fabs(w[j]), p) ), where
+
+   L(w) = log conditional likelihood of the training data
+
+The -cv option instructs the program to optimize a function defined in
+terms of vectors of variables u[] and v[], where w[j] = u[j] + v[j]
+and v[j] <= 0 <= u[j], otherwise it optimizes the w[j] directly.
+
+With debug = 0, the program writes a single line to stdout:
+
+c p r s it nzeroweights/nweights neglogP/nsentence ncorrect/nsentences
+
+With debug >= 10, the program writes out a histogram of weights as well
+
+Data format:
+-----------
+
+<Data>     --> [S=<NS>] <Sentence>*
+<Sentence> --> [C=<C>] N=<N> <Parse>*
+<Parse>    --> [W=<W>] <FC>*,
+<FC>       --> <F>[=<C>]
+
+NS is the number of sentences.
+
+Each <Sentence> consists of N <Parse>s.  <C> is the sentence's count
+(a real, e.g., the number of times it was seen).
+
+A <Parse> consists of <FC> pairs.  <W> is the parse's weight.  Winners
+should have a weight of 1.
+
+A <FC> consists of a feature (a non-negative integer) and a count (a
+real).
+
+The default for all numbers except <W> is 1.  The default for <W> is 0.
+
+

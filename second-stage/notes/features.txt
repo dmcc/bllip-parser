@@ -1,0 +1,177 @@
+From the top-level directory of a distribution of the reranking parser, you can find all of the feature weights under second-stage/features.  The directory second-stage/models/ec50spfinal contains our standard set of feature weights, while second-stage/models/ec50edgefinal contains feature weights for just edge features.
+
+There are two main files in each directory.  features.gz lists all of the features extracted, and cvlm-l1c10P1-weights.gz lists their weights (this curious name describes how the weights were estimated).  You'll need to read both these files to get the feature weights.
+
+The features file starts like this:
+
+0       NLogP 0
+1       Rule:0:0:0:0:0:0:0:1 (DT NNS NN _ NP)
+2       Rule:0:0:0:0:0:0:0:1 (NP NNS NN _ NP)
+3       Rule:0:0:0:0:0:0:0:1 (CD ADJP NN _ NP)
+
+Its format is
+
+FeatId   FeatClass   Feature
+
+FeatId is a nonnegative integer sequentially assigned to features, used to identify it in a feature weights file.  FeatClass specifies what type of feature it is, while Feature gives the details of the features.  For example, NLogP is the negative log probability feature from your parse (the 0 at the end of the line is only there because my program expects every feature to have some kind of written representation).
+
+The features.gz file lists the corresponding weights.  Some estimators only assign a few features a non-zero weight, so you can't assume every feature will be listed.  The weights file starts:
+
+0=-0.28827
+1=0.0158641
+2=-0.000931677
+3=0.00568483
+4=-0.00584903
+5=-0.0143718
+6=-0.000111186
+
+Its format is
+
+FeatId=Weight
+
+I presume the NLogP feature has a negative weight because it is the NEGATIVE logarithm of the parse probability.  You'll need to know this, because you'll need to scale all other features by this.  Lets say the weight of the NLogP feature is w0.  Then the multiplicative factor f for another feature whose weight is w is:
+
+f = exp(- w/w0 )
+
+WordEdges
+=========
+
+Let's start with the WordEdges feature classes.  In the features.gz file it generally looks as follows:
+
+913374  WordEdges:0:0:0:1:1 (NP market and)
+913375  WordEdges:0:0:0:1:1 (ADVP off a)
+913376  WordEdges:0:0:0:1:1 (ADJP \% this)
+913377  WordEdges:0:0:0:1:1 (ADVP likewise ,)
+913378  WordEdges:0:0:0:1:1 (NP trading at)
+913379  WordEdges:0:0:0:1:1 (NP hugo ,)
+913380  WordEdges:0:0:0:1:1 (NP more than)
+
+A WordEdges Feature is a vector of elements beginning with an open parenthesis '(' and ending with a closing parenthesis ')', always on a single line.  The '\' is an escape character, used e.g. to introduce punctuation.  All words have been lower-cased.
+
+The FeatClass WordEdges:0:0:0:1:1 specifies the elements that appear in the Feature (NP market and) that comes after it.  The integer flags in WordEdges:0:0:0:1:1specify how to do this.  The general form of a WordEdges FeatClass is:
+
+WordEdges:<binnedlength>:<nleftprec>:<nleftsucc>:<nrightprec>:<nrightsucc>
+
+where:
+
+<binnedlength> is a flag indicating whether the first element in the vector is the binned length of the constituent.  The binning function is: 1 -> 1, 2 -> 2, 3 and 4 -> 4, and anything larger is 5.
+
+<nleftprec> is the number of words preceding the left boundary
+
+<nleftsucc> is the number of words following the left boundary
+
+<nrightprec> is the number of words preceding the right boundary
+
+<nrightsucc> is the number of words following the right boundary
+
+So the feature WordEdges:0:0:0:1:1 (NP market and) fires when an NP ends in "market" and is followed by "and".
+
+Edges
+=====
+
+The Edges feature class is the same as the WordEdges class, except that the POS tags of the neighbours, rather than the words themselves, is used in the context of a node.  In the features.gz it looks like:
+
+80934   Edges:0:0:1:1:1 (SBAR NNP NNP .)
+80935   Edges:0:0:1:1:1 (NP NNPS NNPS :)
+80936   Edges:0:0:1:1:1 (ADVP RB RB ``)
+80937   Edges:0:0:1:1:1 (VP VBP VBN VBZ)
+80938   Edges:0:0:1:1:1 (S DT NNPS IN)
+80939   Edges:0:0:1:1:1 (SBAR IN NNP .)
+
+An Edges Feature is a vector of elements beginning with an open parenthesis '(' and ending with a closing parenthesis ')', always on a single line.
+ 
+The FeatClass Edges:0:0:1:1:1 specifies the elements that appear in the Feature (SBAR IN NNP .) that comes after it.  The integer flags in Edges:0:0:1:1:1specify how to do this.  The gene\
+ral form of an Edges FeatClass is: 
+ 
+Edges:<binnedlength>:<nleftprec>:<nleftsucc>:<nrightprec>:<nrightsucc> 
+ 
+where: 
+ 
+<binnedlength> is a flag indicating whether the first element in the vector is the binned length of the constituent.  The binning function is: 1 -> 1, 2 -> 2, 3 and 4 -> 4, and anything larger is\
+ 5. 
+ 
+<nleftprec> is the number of POS tags preceding the left boundary 
+ 
+<nleftsucc> is the number of POS tags following the left boundary 
+ 
+<nrightprec> is the number of POS tags preceding the right boundary 
+ 
+<nrightsucc> is the number of POS tags following the right boundary 
+ 
+So the feature Edges:0:0:1:1:1 (SBAR IN NNP .) fires when an SBAR begins with an IN, ends with an NNP and is followed by a '.'
+
+
+RightBranch
+===========
+
+The RightBranch feature counts the number of nodes that lie on the rightmost branch in the tree, and the number of nodes that do not.  There are two features in the RightBranch feature class.  
+
+1     RightBranch 0
+2     RightBranch 1
+
+The value of the RightBranch 1 feature is the number of nodes lie on the rightmost branch down the tree, while the value of the RightBranch 0 feature is the number of nodes that don't lie on this rightmost branch.  Preterminals are included in this count (maybe they shouldn't be?) but punctuation preterminals and all terminals are neither counted nor used to determine the rightmost branch.  That is, a node that is followed only by punctuation counts as rightmost in the tree.
+
+
+Heavy
+=====
+
+427380  Heavy ((5 5) (SBAR -rcb- ,))
+427381  Heavy ((5 5) (ADVP -rrb- ,))
+427382  Heavy ((4 5) (VP _ -lcb-))
+427383  Heavy ((5 1) (FRAG _ .))
+427384  Heavy ((2 1) (VP _ :))
+
+The Heavy feature counts the number of times a particular category spans a particular number of words, and is preceded and followed by certain punctuation.  It is a kind of variant of the WordEdges feature.  It only fires on nonterminal nodes, i.e., preterminal and terminal nodes are ignored.
+
+The format of the actual features is:
+
+Heavy ((<width> <distance>) (<category> <rightpunct> <followingpunct>))
+
+<width> is the binned width (i.e., right string position - left string position) of this category.
+<distance> is the binned number of preterminals to the end of the string (including punctuation).
+<category> is the category of the node
+<rightpunct> is the rightmost terminal dominated by the node if that terminal is punctuation, or '_' if it is not
+<followingpunct> is the terminal following the node if that terminal is punctuation, or '_' if it is not 
+
+The binning function is the same as used in other features, i.e.: 1 -> 1, 2 -> 2, 3 and 4 -> 4, and anything larger is 5.
+
+Note that all terminals are downcased.
+
+
+WEdges
+======
+
+This is a mixture of the Edges and WordEdges feature class.  The feature class is:
+
+WEdges:<binnedlength>:<nleftprec>:<nleftprecw>:<nleftsucc>:<nleftsuccw>:<nrightprec>:<nrightprecw>:<nrightsucc>:<nrightsuccw>
+
+where:
+
+<binnedlength> is a flag indicating whether the first element in the vector is the binned length of the constituent.  The binning function is: 1 -> 1, 2 -> 2, 3 and 4 -> 4, and anything larger is 5.
+
+<nleftprec> is the number of POS tags preceding the left boundary
+
+<nleftprecw> is the number of words preceding the left boundary
+
+<nleftsucc> is the number of POS tags following the left boundary
+
+<nleftsuccw> is the number of words following the left boundary
+
+<nrightprec> is the number of POS tags preceding the right boundary
+
+<nrightprecw> is the number of words preceding the right boundary
+
+<nrightsucc> is the number of POS tags following the right boundary
+
+<nrightsuccw> is the number of words following the right boundary
+
+Here are some WEdges features (and their feature ids) from the features.gz file:
+
+1484    WEdges:0:0:0:0:0:0:0:0:0 (PRN)
+338377  WEdges:0:1:0:0:0:0:0:0:0 (UCP VBD)
+638767  WEdges:1:0:0:0:0:0:0:0:0 (5 SBAR)
+1256773 WEdges:1:1:1:0:0:1:1:0:0 (5 S VBD said NN share)
+1256778 WEdges:1:1:1:0:0:1:1:0:0 (4 NP IN in NN business)
+1386990 WEdges:1:1:1:1:1:0:0:0:0 (5 SBAR VBD said PRP he)
+
+The feature WEdges:1:1:1:0:0:1:1:0:0 (5 S VBD said NN share) fires whenever there is an S nonterminal of width 5 or greater whose left edge is preceded by (VBD said) and whose rightmost POS and word is (NN share)

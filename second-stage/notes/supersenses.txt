@@ -1,0 +1,52 @@
+research/rerank/notes/supersenses.txt
+
+Mark Johnson, 15th May 2005
+
+The supersense model right now does make a significant difference on
+test, but not on dev data!
+
+I think this is because the baseline model is actually far from optimal.
+
+These two runs show that supersenses don't help on section 24
+
+tembo [11] % programs/eval-weights/compare-models features/ec50-connll-ic-s5/cvlm-l1-c10-Pyx1-ns-1/train-weights.gz features/ec50-connll-ic-s5/train-f24.gz features/ec50-ssp-ic-s5/cvlm-l1-c10-Pyx1-ns-1/train-weights.gz features/ec50-ssp-ic-s5/train-f24.gz
+nsentences = 1345 in test corpus.
+model 1 nfeatures = 667453, corpus f-score = 0.903423
+model 2 nfeatures = 941388, corpus f-score = 0.904242
+permutation test significance of corpus f-score difference = 0.43296
+model 1 better on 91 = 6.7658% sentences
+model 2 better on 98 = 7.28625% sentences
+models 1 and 2 tied on 1156 = 85% sentences
+binomial 2-sided significance of sentence-by-sentence comparison = 0.662635
+bootstrap 95% confidence interval for model 1 f-scores = (0.897416 0.909371)
+bootstrap 95% confidence interval for model 2 f-scores = (0.898264 0.910104)
+28.616u 0.324s 0:28.94 99.9%    0+0k 0+0io 0pf+0w
+
+tembo [12] % programs/eval-weights/compare-models features/ec50-connll-ic-s5/cvlm-l1-c10-Pyx1-ns-1/traindev-weights.gz features/ec50-connll-ic-s5/traindev-f24.gz features/ec50-ssp-ic-s5/cvlm-l1-c10-Pyx1-ns-1/traindev-weights.gz features/ec50-ssp-ic-s5/traindev-f24.gz
+nsentences = 1345 in test corpus.
+model 1 nfeatures = 728590, corpus f-score = 0.904192
+model 2 nfeatures = 1025608, corpus f-score = 0.904795
+permutation test significance of corpus f-score difference = 0.67462
+model 1 better on 155 = 11.5242% sentences
+model 2 better on 167 = 12.4164% sentences
+models 1 and 2 tied on 1023 = 76% sentences
+binomial 2-sided significance of sentence-by-sentence comparison = 0.539938
+bootstrap 95% confidence interval for model 1 f-scores = (0.898235 0.910041)
+bootstrap 95% confidence interval for model 2 f-scores = (0.898861 0.910627)
+26.916u 0.365s 0:27.30 99.8%    0+0k 0+0io 0pf+0w
+
+
+On section 23, the difference is significant
+
+tembo [10] % programs/eval-weights/compare-models features/ec50-connll-ic-s5/cvlm-l1-c10-Pyx1-ns-1/traindev-weights.gz features/ec50-connll-ic-s5/traindev-f23.gz features/ec50-ssp-ic-s5/cvlm-l1-c10-Pyx1-ns-1/traindev-weights.gz features/ec50-ssp-ic-s5/traindev-f23.gz 
+nsentences = 2416 in test corpus.
+model 1 nfeatures = 728590, corpus f-score = 0.910751
+model 2 nfeatures = 1025608, corpus f-score = 0.913742
+permutation test significance of corpus f-score difference = 0.00379
+model 1 better on 219 = 9.06457% sentences
+model 2 better on 284 = 11.755% sentences
+models 1 and 2 tied on 1913 = 79% sentences
+binomial 2-sided significance of sentence-by-sentence comparison = 0.00427645
+bootstrap 95% confidence interval for model 1 f-scores = (0.905945 0.915462)
+bootstrap 95% confidence interval for model 2 f-scores = (0.908999 0.918409)
+50.920u 0.588s 0:51.61 99.7%    0+0k 0+0io 0pf+0w

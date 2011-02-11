@@ -1,0 +1,11 @@
+evalb distribution: http://nlp.cs.nyu.edu/evalb/
+
+evalb.c.orig: distributed version
+
+evalb.c: 
+* compiler/cleanup fixes
+* computes F-Measures
+
+new.prm: 
+* ignores S1 labels (Charniak output)
+

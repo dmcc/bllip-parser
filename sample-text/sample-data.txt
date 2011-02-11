@@ -1,0 +1,5 @@
+<s> This is some text that we should, presumably, parse! </s>
+
+<s> A second sentence (much like the first) will also help. </s>
+
+<s> This sentence contains some very funny tokens, such as \/ and # and %% and *&* and !! and ~ and += < . . ? ; _ - & > </s>

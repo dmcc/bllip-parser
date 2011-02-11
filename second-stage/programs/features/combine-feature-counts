@@ -1,0 +1,40 @@
+#!/usr/bin/env python
+"""Combine multiple feature count files into one, sorting, pruning
+and renumbering the features.  This can be used on the output of
+extract-spfeatures-counts.  It should not need to be used on the output
+of extract-spfeatures."""
+import sys
+import gzip, bz2
+
+def opener(filename):
+    """Open files based on their extension."""
+    if filename.endswith('.gz'):
+        return gzip.GzipFile(filename)
+    elif filename.endswith('.bz2'):
+        return bz2.BZ2File(filename)
+    else:
+        return file(filename)
+
+name_to_freq = {} # { feature name : freq }
+threshold = 5
+for filename in sys.argv[1:]:
+    print >>sys.stderr, "Reading", filename
+    for line in opener(filename):
+        freq, name = line.split('\t', 1)
+        freq = int(freq)
+        name = name.strip()
+
+        name_to_freq.setdefault(name, 0)
+        name_to_freq[name] += freq
+
+print >>sys.stderr, len(name_to_freq), "unpruned features"
+feature_names = [name for name, freq in name_to_freq.iteritems()
+    if freq >= threshold]
+print >>sys.stderr, len(feature_names), "pruned features"
+feature_names.sort()
+print >>sys.stderr, "Writing sorted features out..."
+
+i = 0
+for name in feature_names:
+    print '%s\t%s' % (i, name)
+    i += 1

@@ -1,0 +1,60 @@
+ClassRule.o: ClassRule.C ClassRule.h TreeHist.h InputTree.h ECString.h \
+  utils.h Term.h Feature.h headFinder.h headFinderCh.h
+ECArgs.o: ECArgs.C ECArgs.h ECString.h utils.h
+EmpNums.o: EmpNums.C EmpNums.h ECString.h utils.h
+Feat.o: Feat.C Feat.h Feature.h ECString.h utils.h
+FeatIter.o: FeatIter.C FeatIter.h Feat.h Feature.h ECString.h \
+  FeatTreeIter.h FeatureTree.h
+FeatTreeIter.o: FeatTreeIter.C FeatTreeIter.h FeatureTree.h Feat.h \
+  Feature.h ECString.h
+Feature.o: Feature.C Feature.h ECString.h
+FeatureTree.o: FeatureTree.C FeatureTree.h Feat.h Feature.h ECString.h
+InputTree.o: InputTree.C InputTree.h ECString.h utils.h headFinder.h \
+  headFinderCh.h Term.h Feature.h EmpNums.h auxify.h
+Phegt.o: Phegt.C Phegt.h ECString.h
+Pst.o: Pst.C Pst.h WordInfo.h ECString.h Phegt.h Feature.h Term.h utils.h
+Smoother.o: Smoother.C Smoother.h Feature.h ECString.h
+Term.o: Term.C Term.h ECString.h Feature.h utils.h
+UnitRules.o: UnitRules.C UnitRules.h InputTree.h ECString.h utils.h \
+  Feature.h Term.h
+auxify.o: auxify.C auxify.h ECString.h InputTree.h utils.h Term.h \
+  Feature.h
+ccInd.o: ccInd.C ccInd.h InputTree.h ECString.h utils.h Term.h Feature.h
+getProbs.o: getProbs.C getProbs.h ClassRule.h TreeHist.h InputTree.h \
+  ECString.h utils.h ECArgs.h Feature.h FeatureTree.h Feat.h headFinder.h \
+  headFinderCh.h treeHistSf.h Pst.h WordInfo.h Phegt.h Smoother.h Term.h \
+  trainRsUtils.h
+headFinder.o: headFinder.C headFinder.h ECString.h InputTree.h utils.h \
+  headFinderCh.h Term.h Feature.h
+headFinderCh.o: headFinderCh.C headFinderCh.h ECString.h InputTree.h \
+  utils.h Term.h Feature.h
+iScale.o: iScale.C ECArgs.h ECString.h utils.h FeatIter.h Feat.h \
+  Feature.h FeatTreeIter.h FeatureTree.h Term.h
+kn3Counts.o: kn3Counts.C ECArgs.h ECString.h Feature.h FeatureTree.h \
+  Feat.h FeatTreeIter.h InputTree.h utils.h headFinder.h headFinderCh.h \
+  treeHistSf.h TreeHist.h Term.h Pst.h WordInfo.h Phegt.h
+pSfgT.o: pSfgT.C ECArgs.h ECString.h Term.h Feature.h utils.h InputTree.h \
+  headFinder.h headFinderCh.h Pst.h WordInfo.h Phegt.h
+pSgT.o: pSgT.C ECArgs.h ECString.h Term.h Feature.h utils.h InputTree.h \
+  headFinder.h headFinderCh.h UnitRules.h
+pTgNt.o: pTgNt.C ECArgs.h ECString.h Term.h Feature.h utils.h InputTree.h \
+  headFinder.h headFinderCh.h Pst.h WordInfo.h Phegt.h
+pUgT.o: pUgT.C ECArgs.h ECString.h Term.h Feature.h utils.h InputTree.h \
+  headFinder.h headFinderCh.h Pst.h WordInfo.h Phegt.h
+rCounts.o: rCounts.C ECArgs.h ECString.h Feature.h FeatureTree.h Feat.h \
+  InputTree.h utils.h headFinder.h headFinderCh.h treeHistSf.h TreeHist.h \
+  Term.h Pst.h WordInfo.h Phegt.h ClassRule.h
+selFeats.o: selFeats.C Feat.h Feature.h ECString.h FeatIter.h \
+  FeatTreeIter.h FeatureTree.h utils.h ECArgs.h
+trainRs.o: trainRs.C trainRsUtils.h ECArgs.h ECString.h Feature.h \
+  FeatureTree.h Feat.h InputTree.h utils.h headFinder.h headFinderCh.h \
+  treeHistSf.h Pst.h WordInfo.h Phegt.h Smoother.h TreeHist.h Term.h \
+  ClassRule.h
+trainRsUtils.o: trainRsUtils.C trainRsUtils.h ECArgs.h ECString.h \
+  Feature.h FeatureTree.h Feat.h InputTree.h utils.h headFinder.h \
+  headFinderCh.h treeHistSf.h Pst.h WordInfo.h Phegt.h Smoother.h \
+  TreeHist.h Term.h ClassRule.h
+treeHistSf.o: treeHistSf.C TreeHist.h InputTree.h ECString.h utils.h \
+  treeHistSf.h Term.h Feature.h Pst.h WordInfo.h Phegt.h headFinder.h \
+  headFinderCh.h Feat.h ccInd.h ClassRule.h
+utils.o: utils.C utils.h ECString.h Term.h Feature.h

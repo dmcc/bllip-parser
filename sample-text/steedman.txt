@@ -1,0 +1,5 @@
+<s> This cat likes fresh fish. </s>
+<s> This cat likes to chase dogs. </s>
+<s> There is a pretty little girl's school. </s>
+<s> I bought a plastic cat food can cover. </s>
+<s> This will cost taxpayers $15 million, and BPC residents $8 million. </s>

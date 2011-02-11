@@ -1,0 +1,56 @@
+/home/mj/research/collins/data/prepare-data/README
+
+Mark Johnson, 14th August 2003
+
+prepare-data is a C++ program used to prepare the data files
+for discriminative training from Michael Collins' original files.
+
+count-sentences.py is a Python program that counts the number of
+sentences in a scored file (this is needed as an argument for
+prepare-data).
+
+write-collins-trees.py is a Python program that isn't used any
+more.
+
+--------------------------------------------------------------
+
+Usage: prepare-data penn-wsj-regex nsentences collins-tree-command collins-score-command
+
+where:
+  penn-wsj-regex is a regular expression that expands to the names of
+      the Penn WSJ treebank files,
+  nsentences is the number of sentences in the data,
+  collins-tree-command is a shell expression that writes Collins trees
+      to stdout, and
+  collins-score-command is a shell expression that writes Collins scores
+      to stdout.
+
+The combined data file is written to stdout.
+
+Format of the output data:
+=========================
+
+The first line of the data is:
+
+        <NSENTENCES>
+
+which is the number of sentences in the data.
+
+The rest of the data consists of a sequence of blocks, one per
+sentence.  Each sentence block begins with a line of the form:
+
+        <NPARSES> <GOLDTREE>
+
+where:
+
+        <NPARSES> is the number of parses,
+        <GOLDTREE> is the treebank tree.
+
+This is followed by <NPARSES> lines, one for each parse, of the form:
+
+        <LOGPROB> <PARSETREE>
+
+where:
+
+        <LOGPROB> is the log probability of the parse,
+        <PARSETREE> is the parse tree.
