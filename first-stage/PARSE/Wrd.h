@@ -27,6 +27,7 @@
 #include "ECString.h"
 #include <iostream>
 #include "ewDciTokStrm.h"
+#include "utils.h"
 
 class Wrd;
 class Wrd
@@ -49,7 +50,7 @@ public:
     {
       ECString lx;
       is >> lx;
-      substBracket( w.lexeme_ );
+      escape_parens(w.lexeme_);
       return is;
     }
   friend ostream& operator<<(ostream& os, const Wrd& w)
@@ -67,22 +68,6 @@ public:
   int loc() const { return loc_; }
   int toInt() const { return wInt_; }
   int& toInt() { return wInt_; }
-
-
-  static void substBracket( ECString &w )
-    {
-      if ( w.length() != 1 ) return;
-
-      switch (w[0]) 
-	{
-	case '(': w = "-LRB-"; break;
-	case ')': w = "-RRB-"; break;
-	case '{': w = "-LCB-"; break;
-	case '}': w = "-RCB-"; break;
-	case '[': w = "-LSB-"; break; 
-	case ']': w = "-RSB-"; break;
-	}
-    }
 
 private:
   ECString lexeme_;

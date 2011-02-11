@@ -42,16 +42,8 @@ typedef vector<ECString> ECStrings;
 typedef ECStrings::iterator ECStringsIter;
 bool vECfind(const ECString& st, ECStrings& sts);
 
+void find_and_replace(std::string & tInput, std::string tFind, std::string tReplace);
+void escape_parens(ECString& word);
 
-/* UNUSED
-double ran();
-enum DGStatus  { OK, NOT_OK };
-ECString lastCharacter(const ECString& s);
-void ignoreComment(ifstream& input);
-*/
-
-/* UNIMPLMENTED
-ECString firstCharacter(const ECString& s);
-*/
 #endif /* ! UTILS_H */
 

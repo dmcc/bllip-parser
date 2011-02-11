@@ -108,7 +108,7 @@ addWwData(InputTree* tree)
       if(wi->c() <= 2)
 	{
 	  posUCounts[lhsInt]++;
-	  char* hyppos =  strpbrk(hdLex.c_str(), "-");
+	  const char* hyppos =  strpbrk(hdLex.c_str(), "-");
 	  if(hyppos) posDashCounts[lhsInt]++;
 	}
       return;

@@ -598,8 +598,8 @@ pHypgt(const ECString& shU, int t)
 {
   //return 1.0  //ADD to IGNORE hypenization for unknown words
   bool hyp = false;
-  char* hyppos =  strpbrk(shU.c_str(), "-");
-  if(hyppos) hyp = true;
+  const char* hyppos = strpbrk(shU.c_str(), "-");
+  if (hyppos) hyp = true;
   double phyp = pHhypgt(t);  
   return hyp ? phyp : (1 - phyp);
 }

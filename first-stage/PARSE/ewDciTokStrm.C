@@ -34,29 +34,9 @@
 
 #include "ewDciTokStrm.h"
 
-
-
-
 inline int Cap( ECString );
-
 inline int has_alnum( ECString, int );
-
 inline int has_one( char, ECString, int );
-
-void find_and_replace(std::string & tInput, std::string tFind, std::string tReplace) {
-    size_t uPos = 0;
-    size_t uFindLen = tFind.length();
-    size_t uReplaceLen = tReplace.length();
-
-    if (uFindLen == 0) {
-        return;
-    }
-
-    for (; (uPos = tInput.find(tFind, uPos)) != std::string::npos; ) {
-        tInput.replace(uPos, uFindLen, tReplace);
-        uPos += uReplaceLen;
-    }
-}
 
 ewDciTokStrm::
 ewDciTokStrm( const ECString& name )
@@ -193,16 +173,6 @@ read()             // tion, savedWrd_  may or may not be empty, and nextWrd_
     if(savedWrd_ == "\'\'") savedWrd_ = "\"";
     return retWrd;
 }
-
-void escape_parens(ECString& word) {
-    find_and_replace(word, "(", "-LRB-");
-    find_and_replace(word, ")", "-RRB-");
-    find_and_replace(word, "{", "-LCB-");
-    find_and_replace(word, "}", "-RCB-");
-    find_and_replace(word, "[", "-LSB-");
-    find_and_replace(word, "]", "-RSB-");
-}
-
 
 								// page THREE
 

@@ -33,9 +33,6 @@
 ****    wsj/text/198* .  Run any "improved" version side by side with     ****
 ****   this one and inspect the actual outputs, before changing this.     ***/
 
-void find_and_replace(std::string & tInput, std::string tFind, std::string tReplace);
-void escape_parens(ECString& word);
-
 class ewDciTokStrm
 {
   public:

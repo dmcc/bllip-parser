@@ -98,52 +98,26 @@ vECfind(const ECString& s, ECStrings& sts)
   return ( find(sts.begin(),sts.end(),s) != sts.end() );
 }
 
-/*
-UNUSED ---------------------------------------
+void find_and_replace(std::string & tInput, std::string tFind, std::string tReplace) {
+    size_t uPos = 0;
+    size_t uFindLen = tFind.length();
+    size_t uReplaceLen = tReplace.length();
 
-double 
-ran()
-{
-    return (rand() * 4.656612875245796E-10);
-}
-
-ECString lastCharacter(const ECString& s)
-{
-        ECString f;
-        int len=s.length();
-        assert(s!="");
-        int c=(int)s[len-1];
-        if (c<0||c>127) {
-                assert(len>=2);
-                f=f+s[len-2]+s[len-1];
-        }else f=f+s[len-1];
-        return f;
-}
-*/
-#if 0 // can't comment out code below since it uses '*/'
-
-void
-ignoreComment(ifstream& inpt)
-{
-  ECString nxt;
-  char a;
-  inpt.get(a);
-  if(a == '/')
-    {
-      char b = inpt.peek();
-      if(b == '*')
-	{
-	  while(inpt)
-	    {
-	      inpt >> nxt;
-	      if(nxt == "*/") break;
-	    }
-	  return;
-	}
+    if (uFindLen == 0) {
+        return;
     }
-  inpt.putback(a);
-  return;
+
+    for (; (uPos = tInput.find(tFind, uPos)) != std::string::npos; ) {
+        tInput.replace(uPos, uFindLen, tReplace);
+        uPos += uReplaceLen;
+    }
 }
-	  
---------------------------------------- 
-#endif // 0
+
+void escape_parens(ECString& word) {
+    find_and_replace(word, "(", "-LRB-");
+    find_and_replace(word, ")", "-RRB-");
+    find_and_replace(word, "{", "-LCB-");
+    find_and_replace(word, "}", "-RCB-");
+    find_and_replace(word, "[", "-LSB-");
+    find_and_replace(word, "]", "-RSB-");
+}
