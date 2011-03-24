@@ -30,6 +30,9 @@ or
 
 > setenv GCCFLAGS "-march=opteron -m64"
 
+(if unsure, it is safe to leave GCCFLAGS unset -- it just won't be
+as optimized as possible)
+
 Then execute 
 
 make
@@ -40,7 +43,7 @@ After it has built, the parser can be run with
 
 E.g.,
 
-> parse.sh sample-data.txt
+> parse.sh sample-text/sample-data.txt
 
 The script parse-eval.sh takes a list of treebank files as arguments
 and extracts the terminal strings from them, runs the two-stage parser
