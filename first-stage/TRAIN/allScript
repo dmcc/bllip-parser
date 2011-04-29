@@ -1,0 +1,121 @@
+#!/bin/bash -u
+#
+# Trains the Charniak parser -- see usage() statement below.
+#
+# 05/12/05
+# * merged parser and language modeler training scripts
+# * replaced copied code with loops
+# * enabled running this script from outside TRAIN directory
+# * made the final "/" on the path argument optional
+# * no longer assumes "." is in $PATH
+# * specified shell at top (make script invariant to user shell)
+# * outputs program exit codes for better error detection
+# * added a usage statement
+#
+# 07/12/05
+# * distinguished parser/lm vs. language choice
+# * removed use of "realpath" not available on all systems
+# * removed "typeset -r" constant declarations due to some user
+#   reports of having this unsupported in their bash
+#
+# 11/30/05
+# * decoupled make from running (script no longer makes for you)
+#-----------------------------------------------------------------
+
+function usage () {
+    echo "Usage: `basename $0` [-lm/-parser] [-Ch/-En] DATA_dir train_trees dev_trees"
+    echo "       If no optional \"-\" flags are supplied, trains English parser (default behavior)"
+    exit 1
+}
+if [ $# -eq 0 ]; then usage; fi
+
+echo -e "\nInvocation: $0 $@"
+
+# Parser or Language model?
+if [ $1 = -lm ];       then MODE=lm; shift
+elif [ $1 = -parser ]; then MODE=parser; shift
+else                        MODE=parser
+fi
+
+# English or Chinese
+if [ $1 = -Ch ];   then LANG=Chinese; shift
+elif [ $1 = -En ]; then LANG=English; shift
+else                    LANG=English
+fi
+
+# traditional allScript training arguments
+if [ $# -ne 3 ]; then usage; fi
+DATA=`echo $1 | sed -e 's|/$||g'` # remove final "/" if present
+TRAIN="$2 ${DATA}/bugFix.txt"
+TUNE="$3 ${DATA}/bugFix.txt" 
+
+echo "* directory: $DATA"
+echo "* TRAIN file: $2"
+echo "* TUNE file: $3"
+
+# Set training mode and language 
+if [ $LANG = English ]; then
+    HEAD_PROG=pTgNt
+    if [ $MODE = parser ]; then
+	SWITCH="" # or equivalently -LEn
+    elif [ $MODE = lm ]; then
+	SWITCH="-M" 
+    fi
+elif [ $LANG = Chinese ]; then
+    HEAD_PROG=pSfgT
+    if [ $MODE = parser ]; then
+	SWITCH="-LCh"
+    elif [ $MODE = lm ]; then
+	echo "Chinese LM not supported!"
+	exit 1
+    fi
+fi
+
+# Cleanup old files
+for f in pSgT.txt pUgT.txt nttCounts.txt; do
+    rm -f $DATA/$f
+done
+
+# define helper function: run a command and print its exit code
+function run () {
+    echo -e "\nrun: $1\n-------------"
+    eval $1
+    local code=$?
+    if [ $code -ne 0 ]; then
+	echo "Exit code: $code"
+	exit $code
+    fi
+}
+
+# Training -----------------------------------------------------
+
+HERE=`dirname $0`
+
+for prog in pSgT pUgT $HEAD_PROG; do
+    run "cat $TRAIN | $HERE/$prog $SWITCH $DATA/"
+done
+
+for x in r m l u h lm ru rm tt; do
+
+    cutoff=50
+    if [ $x = ru ]; then
+	cutoff=98
+    elif [ $x = tt ]; then
+	cutoff=100
+    fi
+
+    run "cat $TRAIN | $HERE/rCounts $SWITCH $x $DATA/"
+    run "$HERE/selFeats $x $cutoff $DATA/" 
+    rm -f $DATA/$x.g
+    run "$HERE/iScale $x $DATA/"
+    run "cat $TUNE | $HERE/trainRs $SWITCH $x $DATA/" 
+    rm -f $DATA/$x.f $DATA/$x.ff
+    
+done
+
+# use Knesser-Ney smoothing with language model for trigram interpolation
+if [ $MODE = lm ]; then
+    run "cat $TRAIN | $HERE/kn3Counts ww $DATA/"
+fi
+
+echo -e "\nTraining completed successfully.\n"
