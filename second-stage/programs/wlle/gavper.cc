@@ -380,10 +380,11 @@ struct Estimator1 {
 	  identifier.push_back(c);
 	}
       
-      // skip the rest of the line
-
-      while ((c = getc(in)) != EOF && c != '\n')
-	;
+      if (c != '\n') {
+          // skip the rest of the line
+          while ((c = getc(in)) != EOF && c != '\n')
+            ;
+      }
 
       // insert the prefix into the prefix -> regularization class map
       
