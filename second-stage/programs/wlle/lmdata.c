@@ -346,7 +346,12 @@ int read_sentence(corpusflags_type *flags, FILE *in, sentence_type *s,
 
   for (i = 0; i < s->nparses; ++i) {
     read_parse(in, &s->parse[i], fmax);
-    fscore = 2 * s->parse[i].w/(s->parse[i].p+s->g);
+    // handle the admittedly strange case where a parse has no brackets
+    if (s->parse[i].w == 0.0 || s->parse[i].p == 0.0) {
+      fscore = 0.0;
+    } else {
+      fscore = 2 * s->parse[i].w/(s->parse[i].p+s->g);
+    }
     if (fscore+DATAFLOAT_EPS >= best_fscore) {
       Float logprob = feature_value(&s->parse[i], 0); // logprob is feature 0
       if (fabs(fscore-best_fscore) < 2*DATAFLOAT_EPS) {
@@ -366,6 +371,13 @@ int read_sentence(corpusflags_type *flags, FILE *in, sentence_type *s,
     }
   }
 
+  // skip sentences where the best f-score was 0 since there's nothing to learn from them
+  if (best_fscore == 0.0) {
+    best_fscore = -1;
+    best_logprob = -DATAFLOAT_MAX;
+    best_fscore_index = -1;
+    nwinners = 0;
+  }
   if (best_fscore_index >= 0) {  /* is there a winner? */
     Float sum_Pyx = 0;
     assert(nwinners > 0);
