@@ -32,7 +32,7 @@ class TimeIt
  public:
   TimeIt() :
     totEdges(0),
-    totPopedEdges(0),
+    totPoppedEdges(0),
     totAccessTime(0),
     totParseTime(0),
     totSemParseTime(0)
@@ -42,7 +42,7 @@ class TimeIt
   void aftSent();
   void finish(int totSents);
   int    totEdges;
-  int    totPopedEdges;
+  int    totPoppedEdges;
   double totAccessTime;
   double totParseTime;
   double totSemParseTime;

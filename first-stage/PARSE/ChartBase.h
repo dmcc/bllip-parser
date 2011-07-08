@@ -48,8 +48,8 @@ public:
     const Items&    items( int i, int j ) const
 		    {   return regs[ i ][ j ];   }
     int             edgeCount() const    { return ruleiCounts_; }
-    int             popedEdgeCount() const    { return popedEdgeCount_; }
-    int             popedEdgeCountAtS() const    { return popedEdgeCountAtS_; }
+    int             poppedEdgeCount() const    { return poppedEdgeCount_; }
+    int             poppedEdgeCountAtS() const    { return poppedEdgeCountAtS_; }
     int             totEdgeCountAtS() const    { return totEdgeCountAtS_; }
     Item*           addtochart(const Term* trm);
     // printing information about the parse.
@@ -80,9 +80,9 @@ protected:
     list<Edge*>     waitingEdges[2][MAXSENTLEN];
     double          crossEntropy_;
     int             wrd_count_;
-    int             popedEdgeCount_;
+    int             poppedEdgeCount_;
     int             totEdgeCountAtS_;
-    int             popedEdgeCountAtS_;
+    int             poppedEdgeCountAtS_;
     int             ruleiCounts_; // keeps track of how many edges have been
                                 // created --- used to time out the parse
     Item*           pretermItems[4000];

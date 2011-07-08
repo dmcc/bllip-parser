@@ -171,8 +171,8 @@ public:
     void   addToDemerits(Edge* edge);
     static Item*    stops[MAXSENTLEN];
     EdgeHeap*       heap;
-    int             alreadyPopedNum;
-    Edge*           alreadyPoped[450000]; //was 350000;
+    int             alreadyPoppedNum;
+    Edge*           alreadyPopped[450000]; //was 350000;
     static int&     posStarts(int i, int j);
     static int      posStarts_[MAXNUMNTTS][MAXNUMNTS];
   int     curDemerits_[MAXSENTLEN][MAXSENTLEN];

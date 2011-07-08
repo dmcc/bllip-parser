@@ -193,7 +193,7 @@ add_edge(Item* lhs, Items& rhs)
       Edge*   newEdge = new Edge(*prevEdge, *item, 0);
       prevEdge  = newEdge;
       cerr << "ae1 " << *item << " " << *newEdge << endl;
-      alreadyPoped[alreadyPopedNum++] = newEdge;  //so it will be gced.;
+      alreadyPopped[alreadyPoppedNum++] = newEdge;  //so it will be gced.;
       if(item->term() != Term::stopTerm) item->needme().push_back(newEdge);
       if(pos > 0) ii--;
     }
@@ -203,7 +203,7 @@ add_edge(Item* lhs, Items& rhs)
       Edge*   newEdge = new Edge(*prevEdge, *item, 1);
       prevEdge  = newEdge;
       cerr << "ae2 " << *item << " " << *newEdge << endl;
-      alreadyPoped[alreadyPopedNum++] = newEdge;  //so it will be gced.;
+      alreadyPopped[alreadyPoppedNum++] = newEdge;  //so it will be gced.;
       if(item->term() != Term::stopTerm) item->needme().push_back(newEdge);
     }
   prevEdge->setFinishedParent( lhs );    

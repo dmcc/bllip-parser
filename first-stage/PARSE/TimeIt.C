@@ -49,12 +49,12 @@ betweenSent(Bchart* chart)
   if(elapsedTime < 0) elapsedTime += 2147;
   cerr << "Parsing time = " << elapsedTime
        << "\tEdges created = " << chart->totEdgeCountAtS()
-       << "\tEdges poped = " << chart->popedEdgeCountAtS() << endl;
+       << "\tEdges popped = " << chart->poppedEdgeCountAtS() << endl;
   totParseTime += elapsedTime;
   //totEdges += chart->totEdgeCountAtS();
-  //totPopedEdges += chart->popedEdgeCountAtS();
+  //totPoppedEdges += chart->poppedEdgeCountAtS();
   totEdges += chart->totEdgeCountAtS();
-  totPopedEdges += chart->popedEdgeCountAtS();
+  totPoppedEdges += chart->poppedEdgeCountAtS();
   lastTime = clock();
 }
 
@@ -83,7 +83,7 @@ finish(int totSents)
        << totSemParseTime/totSents
        << "\nAv edges created = "
        << (float)totEdges/totSents
-       << "\tAv edges poped = "
-       << (float)totPopedEdges/totSents
+       << "\tAv edges popped = "
+       << (float)totPoppedEdges/totSents
        << endl;
 }

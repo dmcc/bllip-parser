@@ -109,7 +109,7 @@ ChartBase(SentRep & sentence,int id)
   sentence_( sentence ),
   crossEntropy_(0.0L), 
   wrd_count_(0),
-  popedEdgeCount_(0),
+  poppedEdgeCount_(0),
   ruleiCounts_(0)
 {
 #ifdef DEBUG

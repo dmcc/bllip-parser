@@ -65,7 +65,7 @@ Bchart(SentRep & sentence, int id)
     depth(0),
     curDir(-1),
     gcurVal(NULL),
-    alreadyPopedNum( 0 )
+    alreadyPoppedNum( 0 )
 {
   pretermNum = 0;
   heap = new EdgeHeap();
@@ -91,7 +91,7 @@ Bchart(SentRep & sentence, ExtPos& extPos,int id)
     curDir(-1),
     gcurVal(NULL),
     extraPos(extPos),
-    alreadyPopedNum( 0 )
+    alreadyPoppedNum( 0 )
 {
   pretermNum = 0;
   heap = new EdgeHeap();
@@ -115,8 +115,8 @@ Bchart::
 ~Bchart()
 {
   int i;
-  for(i = 0 ; i < alreadyPopedNum ; i++)
-    delete alreadyPoped[i];
+  for(i = 0 ; i < alreadyPoppedNum ; i++)
+    delete alreadyPopped[i];
   delete heap;
 }
 
@@ -125,14 +125,14 @@ Bchart::
 parse()
 {
   initDenom();
-    alreadyPopedNum = 0;
+    alreadyPoppedNum = 0;
     
     bool   haveS = false;
     int locTimeout = ruleiCountTimeout_;
     for (;;)
     {
       //check();
-      if( ruleiCounts_ > locTimeout || popedEdgeCount_ > poppedTimeout_)
+      if( ruleiCounts_ > locTimeout || poppedEdgeCount_ > poppedTimeout_)
 	{
 	  if(printDebug(5)) cerr << "Ran out of time" << endl;
 	  break;
@@ -142,8 +142,8 @@ parse()
 	{
 	  // once we have found a parse, the total edes is set to edges * 3.5;
 	  haveS = true;
-	  if(printDebug(10)) cerr << "Found S " << popedEdgeCount_ << endl;
-	  popedEdgeCountAtS_ = popedEdgeCount_;
+	  if(printDebug(10)) cerr << "Found S " << poppedEdgeCount_ << endl;
+	  poppedEdgeCountAtS_ = poppedEdgeCount_;
 	  totEdgeCountAtS_ = ruleiCounts_;
 	  int newTime = (int)(ruleiCounts_ * timeFactor);  
 	  if(newTime < ruleiCountTimeout_)
@@ -172,14 +172,14 @@ parse()
 	  if(printDebug(5)) cerr << "Over or underflow" << endl;
 	  break;
 	}
-      if(alreadyPopedNum >= 400000)
+      if(alreadyPoppedNum >= 400000)
 	{
-	  if(printDebug(5)) cerr << "alreadyPoped got too large" << endl;
+	  if(printDebug(5)) cerr << "alreadyPopped got too large" << endl;
 	  break;
 	}
       if(printDebug() > 10)
 	{
-	  cerr << popedEdgeCount_ << "\tPop";
+	  cerr << poppedEdgeCount_ << "\tPop";
 	  if(stus == 0) cerr << "< ";
 	  else if(stus == 2) cerr << ". ";
 	  else cerr << "> ";
@@ -187,8 +187,8 @@ parse()
 	  cerr << "\t" << ruleiCounts_;
 	  cerr << endl;
 	}
-      popedEdgeCount_++;
-      alreadyPoped[alreadyPopedNum++] = edge;
+      poppedEdgeCount_++;
+      alreadyPopped[alreadyPoppedNum++] = edge;
       if(!haveS) addToDemerits(edge);
       /* and add it to chart */
       //heap->check();
@@ -404,8 +404,8 @@ extend_rule(Edge* edge, Item * item, int right)
     globalGi[thrdid] = NULL;
     if(newEdge->merit() == 0)
       {
-	assert(alreadyPopedNum < 450000);
-	alreadyPoped[alreadyPopedNum++] = newEdge;
+	assert(alreadyPoppedNum < 450000);
+	alreadyPopped[alreadyPoppedNum++] = newEdge;
 	Edge* prd = newEdge->pred();
 	if(prd) prd->sucs().pop_front();
 	return;
@@ -434,9 +434,9 @@ addFinishedEdge(Edge* newEdge)
 		  newEdge->start(), newEdge->loc());
   if(regi)
     {
-      /* redoP is a crutial function.  It uses to probability of the edge
+      /* redoP is a crucial function.  It uses the probability of the edge
 	 to see what the new prob of regi should be, and if it is over
-	 the threshold for propogating probs, It will recursively
+	 the threshold for propogating probs, it will recursively
 	 do this up the chart. */
       redoP(regi, newEdge->prob());
     }
