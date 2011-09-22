@@ -107,6 +107,12 @@ ewDciTokStrm::     // ing splitAtPunc on savedWrd_ .  Upon entry to this func-
 read()             // tion, savedWrd_  may or may not be empty, and nextWrd_
                    // will be empty only if the input stream has run dry.
 {
+    if (nextWrd_ == "</s>") {
+        savedWrd_ = "";
+        nextWrd_ = "";
+        return "</s>";
+    }
+
     if( !savedWrd_.length() )
     {
 	savedWrd_ = nextWrd_;
