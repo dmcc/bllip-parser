@@ -31,3 +31,5 @@ glob:second-stage/programs/prepare-data/prepare-ec-data
 glob:second-stage/programs/prepare-data/prepare-ec-data100
 glob:second-stage/programs/prepare-data/prepare-new-data
 glob:second-stage/programs/prepare-data/ptb
+glob:*.swp
+glob:tags
