@@ -108,9 +108,14 @@ read()             // tion, savedWrd_  may or may not be empty, and nextWrd_
                    // will be empty only if the input stream has run dry.
 {
     if (nextWrd_ == "</s>") {
-        savedWrd_ = "";
-        nextWrd_ = "";
-        return "</s>";
+        if (savedWrd_.length()) { // return saved word first
+            ECString saved = savedWrd_;
+            savedWrd_ = "";
+            return saved;
+        } else {
+            nextWrd_ = "";
+            return "</s>";
+        }
     }
 
     if( !savedWrd_.length() )
