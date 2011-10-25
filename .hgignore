@@ -33,3 +33,5 @@ glob:second-stage/programs/prepare-data/prepare-new-data
 glob:second-stage/programs/prepare-data/ptb
 glob:*.swp
 glob:tags
+glob:first-stage/PARSE/evalTree
+glob:first-stage/PARSE/parseAndEval
