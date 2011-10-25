@@ -21,18 +21,9 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-New in the August 2006 parser release.
-
-parseIt is now multi-threaded.  The top level README file gives enough
-information to use it.  See below for some details.  Just in case
-people have problems with it, the non-treaded version is available
-as oparseIt.  Assuming no problems the old version will go away
-in the next release.
-
 ----------------------------------------------------------------------
 
-
-I  Basic Usage
+1.  Basic Usage
 
 The parser (which is to be found in the sub-directory PARSE)expects
 sentences delimited by <s> ...</s>, and outputs the parsed versions in
@@ -61,9 +52,9 @@ The parser will take input from either cin, or, if given the name
 of a file, from that file.  So in the latter case the call to
 the parser would be:
 
-parseIt <path to directory with parsing statistics>  <file of sentences>
+shell> parseIt <path to directory with parsing statistics>  <file of sentences>
 E.g.,
-parseIt ../DATA/EN/ testSentence
+shell> parseIt ../DATA/EN/ testSentence
 (Note that as the parser now has three separate DATA files, one each
 for English, Chinese, and English Language Modeling, the DATA directories
 have been made separate subdirectories under the directory DATA).
@@ -73,11 +64,15 @@ If you do NOT want to to tokenize (for some reason you are
 handing it pretokenized input, as you would do if you were
 testing it's performance on the tree-bank), give it a -K option.
 
-II To compile
+2. Compilation instructions
 
-The program was created from this file by make parseIt
+shell> cd TRAIN
+shell> make all
+shell> cd ..
+shell> cd PARSE
+shell> make all
 
-III N-best Parsing
+3. N-best Parsing
 
 This version of the parser can produce multiple-best parses.  So if
 you what 50 alternative parses rather than just one, just add -N50
@@ -98,12 +93,12 @@ However, if the input to the parser is of the form <s sentence-id >
 ... </s>, then the sentence-id proveded will be used instead.  This is
 useful if, e.g., you want to know where article boundaries are.
 
-IV Other options
+4. Other options
 
 -S tells the parser to remain silent when it cannot parse a sentence
 (it just goes on to the next one.
 
-The parser can now parse CHINESE.  It requires that the Chinese
+The parser can now parse Chinese.  It requires that the Chinese
 characters already be grouped into words.  Assuming you have 
 trained on the Chinese Tree-bank from LDC (see the README for
 the TRAIN programs), you tell the parser to be expecting Chinese
@@ -129,7 +124,7 @@ To see debugging information give it the on-line argument -d#
 where # is a number > 10.  As the numbers get larger, the verbosity of
 the information increases.
 
-V Training
+5. Training
 
 There is a subdirectory TRAIN which contains the programs used to
 collect the statistics the parser requires from tree-bank data.  As
@@ -138,7 +133,7 @@ if you want to try experiments with the parser on more (or less, or
 different) tree-bank data.  For more information see the README file
 in TRAIN.
 
-VII Language Modeling
+6. Language Modeling
 
 To use the parser as the language model described in Charniak 2001
 (Proceedings of ACL) you must first retrain the data using the
@@ -160,7 +155,7 @@ will be many parses with equally bad probabilities.  In such cases the
 pruning that keeps memory in bounds for 50-best parsing fails.  So
 just use 1-best, or maybe 10 best.
 
-VII Faster Parsing
+7. Faster Parsing
 
 The defaulty speed/accuracy setting should give you the results in the
 published papers.  It is, however, easy to get faster parsing at the
@@ -169,7 +164,7 @@ you about a percent of parsing accuracy, but rather than 1.4
 sentences/second you will get better than 6 sentences/second.  (The
 default is -T210.)
 
-VIII Multi-threaded version
+8. Multi-threaded version
 
 parseIt is multi threaded.  It currently assumes two threads (for dual
 processors).  To change this, use the command line argument, -t4 to
@@ -179,14 +174,13 @@ and recompile parseItT.
 
 #define MAXNUMTHREADS 4
 
-
-VIII evalTree
-
-evalTree <path to directory with parsing statistics> 
+9. evalTree
 
 evalTree takes penn-treebank parse trees from cin, and outputs to cout
 sentence-number log2(parse-tree-probability)
 for each tree, one per line.
+
+shell> evalTree <path to directory with parsing statistics> 
 
 If the tree is assigned zero probability it returns 0 for the log2
 probability.
@@ -196,5 +190,45 @@ it returns a probability that is too high.  If you want to be warned
 when it is doing this, give evalTree a -W command-line argument and
 the output will have an "!" at the end of the line.
 
+10. Parsing from tagged input
 
+This can now be done using a command such as the following:
 
+shell> parseIt -K -Einput.tags <model dir/> input.sgml
+
+and input.sgml looks like this:
+
+<s> This is a test sentence . </s>
+
+and input.tags looks like this:
+
+This DT
+is VBZ
+a DT
+test NN
+sentence NN
+. .
+---
+
+Each token is given a list of zero or more tags and sentences are separated by "---".  If a token is given zero tags, the standard tagging mechanism will be employed.  If a token is given multiple tags, they will each be considered.
+
+Note that the tokenization must match exactly between these files (tokens are space-separated in input.sgml).  To ensure that tokenization matches, you should pretokenize your input and supply the -K flag.
+
+11. Frequently confusing errors
+
+a.  Parser prints something like the following:
+
+    Can't open terms file ../DATA/ENterms.txt
+    parseIt: headFinder.C:39: void readHeadInfoEn(std::string&): Assertion `headStrm' failed.
+
+This error means that you forgot to add a / after the model directory (e.g. DATA/EN instead of DATA/EN/).
+
+b.  If parser provides no output at all
+
+This is most likely caused by not having spaces around the <s> and </s> brackets, i.e.
+
+    <s>This is a test sentence.</s>
+
+instead of
+
+    <s> This is a test sentence. </s>

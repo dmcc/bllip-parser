@@ -54,6 +54,10 @@ following code evaluates the two-stage parser on section 24.
 
 > parse-eval.sh /usr/local/data/Penn3/parsed/mrg/wsj/24/wsj*.mrg
 
+USING THE PARSER
+================
+
+See first-stage/README for more information.
 
 TRAINING THE RERANKER
 =====================
