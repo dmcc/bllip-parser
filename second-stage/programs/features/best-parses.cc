@@ -19,6 +19,8 @@ const char usage[] =
   "    0 print 1-best tree,\n"
   "    1 print ranked parses,\n"
   "    2 print feature counts,\n"
+  "    3 print 1-best tree with syntactic heads,\n"
+  "    4 print 1-best tree with semantic heads,\n"
   "\n"
   " feat-defs.bz2 is a feature definition file produced by extract-spfeatures, and\n"
   " feat-weights.bz2 is a feature weight file\n"
@@ -124,6 +126,14 @@ int main(int argc, char **argv) {
       break;
     case 2:
       fcps.write_features_debug(s, weights, std::cout);
+      break;
+    case 3:
+      write_tree_noquote_root_with_heads(std::cout, fcps.best_parse(s, weights), true);
+      std::cout << std::endl;
+      break;
+    case 4:
+      write_tree_noquote_root_with_heads(std::cout, fcps.best_parse(s, weights), false);
+      std::cout << std::endl;
       break;
     default:
       std::cerr << "## Error: unknown mode = " << mode << std::endl;

@@ -1221,6 +1221,67 @@ void write_tree_noquote_root(std::ostream& s, const tree_node<label_type>* t)
     s << t->label.cat.string_reference();
 }
 
+template <typename label_type>
+int get_head_num(const tree_node<label_type>* t, bool syntactic_head)
+{
+  assert(t);
+
+  if(t->is_preterminal())
+    return 0;
+
+  const tree_node<label_type>* head_child = syntactic_head ? tree_syntacticHeadChild(t): tree_semanticHeadChild(t);
+
+  int head_num = 0;
+  tree_node<label_type> *p = t->child;
+  while(p != head_child)
+    {
+      p = p->next;
+      ++head_num;
+    }
+
+  return head_num;
+}
+
+template <typename label_type>
+void write_tree_noquote_root_with_heads(std::ostream& s, const tree_node<label_type>* t, bool syntactic_heads)
+{
+  assert(t);
+  assert(t->label.is_root());
+
+  if (t->child) {
+
+    s << '(' << t->label.cat.string_reference() << " H:" << get_head_num(t, syntactic_heads);
+    
+    for (tree_node<label_type> *p = t->child; p; p = p->next) {
+      s << ' ';
+      write_tree_with_heads(s, p, syntactic_heads);
+    }
+
+    s << ')';
+  }
+  else 
+    s << t->label.cat.string_reference();
+}
+
+template <typename label_type>
+static void write_tree_with_heads(std::ostream& s, const tree_node<label_type>* t, bool syntactic_heads)
+{
+  assert(t);
+
+  if (t->child) {
+
+    s << '(' << t->label << " H:" << get_head_num(t, syntactic_heads);
+    
+    for (tree_node<label_type> *p = t->child; p; p = p->next) {
+      s << ' ';
+      write_tree_with_heads(s, p, syntactic_heads);
+    }
+
+    s << ')';
+  }
+  else 
+    s << t->label;
+}
 
 template <typename label_type>
 void write_prolog_label(std::ostream& os, const label_type& l) 
