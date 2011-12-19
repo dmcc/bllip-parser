@@ -1,7 +1,8 @@
 // tree.h
 //
 // (c) Mark Johnson, 20th August 2001, 
-// last modified (c) Mark Johnson, 22nd November, 2005
+// last modified (c) Mark Johnson, 28th February 2010 
+// to comment out custom allocator (incompatible with OpenMP)
 // 
 // The tree structure can represent arbitrary trees.
 // Each tree node contains:
@@ -240,7 +241,7 @@ struct tree_label {
   //
   cat_type simplified_cat() const {
     const std::string& s = cat.string_reference();
-    std::string::size_type pos = s.find('-', 1);
+    std::string::size_type pos = s.find_first_of("-=|^", 1);
     if (pos != std::string::npos && pos+1 < s.size())
       return cat_type(s.substr(0, pos));
     else
@@ -379,7 +380,7 @@ public:
   }  // tree_node::operator<()
 
 private:
-
+  /*
   struct cache {        // for new and delete
     tree_node* freelist;
     tree_node* freeblock;
@@ -411,9 +412,9 @@ private:
     static cache c;
     return c;
   }  // tree_node::getcache()
-
+  */
 public:
-
+  /*
   inline void* operator new (size_t size) {
     assert(size == sizeof(tree_node));
     return (void *) getcache().alloc();
@@ -423,7 +424,7 @@ public:
     assert(size == sizeof(tree_node));
     getcache().free((tree_node *) p);
   }  // tree_node::operator delete()
-  
+  */
   //! is_terminal() is true of terminal nodes
   //
   bool is_terminal() const {

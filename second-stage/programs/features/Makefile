@@ -1,12 +1,40 @@
-TARGETS = best-parses best-splhparses extract-spfeatures extract-splhfeatures extract-nfeatures oracle-score
-SOURCES = best-parses.cc best-splhparses.cc extract-nfeatures.cc extract-splhfeatures.cc extract-spfeatures.cc heads.cc read-tree.l sym.cc oracle-score.cc
+TARGETS = best-parses best-splhparses best-spmparses extract-spmfeatures best-nmparses extract-nmfeatures extract-spmultifeatures extract-nmultifeatures extract-spfeatures extract-splhfeatures extract-nfeatures oracle-score
+SOURCES = best-parses.cc best-splhparses.cc best-spmparses.cc extract-spmultifeatures.cc extract-spmfeatures.cc extract-nmultifeatures.cc best-nmparses.cc extract-nmfeatures.cc extract-nfeatures.cc extract-splhfeatures.cc extract-spfeatures.cc heads.cc read-tree.l sym.cc oracle-score.cc
 OBJECTS = $(patsubst %.l,%.o,$(patsubst %.c,%.o,$(SOURCES:%.cc=%.o)))
+
+FOPENMP=-fopenmp
 
 top: $(TARGETS)
 
-parallel-tools: count-spfeatures count-nfeatures parallel-extract-nfeatures parallel-extract-spfeatures
+extract-nmfeatures.o: extract-nmfeatures.cc
+	g++ -c $(CXXFLAGS) $(FOPENMP) $< -o $@
 
-all: top parallel-tools
+extract-nmfeatures: extract-nmfeatures.o heads.o read-tree.o sym.o
+	$(CXX) $(LDFLAGS) $(FOPENMP) $^ -o $@
+
+best-nmparses.o: best-nmparses.cc
+	g++ -c $(CXXFLAGS) $(FOPENMP) $< -o $@
+
+best-nmparses: best-nmparses.o heads.o read-tree.o sym.o
+	$(CXX) $(LDFLAGS) $(FOPENMP) $^ -o $@
+
+extract-spmfeatures.o: extract-spmfeatures.cc
+	g++ -c $(CXXFLAGS) $(FOPENMP) $< -o $@
+
+extract-spmfeatures: extract-spmfeatures.o heads.o read-tree.o sym.o
+	$(CXX) $(LDFLAGS) $(FOPENMP) $^ -o $@
+
+best-spmparses.o: best-spmparses.cc
+	g++ -c $(CXXFLAGS) $(FOPENMP) $< -o $@
+
+best-spmparses: best-spmparses.o heads.o read-tree.o sym.o
+	$(CXX) $(LDFLAGS) $(FOPENMP) $^ -o $@
+
+extract-spmultifeatures: extract-spmultifeatures.o heads.o read-tree.o sym.o
+	$(CXX) $(LDFLAGS) $^ -o $@
+
+extract-nmultifeatures: extract-nmultifeatures.o heads.o read-tree.o sym.o
+	$(CXX) $(LDFLAGS) $^ -o $@
 
 extract-spfeatures: extract-spfeatures.o heads.o read-tree.o sym.o
 	$(CXX) $(LDFLAGS) $^ -o $@
@@ -37,6 +65,10 @@ count-nfeatures: count-nfeatures.o heads.o read-tree.o sym.o
 
 parallel-extract-nfeatures: parallel-extract-nfeatures.o heads.o read-tree.o sym.o
 	$(CXX) $(LDFLAGS) $^ -o $@
+
+parallel-tools: count-spfeatures count-nfeatures parallel-extract-nfeatures parallel-extract-spfeatures
+
+all: top parallel-tools
 
 read-tree.cc: read-tree.l
 	flex -oread-tree.cc read-tree.l

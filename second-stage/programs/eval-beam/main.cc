@@ -1,6 +1,6 @@
 // main.cc
 //
-// Mark Johnson 16th August 2003, modified 11th November 2005
+// Mark Johnson 16th August 2003, modified 25th November 2009
 
 #include "custom_allocator.h"
 
@@ -10,7 +10,7 @@
 #include <utility>
 #include <vector>
 
-#include "dp-data.h"
+#include "sp-data.h"
 #include "histogram.h"
 #include "sym.h"
 #include "tree.h"
@@ -34,7 +34,7 @@ struct beam_sizer_type {
     : nsentences(0), nparses(0), precrecs(n), nparses_counts(n), 
       lrpt_prs(51), lrpt_count(51), lcpt_prs(51), lcpt_count(51) { }
 
-  void operator()(sentence_type& s) { 
+  void operator()(sp_sentence_type& s) { 
 
     ++nsentences;
     nparses += s.parses.size();
@@ -141,7 +141,7 @@ int main(int argc, char** argv)
 {
   assert(argc == 3);
   beam_sizer_type beam_sizer;
-  size_t nsentences = corpus_type::map_sentences_cmd(argv[1], argv[2], beam_sizer);
+  size_t nsentences = sp_corpus_type::map_sentences_cmd(argv[1], argv[2], beam_sizer);
   std::cout << "# Read " << nsentences << " sentences from " << argv[1] << " and " << argv[2] << std::endl;
 
   std::cout << "# Oracle " << beam_sizer.best_prs << std::endl;

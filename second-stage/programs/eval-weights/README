@@ -47,3 +47,23 @@ ilanga [14] % eval-weights ../../fcounts/feat.bz2 ../../fcounts/dev.bz2 < ../../
 0.000385311     -1187.79        32672   LexR:1:1:1:0:0
 3.20906e-05     -1673.15        11199   Rule:1
 41.570u 0.940s 0:42.84 99.2%    0+0k 0+0io 1011pf+0w
+
+
+======================================================================
+
+Added in 2009 (several years after the code was written, so user beware!)
+
+
+This directory also has code for comparing parser trees with gold trees and
+displaying the differences.
+
+After you've trained a reranker model, you can use best-indices.cc on
+the dev data and the feature weights to identify which parses the
+model thinks are the best parses.
+
+Then you use best-parses.cc to identify the tree for the best parse
+and the corresponding gold tree, together with their probabilities.
+
+Then you feed the output of best-parses into pretty-print.cc, which
+reformats them in the format that draw-tree accepts, and adds
+annotations to highlight the differences.

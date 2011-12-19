@@ -39,8 +39,8 @@
 //
 // Constructors:
 //
-//  sym()                This returns an undefined symbol
-//  sym(const string&)
+//  symbol()                This returns an undefined symbol
+//  symbol(const string&)
 //
 // Conversions and member functions:
 //

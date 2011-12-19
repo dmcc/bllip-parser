@@ -1,7 +1,7 @@
-SOURCES = main.cc read-tree.l sym.cc
+SOURCES = main.cc heads.cc sym.cc
 OBJECTS = $(patsubst %.l,%.o,$(patsubst %.c,%.o,$(SOURCES:%.cc=%.o)))
 
-main: main.o read-tree.o sym.o
+main: heads.o main.o sym.o
 	$(CXX) $(LDFLAGS) $^ -o $@
 
 read-tree.cc: read-tree.l

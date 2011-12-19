@@ -1,11 +1,10 @@
-// sp-data.h -- Read the Charniak and Petrov n-best parse data files
+// sp-multidata.h -- Read the Charniak and Petrov n-best parse data files
 //
-// Mark Johnson, 16th October 2003, last modified 16th November 2009
+// Mark Johnson, 24th November 2009
 //
-// Updated to read Slav Petrov's Berkeley Parser output files
+// Reads Charniak and Petrov's n-best parser output
 
-#ifndef SP_DATA_H
-#define SP_DATA_H
+#pragma once
 
 #include <cassert>
 #include <cctype>
@@ -22,6 +21,7 @@
 #include "tree.h"
 
 typedef double Float;
+typedef std::vector<Float> Floats;
 
 // strip_function_tags() destructively removes the function tags from
 // a treebank tree
@@ -40,8 +40,9 @@ tree_node<label_type>* strip_function_tags(tree_node<label_type>* tp) {
 // to the parse tree, but someone else must free it when it is deleted!
 //
 struct sp_parse_type {
-  Float logprob;   // log probability from parser
-  Float logcondprob;
+  Floats logprobs;   // log probabilities from parsers
+  Floats logcondprobs;
+  Floats logrelprobs;
   size_t nedges;
   size_t ncorrect;
   float f_score;   // f-score of this parse
@@ -50,8 +51,7 @@ struct sp_parse_type {
 
   // default constructor
   //
-  sp_parse_type() : logprob(0), logcondprob(0), nedges(0), ncorrect(0),
-		    f_score(0), parse(NULL), parse0(NULL) { }
+  sp_parse_type() : nedges(0), ncorrect(0), f_score(0), parse(NULL), parse0(NULL) { }
 
   static void write_next_thousand_chars(FILE* fp) {
     std::cerr << "Next 1000 characters:" << std::endl;
@@ -81,16 +81,31 @@ struct sp_parse_type {
     std::cerr << std::endl;
   }  // sp_parse_type::write_next_thousand_chars()
 
-  //! read() reads Eugene's or Slav's n-best parser output
+  //! read() reads merged n-best parser output with multiple parse probabilities
   //
   std::istream& read(std::istream& is, bool downcase_flag=false) {
-    if (is >> logprob >> parse0) {
+    std::string line;
+    getline(is, line);  // skip end of line
+    if (!is)
+      return is;
+    if (getline(is, line)) {
+      std::istringstream iss(line);
+      Float logprob;
+      while (iss >> logprob) {
+	assert(finite(logprob));
+	logprobs.push_back(logprob);
+      }
+      is >> parse0;
       ASSERT(is);
-      ASSERT(finite(logprob));
       ASSERT(parse0 != NULL);
       parse0->label.cat = tree::label_type::root();
       parse = tree_sptree(parse0, downcase_flag);
       assert(parse != NULL);
+      if (false) {
+	std::cerr << "# line = " << line << std::endl;
+	std::cerr << "# logprobs = " << logprobs << std::endl;
+	std::cerr << "# parse0 = " << parse0 << std::endl;
+      }
     }
     return is;
   }  // read_nbest()
@@ -99,7 +114,7 @@ struct sp_parse_type {
 
 
 std::ostream& operator<< (std::ostream& os, const sp_parse_type& p) {
-  return os << "(" << p.logprob << " " << p.logcondprob << " " << p.nedges 
+  return os << "(" << p.logprobs << " " << p.logcondprobs << " " << p.nedges 
 	    << " " << p.ncorrect << " " << p.parse << ")";
 }  // operator<< (sp_parse_type)
 
@@ -117,7 +132,7 @@ struct sp_sentence_type {
   float max_fscore;             // the max f-score of all parses
   sp_parses_type parses;	// vector of parses
   size_t nparses() const { return parses.size(); }
-  Float logsumprob;
+  Floats logsumprobs;
   std::string label;
 
   //! precrec() increments pr by the score for parse i
@@ -144,7 +159,7 @@ struct sp_sentence_type {
   // default constructor
   //
   sp_sentence_type() 
-    : gold(NULL), gold0(NULL), gold_nedges(0), max_fscore(0), logsumprob(0) { }
+    : gold(NULL), gold0(NULL), gold_nedges(0), max_fscore(0) { }
 
   //! clear() deletes the gold and parse trees, and sets everything to default values
   //
@@ -223,22 +238,50 @@ struct sp_sentence_type {
   void set_logcondprob() {
     // calculate logcondprob and logsumprob (log(sum(P(parse)))) in a way 
     //  that avoids overflow/underflow
+    
+    if (false) {
+      std::cerr << "# parses.size() = " << parses.size() << std::endl;
+      std::cerr << "# parse0 = " << parses[0].parse0 << std::endl;
+      for (unsigned i = 0; i < parses.size(); ++i)
+	std::cerr << "# parses[" << i << "].logprobs = " << parses[i].logprobs << std::endl;
+      std::cerr << std::endl;
+    }
 
     if (parses.size() > 0) {
-      Float logmaxprob = parses[0].logprob;
-      for (size_t i = 1; i < parses.size(); ++i)
-	logmaxprob = std::max(logmaxprob, parses[i].logprob);
-      assert(finite(logmaxprob));
-      Float sumprob_maxprob = 0;
-      for (size_t i = 0; i < parses.size(); ++i)
-	sumprob_maxprob += exp(parses[i].logprob - logmaxprob);
-      assert(finite(sumprob_maxprob));
-      logsumprob = log(sumprob_maxprob) + logmaxprob;
-      assert(finite(logsumprob));
-
-      for (size_t i = 0; i < parses.size(); ++i) {
-	parses[i].logcondprob = parses[i].logprob - logsumprob;
-	assert(finite(parses[i].logcondprob));
+      size_t nlogprobs = parses[0].logprobs.size();
+      logsumprobs.resize(nlogprobs);
+      for (unsigned i = 0; i < parses.size(); ++i) {
+	assert(nlogprobs == parses[i].logprobs.size());
+	parses[i].logcondprobs.resize(nlogprobs);
+	parses[i].logrelprobs.resize(nlogprobs);
+      }
+      for (size_t ip = 0; ip < nlogprobs; ++ip) {
+	Float max_log_prob = parses[0].logprobs[ip];
+	Float min_log_prob = parses[0].logprobs[ip];
+	for (size_t i = 1; i < parses.size(); ++i) 
+	  if (parses[i].logprobs[ip] != 0) {
+	    if (max_log_prob == 0) 
+	      min_log_prob = max_log_prob = parses[i].logprobs[ip];
+	    else {
+	      max_log_prob = std::max(max_log_prob, parses[i].logprobs[ip]);
+	      min_log_prob = std::min(min_log_prob, parses[i].logprobs[ip]);
+	    }
+	  }
+	assert(finite(max_log_prob));
+	// assert(max_log_prob != 0); // not true for Petrov parses, since some sentence have no parses
+	Float sumprob_maxprob = 0;
+	for (size_t i = 0; i < parses.size(); ++i)
+	  if (parses[i].logprobs[ip] != 0)
+	    sumprob_maxprob += exp(parses[i].logprobs[ip] - max_log_prob);
+	assert(finite(sumprob_maxprob));
+	logsumprobs[ip] = log(sumprob_maxprob) + max_log_prob;
+	assert(finite(logsumprobs[ip]));
+	for (size_t i = 0; i < parses.size(); ++i) 
+	  if (parses[i].logprobs[ip] != 0) {
+	    parses[i].logcondprobs[ip] = parses[i].logprobs[ip] - logsumprobs[ip];
+	    assert(finite(parses[i].logcondprobs[ip]));
+	    parses[i].logrelprobs[ip] = parses[i].logprobs[ip] - min_log_prob;
+	  }
       }
     }
   }  // sp_sentence_type::set_logcondprob()
@@ -264,7 +307,7 @@ struct sp_sentence_type {
 
     is.unget();
     
-    if (c == '-' || c == '0') { // Petrov-style Berkeley parser output
+    if (c == '-') { // Petrov-style Berkeley parser output
       if (nblanklines == 0) {
 	std::string line;
 	while (getline(is, line)) {
@@ -301,6 +344,9 @@ struct sp_sentence_type {
 	ASSERT(nparses > 0);
 	
 	is >> label;  // read sentence identifier
+
+	if (false)
+	  std::cerr << "# nparses = " << nparses << ", label = " << label << std::endl;
 
 	parses.resize(nparses);
 	for (size_t i = 0; i < nparses; ++i) {
@@ -411,7 +457,7 @@ struct sp_sentence_type {
 
 std::ostream& operator<< (std::ostream& os, const sp_sentence_type& s) {
   return os << "(" << s.gold << " " << s.gold_nedges << " " << s.max_fscore
-	    << " " << s.parses << " " << s.logsumprob << ")";
+	    << " " << s.parses << " " << s.logsumprobs << ")";
 }
 
 
@@ -472,4 +518,3 @@ struct sp_corpus_type {
 
 };  // sp_corpus_type{}
 
-#endif // SP_DATA_H

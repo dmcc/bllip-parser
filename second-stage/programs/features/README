@@ -14,3 +14,135 @@ where:
  train.fc.bz2 and dev.fc.bz2 are the training/development feature count files.
 
 The features are written to standard output.
+
+----------------
+
+Mark Johnson, 3rd February 2010
+
+This is a brief description of the hacks I made so that I can read
+the n-best lists that Slav Petrov produces where there are multiple
+log prob scores for each parse.
+
+Slav's n-best lists contain parse entries as follows:
+
+[mj@lugha features]$ less /media/3C03-8382/reranking-parser/second-stage/nbest/ec50_9scores/fold00.gz 
+50      sentence.1
+-520.451, p1-ll -360.710292861, p2-ll -369.439984089, p3-ll -361.516284756, p4-ll -361.012478692, p5-ll -356.775806482, p6-ll -361.308969446, p7-ll -358.853373326, p8-ll -357.817559863
+( (S (PP (IN In) (NP (NP (DT an) (NNP Oct.) (CD 19) (NN review)) ...)
+-520.537, p1-ll -362.220467999, p2-ll -366.824348518, p3-ll -361.145697106, p4-ll -358.557366404, p5-ll -358.258211762, p6-ll -358.684456142, p7-ll -357.478861361, p8-ll -357.790165616
+( (S (PP (IN In) (NP (NP (DT an) (NNP Oct.) (CD 19) (NN review)) ...)
+-520.729, p1-ll -359.476707816, p2-ll -370.184966003, p3-ll -362.370569497, p4-ll -361.642622582, p5-ll -356.797717071, p6-ll -360.5431899, p7-ll -360.015726252, p8-ll -356.702553987
+( (S (PP (IN In) (NP (NP (DT an) (NNP Oct.) (CD 19) (NN review)) ...)
+-520.814, p1-ll -352.5520892, p2-ll -364.205524017, p3-ll -356.980962395, p4-ll -355.365134308, p5-ll -350.736145973, p6-ll -355.890197378, p7-ll -348.783741577, p8-ll -351.872648284
+
+
+This indicates that sentence.1 has 50 parses, and the first parser
+produce a log prob score of -520.451, the second parser produced
+a log prob score of -520.537, etc.
+
+The code responsible for reading this is sp_parse_type::read() at line 87 of
+
+reranking-parser/second-stage/programs/features/sp-mdata.h
+
+Each parse tree comes with a parser_logprob[] map, which maps parser names
+to the log probs the parsers assigned to this tree.  The first parser gets
+the name "p0-ll".  At the same time we also sum the log probs into a float
+variable sum_logprob, also associated with each parse.
+
+These parse trees get passed to spmfeatures.h, which is responsible for
+extracting features from them.
+
+Here the feature class LogP{} constructs a feature for each parser's log
+prob, and the feature class SumLogP{} constructs a feature for the sum of
+log prob feature.  These are trivial features, in the sense that they are
+just copies of the values in the parse data structure.
+
+FeatureClassPtrs::FeatureClassPtrs() in spmfeatures.h determines just
+which features are used in a given run.  Based on its argument (a flag
+that was given at the command line) it switches to a method like 
+FeatureClassPtrs::features_logps(), which is responsible for specifying
+just which feature classes will be used.
+
+The feature extractor makes two passes over the training data.  The first
+pass identifies the features that differ on best vs non best parses for
+at least 5 sentences in the training data.  At the end of the first pass
+it writes out 
+
+less ~/tmp/reranking-parser/models/ec50_9scoresspnonfinal/features.gz 
+0       SumLogP 0
+1       LogP p0-ll
+2       LogP p2-ll
+3       LogP p5-ll
+4       LogP p8-ll
+5       LogP p1-ll
+6       LogP p4-ll
+7       LogP p7-ll
+8       LogP p3-ll
+9       LogP p6-ll
+10      RightBranch 0
+11      RightBranch 1
+...
+
+This file pairs the features that the feature extractor will extract in
+the second pass with feature ids, i.e., integers that serve to identify
+the feature in the feature files.
+
+The second pass produces the feature files that the reranker will use.
+
+These are huge; I've only reproduced the first two lines here, and I've 
+elided the second one (i.e., the "..." abbreviate more feature values)
+
+[mj@lugha features]$ less ~/tmp/reranking-parser/features/ec50_9scoresspnonfinal/train.gz
+S=35848
+G=31 N=50 P=32 W=26 0=4.849 1=4.849 2=6.37565 3=7.40955 4=4.12039 5=6.27264 6=5.93551 7=6.41977 8=5.33733 9=3.47118 449 ...,  P=32 W=25 0=4.763 1=4.763 2=8.99128 3=5.92714 4=4.14779 5=4.76247 6=8.39062 7=7.79428 8=5.70792 9=6.09569 532 ..., P=33 W=26 0=4.571 1=4.571 2=5.63067 3=7.38764 4=5.2354 5=7.50623 6=5.30536 7=5.25741 8=4.48304 9=4.23696 10 449 ...
+
+The S=35848 says there are features for 35,848 sentences in this file.
+
+The G=31 says that the gold tree for the first sentence has 31
+nonterminal nodes in it (this number is used to compute the f-score).
+
+The N=50 says that there are 50 parses for this sentence.
+
+The P=32 says that the first parse of this sentence contains 32
+nonterminal nodes.
+
+The W=26 says that 26 of those nodes are correct.
+
+All of the other scores give values for features.  The 0=4.849
+indicates that the value of the feature with feature id 0 (i.e., the
+SumLogP feature) is 4.849.
+
+Features that appear without a following value (e.g., feature id 449)
+have a value of 1.
+
+Features that don't appear have a value of zero.
+
+Because linear models only depend on the difference between feature
+values, the feature extractor code automatically identifies a baseline
+value for each feature for each sentence and subtracts that from the
+feature value (this is controlled by a flag to extract-*features, so
+you can turn it off if you want).
+
+This means that the values of the features in train.gz, etc., may
+differ from their true values, but the differences in the values of
+features for various parses of the same sentence should be the same.
+
+For example, let's look at the parser 0 probability for the first two
+parses in the n-best parses above.  The difference between those
+values is
+
+-520.451 - -520.537 = 0.086
+
+Feature LogP p0-ll has feature id 0, and in the feature file we find
+the values for the corresponding features are
+
+4.849 - 4.763 = 0.086
+
+Similarly, for parser 1 the values in the n-best parses 2 and 3 are:
+
+-362.220467999 - -359.476707816 = -2.74376
+
+and the corresponding values for feature id 5 are:
+
+4.76247 - 7.50623 = -2.74376
+

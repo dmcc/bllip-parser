@@ -1,5 +1,5 @@
-SOURCES = avper.cc cvlm.cc cvlm-owlqn.cc hlm.cc gavper.cc lm.cc lmdata.c oracle.cc wavper.cc wlle.cc OWLQN.cpp TerminationCriterion.cpp
-TARGETS = avper cvlm cvlm-owlqn gavper hlm # lm oracle wavper
+SOURCES = avper.cc cvlm-owlqn.cc hlm.cc gavper.cc lm.cc lmdata.c oracle.cc wavper.cc wlle.cc OWLQN.cpp TerminationCriterion.cpp # cvlm.cc
+TARGETS = avper cvlm-owlqn gavper oracle # lm oracle wavper cvlm hlm
 OBJECTS = $(patsubst %.cpp,%.o,$(patsubst %.l,%.o,$(patsubst %.c,%.o,$(SOURCES:%.cc=%.o))))
 
 all: $(TARGETS)
@@ -40,8 +40,8 @@ wlle: libdata.a wlle.o
 cvwlle: libdata.a cvwlle.o
 	$(CXX) $(LDFLAGS) cvwlle.o libdata.a $(TAO_PETSC_LIBS) -o cvwlle
 
-oracle: libdata.a oracle.o
-	$(CXX) $(LDFLAGS) oracle.o libdata.a -o oracle
+oracle: liblmdata.a oracle.o
+	$(CXX) $(LDFLAGS) oracle.o liblmdata.a -o oracle
 
 libdata.a: data.o
 	ar rcv libdata.a data.o; ranlib libdata.a
@@ -56,16 +56,17 @@ liblmdata.a: lmdata.o
 # TAO_DIR = /usr/local/share/tao
 # BOPT = O_c++
 
-TAO_PETSC_INCLUDE = -I${PETSC_DIR} -I${PETSC_DIR}/bmake/$(PETSC_ARCH) -I${PETSC_DIR}/include -I${PETSC_DIR}/include/mpiuni -I${TAO_DIR} -I${TAO_DIR}/include
+TAO_PETSC_INCLUDE = -I${PETSC_DIR} -I${PETSC_DIR}/bmake/$(PETSC_ARCH) -I${PETSC_DIR}/include -I${PETSC_DIR}/include/mpiuni -I${TAO_DIR} -I${TAO_DIR}/include -I${PETSC_DIR}/$(PETSC_ARCH)/include
 
 # TAO_PETSC_LIBS = -L${TAO_DIR}/lib/${PETSC_ARCH} -ltaopetsc -ltao -Wl,-rpath,${TAO_DIR}/lib/${PETSC_ARCH} -Wl,-rpath,${PETSC_DIR}/lib/${PETSC_ARCH} -L${PETSC_DIR}/lib/${PETSC_ARCH} -lpetscsnes -lpetscksp -lpetscdm -lpetscmat -lpetscvec -lpetsc   -Wl,-rpath,${PETSC_DIR}/lib/${PETSC_ARCH} -L${PETSC_DIR}/lib/${PETSC_ARCH} -lmpiuni -L${LLAPACK_DIR} -llapack -lblas -lm -lstdc++ -lgcc_s
 # TAO_PETSC_LIBS = -L${TAO_DIR}/lib/${PETSC_ARCH} -ltaopetsc -ltao -Wl,-rpath,${TAO_DIR}/lib/${PETSC_ARCH} -Wl,-rpath,${PETSC_DIR}/lib/${PETSC_ARCH} -L${PETSC_DIR}/lib/${PETSC_ARCH} -lpetscsnes -lpetscksp -lpetscdm -lpetscmat -lpetscvec -lpetsc   -Wl,-rpath,${PETSC_DIR}/lib/${PETSC_ARCH} -L${PETSC_DIR}/lib/${PETSC_ARCH} -lmpiuni -llapack -lblas -lm -lstdc++ -lgcc_s
-TAO_PETSC_LIBS = -L${TAO_DIR}/lib/${PETSC_ARCH} -ltaopetsc -ltao -Wl,-rpath,${TAO_DIR}/lib/${PETSC_ARCH} -Wl,-rpath,${PETSC_DIR}/lib/${PETSC_ARCH} -L${PETSC_DIR}/lib/${PETSC_ARCH} -lpetscsnes -lpetscksp -lpetscdm -lpetscmat -lpetscvec -lpetsc -Wl,-rpath,${PETSC_DIR}/lib/${PETSC_ARCH} -L${PETSC_DIR}/lib/${PETSC_ARCH} -lmpiuni -lm -lstdc++ -lgcc_s
+# TAO_PETSC_LIBS = -L${TAO_DIR}/lib/${PETSC_ARCH} -ltaopetsc -ltao -Wl,-rpath,${TAO_DIR}/lib/${PETSC_ARCH} -Wl,-rpath,${PETSC_DIR}/lib/${PETSC_ARCH} -L${PETSC_DIR}/lib/${PETSC_ARCH} -lpetscsnes -lpetscksp -lpetscdm -lpetscmat -lpetscvec -lpetsc -Wl,-rpath,${PETSC_DIR}/lib/${PETSC_ARCH} -L${PETSC_DIR}/lib/${PETSC_ARCH} -lmpiuni -lm -lstdc++ -lgcc_s
+TAO_PETSC_LIBS = -L${TAO_DIR}/lib/${PETSC_ARCH} -ltaopetsc -ltao -Wl,-rpath,${TAO_DIR}/lib/${PETSC_ARCH} -Wl,-rpath,${PETSC_DIR}/lib/${PETSC_ARCH} -L${PETSC_DIR}/lib/${PETSC_ARCH} -L${PETSC_DIR}/${PETSC_ARCH}/lib -lpetscsnes -lpetscksp -lpetscdm -lpetscmat -lpetscvec -lpetsc -Wl,-rpath,${PETSC_DIR}/lib/${PETSC_ARCH} -Wl,-rpath,${PETSC_DIR}/${PETSC_ARCH}/lib -L${PETSC_DIR}/lib/${PETSC_ARCH} -lmpiuni -lm -lstdc++ -lgcc_s
 
 # end of TAO stuff
 
-# GCCFLAGS=-march=native -mfpmath=sse -msse2 -mmmx
-GCCFLAGS=-mfpmath=sse -msse2 -mmmx
+# Compilation help: you may need to remove -march=native on older compilers.
+GCCFLAGS=-march=native -mfpmath=sse -msse2 -mmmx
 FOPENMP=-fopenmp
 
 CC=gcc

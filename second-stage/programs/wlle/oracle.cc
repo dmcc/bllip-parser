@@ -1,17 +1,19 @@
 // oracle.cc
 //
-// Mark Johnson, 12th October 2003
+// Mark Johnson, 12th October 2003, updated 20th November 2010
 
+#include <cassert>
 #include <iostream>
 #include <vector>
 
-#include "data.h"
+#include "lmdata.h"
 
 
 int main(int argc, char* argv[])
 {
+  assert(argc == 2);
   corpusflags_type cflags = { 0.0, 0 };
-  corpus_type* corpus = read_corpus(&cflags, stdin, 100000);
+  corpus_type* corpus = read_corpus_file(&cflags, argv[1]);
 
   std::cout << "There are " << corpus->nsentences << " sentences," << std::flush;
 

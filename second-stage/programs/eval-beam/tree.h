@@ -199,7 +199,7 @@ struct tree_label {
   //
   static const catset_type& closed_class() {
     static const catset_type closed_class(
-	   "CC DT EX IN MD PDT POS PRP PRP$ PRT RP TO UH WDT WP WP$");
+	   "CC DT EX IN MD PDT POS PRP PRP$ PRT RP TO UH WDT WP WP$ WRB $");
     return closed_class;
   }  // tree_label::closed_class()
 
@@ -208,7 +208,7 @@ struct tree_label {
   //
   static const catset_type& functional() {
     static const catset_type functional(
-	   "CC DT EX IN MD POS PRP PRP$ RP TO WDT WP WP$");
+	   "CC DT EX IN MD POS PRP PRP$ PRT RP TO WDT WP WP$ WRB");
     return functional;
   }  // tree_label::functional()
 
@@ -240,7 +240,7 @@ struct tree_label {
   //
   cat_type simplified_cat() const {
     const std::string& s = cat.string_reference();
-    std::string::size_type pos = s.find('-', 1);
+    std::string::size_type pos = s.find_first_of("-=|^", 1);
     if (pos != std::string::npos && pos+1 < s.size())
       return cat_type(s.substr(0, pos));
     else

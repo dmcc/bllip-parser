@@ -1,9 +1,9 @@
 // ptb.cc -- Maps Penn Treebank trees
 //
-// Mark Johnson, 9th April 2005
+// Mark Johnson, 9th April 2005, last modified 15th November 2009
 //
-// Maps Penn treebank trees into Charniak parser input strings
-// or EVALB format trees
+// Maps Penn treebank trees into Charniak parser input strings,
+// Berkeley parser input strings, or EVALB format trees
 
 const char info[] =
 "Usage: ptb [-c] [-e] [-g] [-i i] [-n n] [-x x] filename ...\n"
@@ -11,8 +11,10 @@ const char info[] =
 "maps Penn Treebank trees into Charniak parser input strings,\n"
 "EVALB format trees or reranker training format.\n"
 "\n"
+" -b writes input strings for Berkeley parser to stdout.\n"
 " -c writes input strings for Charniak parser to stdout.\n"
 " -e writes trees in EVALB format to stdout.\n"
+" -f strip function tags from trees.\n"
 " -g writes trees in gold-standard format needed for training reranker.\n"
 " -n n divide the data into n equal-sized folds.\n"
 " -i i only include fold i.\n"
@@ -37,27 +39,43 @@ typedef std::vector<symbol> symbols;
 
 static symbol top("TOP");
 
+template <typename label_type>
+tree_node<label_type>* strip_function_tags(tree_node<label_type>* tp) {
+  if (tp == NULL || tp->is_terminal()) 
+    return tp;
+  tp->label = tp->label.simplified_cat();
+  strip_function_tags(tp->child);
+  strip_function_tags(tp->next);
+  return tp;
+}
+
 int main(int argc, char** argv) {
 
   int nfolds = -1;
   int ifold = -1;
   int xfold = -1;
 
+  bool berkeley_strings = false;
   bool charniak_strings = false;
   bool evalb_trees = false;
+  bool no_function_tags = false;
   bool reranker_trees = false;
+  bool no_top_node = false;
   int  noutset = 0;
 
   opterr = 0;
   int c;
 
-  while ((c = getopt (argc, argv, "cegi:n:x:")) != -1)
+  while ((c = getopt (argc, argv, "bcefgi:n:tx:")) != -1)
     switch (c) {
+    case 'b': berkeley_strings = true; ++noutset; break;
     case 'c': charniak_strings = true; ++noutset; break;
     case 'e': evalb_trees = true; ++noutset; break;
+    case 'f': no_function_tags = true; break;
     case 'g': reranker_trees = true; ++noutset; break;
     case 'i': ifold = atoi(optarg); break;
     case 'n': nfolds = atoi(optarg); break;
+    case 't': no_top_node = true; break;
     case 'x': xfold = atoi(optarg); break;
     default: std::cerr << "Unknown option in ptb:\n"
 		       << info << std::endl; exit(EXIT_FAILURE); break;
@@ -71,7 +89,7 @@ int main(int argc, char** argv) {
 		<< std::endl;
 
   if (noutset != 1)
-    std::cerr << "## ptb.cc: you should set exactly one of -c -e -g" 
+    std::cerr << "## Warning from ptb.cc: normally you should set exactly one of -b -c -e -g" 
 	      << std::endl;
      
   int nsentences = 0;
@@ -125,6 +143,18 @@ int main(int argc, char** argv) {
 	  || (xfold >= 0 && (sentenceno < fold_start || sentenceno >= fold_end))) {
 	++nsentences_printed;
 	std::string idstring(id+"."+lexical_cast<std::string>(idno));
+	if (no_function_tags)
+	  strip_function_tags(tp);
+	if (berkeley_strings) {
+	  symbols words;
+	  tp->terminals(words);
+	  cforeach (symbols, it, words) {
+	    if (it != words.begin())
+	      std::cout << ' ';
+	    std::cout << it->string_reference();
+	  }
+	  std::cout << "\n";
+	}
 	if (charniak_strings) {
 	  std::cout << "<s " << idstring << " >";
 	  symbols words;
@@ -134,7 +164,8 @@ int main(int argc, char** argv) {
 	  std::cout << " </s>\n";
 	}
 	if (evalb_trees) {
-	  tp->label.cat = top;
+	  if (!no_top_node)
+	    tp->label.cat = top;
 	  write_tree_noquote(std::cout, tp);
 	  std::cout << std::endl;
 	}

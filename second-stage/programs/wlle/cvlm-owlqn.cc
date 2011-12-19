@@ -121,8 +121,11 @@ typedef std::vector<size_t> size_ts;
 
 int debug_level = 0;
 
-enum loss_type { log_loss, em_log_loss, pairwise_log_loss, exp_loss, log_exp_loss, 
+enum loss_type { log_loss, em_log_loss, em_log_loss_noomp, pairwise_log_loss, exp_loss, log_exp_loss, 
 		 expected_fscore_loss };
+
+const char* loss_type_name[] = { "log_loss", "em_log_loss", "em_log_loss_noomp", "pairwise_log_loss", "exp_loss", 
+				 "log_exp_loss", "expected_fscore_loss" };
 
 void print_histogram(int nx, const double x[], int nbins=20) {
   int nx_nonzero = 0;
@@ -153,13 +156,16 @@ void print_histogram(int nx, const double x[], int nbins=20) {
 //
 double f_df(loss_type ltype, corpus_type* corpus, const double x[], double df_dx[]) {
   Float sum_g = 0, sum_p = 0, sum_w = 0, L = 0;
-  
+
   switch (ltype) {
   case log_loss:
     L = corpus_stats(corpus, &x[0], &df_dx[0], &sum_g, &sum_p, &sum_w);
     break;
   case em_log_loss:
     L = emll_corpus_stats(corpus, &x[0], &df_dx[0], &sum_g, &sum_p, &sum_w);
+    break;
+  case em_log_loss_noomp:
+    L = emll_corpus_stats_noomp(corpus, &x[0], &df_dx[0], &sum_g, &sum_p, &sum_w);
     break;
   case pairwise_log_loss:
     L = pwlog_corpus_stats(corpus, &x[0], &df_dx[0], &sum_g, &sum_p, &sum_w);
@@ -179,7 +185,7 @@ double f_df(loss_type ltype, corpus_type* corpus, const double x[], double df_dx
     L = 0;
     std::cerr << "## Error: unrecognized loss_type loss = " << int(ltype) 
 	      << std::endl;
-  }
+  }  
   
   if (debug_level >= 1000)
     std::cerr << "f score = " << 2*sum_w/(sum_g+sum_p) << ", " << std::flush;
@@ -585,9 +591,9 @@ struct Estimator1 {
       fclose(in);
   }  // Estimator1::read_featureclasses()
     
-  void estimate()
+  void estimate(const int maxruns=10)
   {
-    powell::control cntrl(1e-4, 1e-2, 0, (lcs.size() > 1) ? 10 : 50);
+    powell::control cntrl(1e-4, 1e-2, maxruns, maxruns);
     powell::minimize(lcs, *this, log(2), cntrl);
 
     if (debug_level > 0) {
@@ -625,10 +631,11 @@ int main(int argc, char** argv)
   double tol = 1e-5;
   double Pyx_factor = 0.0;
   bool Px_propto_g = false;
+  int maxruns = 10;
   int nseparators = 1;
   std::string  feat_file, weights_file, eval_file, eval2_file;
   int opt;
-  while ((opt = getopt(argc, argv, "hd:c:C:p:r:s:t:l:F:Gn:f:o:e:x:")) != -1) 
+  while ((opt = getopt(argc, argv, "hd:c:C:p:r:s:t:l:F:Gm:n:f:o:e:x:")) != -1) 
     switch (opt) {
     case 'h':
       std::cerr << usage << exit_failure;
@@ -663,6 +670,9 @@ int main(int argc, char** argv)
     case 'G':
       Px_propto_g = true;
       break;
+    case 'm':
+      maxruns = atoi(optarg);
+      break;
     case 'n':
       nseparators = atoi(optarg);
       break;
@@ -682,6 +692,7 @@ int main(int argc, char** argv)
 
   if (debug_level >= 10)
     std::cerr << "#  ltype -l = " << ltype
+	      << " (" << loss_type_name[ltype] << ")"
 	      << " regularization -c = " << c0
 	      << ", c00 -C = " << c00
 	      << ", power -p = " << p 
@@ -690,6 +701,7 @@ int main(int argc, char** argv)
 	      << ", random init -r = " << r 
 	      << ", Pyx_factor -F = " << Pyx_factor
 	      << ", Px_propto_g -G = " << Px_propto_g
+	      << ", maxruns -m = " << maxruns
 	      << ", nseparators -n = " << nseparators
 	      << ", feat_file -f = " << feat_file
 	      << ", weights_file -o = " << weights_file
@@ -741,6 +753,6 @@ int main(int argc, char** argv)
     evaldata = traindata;
 
   e.set_data(traindata, evaldata, evaldata2);
-  e.estimate();
+  e.estimate(maxruns);
 
 }  // main()

@@ -1,12 +1,13 @@
 // utility.h
 //
-// (c) Mark Johnson, 24th January 2005
+// (c) Mark Johnson, 24th January 2005, last modified 14th November 2009
 //
 // modified 6th May 2002 to ensure write/read consistency, fixed 18th July 2002
 // modified 14th July 2002 to include insert() (generic inserter)
 // modified 26th September 2003 to use mapped_type instead of data_type
 // 25th August 2004 added istream >> const char*
 // 24th January 2005 added insert_newkey()
+// 14th November 2009, added HERE, ASSERT()
 //
 // Defines:
 //  loop macros foreach, cforeach
@@ -57,6 +58,15 @@
 #endif
 
 namespace ext = EXT_NAMESPACE;
+
+// define some useful macros
+
+#define HERE   __FILE__ << ":" << __LINE__ << ": In " << __func__ << "()"
+
+// ASSERT() is a version of assert() that is always checked, no matter what
+// NDEBUG is set to
+//
+#define ASSERT(expr) { if (!(expr)) { std::cerr << HERE << ", assertion \"" << __STRING(expr) << "\" failed." << std::endl; std::abort(); } }
 
 ///////////////////////////////////////////////////////////////////////////
 //                                                                       //

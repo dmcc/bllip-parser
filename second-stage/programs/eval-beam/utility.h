@@ -1,12 +1,13 @@
 // utility.h
 //
-// (c) Mark Johnson, 24th January 2005
+// (c) Mark Johnson, 24th January 2005, last modified 14th November 2009
 //
 // modified 6th May 2002 to ensure write/read consistency, fixed 18th July 2002
 // modified 14th July 2002 to include insert() (generic inserter)
 // modified 26th September 2003 to use mapped_type instead of data_type
 // 25th August 2004 added istream >> const char*
 // 24th January 2005 added insert_newkey()
+// 14th November 2009, added HERE, ASSERT()
 //
 // Defines:
 //  loop macros foreach, cforeach
@@ -57,6 +58,15 @@
 #endif
 
 namespace ext = EXT_NAMESPACE;
+
+// define some useful macros
+
+#define HERE   __FILE__ << ":" << __LINE__ << ": In " << __func__ << "()"
+
+// ASSERT() is a version of assert() that is always checked, no matter what
+// NDEBUG is set to
+//
+#define ASSERT(expr) { if (!(expr)) { std::cerr << HERE << ", assertion \"" << __STRING(expr) << "\" failed." << std::endl; std::abort(); } }
 
 ///////////////////////////////////////////////////////////////////////////
 //                                                                       //
@@ -869,12 +879,6 @@ inline std::ostream& operator<< (std::ostream& os, const boost::shared_ptr<T>& s
 
 struct resource_usage { };
 
-#ifndef __i386
-inline std::ostream& operator<< (std::ostream& os, resource_usage r)
-{
-  return os;
-}
-#else // Assume we are on a 586 linux
 inline std::ostream& operator<< (std::ostream& os, resource_usage r)
 {
   FILE* fp = fopen("/proc/self/stat", "r");
@@ -894,6 +898,5 @@ inline std::ostream& operator<< (std::ostream& os, resource_usage r)
   return os << "utime " << float(utime)/1.0e2 << "s, vsize " 
 	    << float(vsize)/1048576.0 << " Mb.";
 }
-#endif
 
 #endif  // UTILITY_H

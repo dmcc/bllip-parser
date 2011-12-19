@@ -316,7 +316,7 @@ public:
 
   tree_node(const typename tree_label::cat_type& cat,
 	    tree_node* child = NULL, tree_node* next = NULL) 
-    : label(tree_label(cat)), child(child), next(next) { }
+    : label(tree_label::tree_label(cat)), child(child), next(next) { }
 
   //! The tree_node() copy constructor makes "deep" copies.
   //

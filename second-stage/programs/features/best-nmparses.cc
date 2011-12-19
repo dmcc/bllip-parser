@@ -1,13 +1,13 @@
-// best-parses.cc
+// best-nmparses.cc
 //
-// Mark Johnson, 30th August 2005, last modified 2nd December 2007
+// Mark Johnson, 27th Feb 2010
 
 const char usage[] =
-  "best-parses version of 2nd December 2007\n"
+  "best-spmparses version of 27th February 2010\n"
   "\n"
   "Usage:\n"
   "\n"
-  "best-parses [-a] [-l] [-m mode] feat-defs.bz2 feat-weights.bz2 < nbest-parses > best-parses\n"
+  "best-spmparses [-a] [-l] [-m mode] feat-defs.bz2 feat-weights.bz2 < nbest-parses > best-parses\n"
   "\n"
   "where:\n"
   "\n"
@@ -33,8 +33,7 @@ const char usage[] =
 #include <vector>
 
 #include "popen.h"
-#include "sp-data.h"
-#include "features.h"
+#include "nmfeatures.h"
 
 int debug_level = 0;
 bool absolute_counts = true;

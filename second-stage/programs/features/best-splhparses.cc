@@ -113,7 +113,7 @@ int main(int argc, char **argv) {
   }
   
   sp_sentence_type s;
-  while (s.read_ec_nbest_15aug05(std::cin, lowercase_flag)) {
+  while (s.read(std::cin, lowercase_flag)) {
     switch (mode) {
     case 0:
       write_tree_noquote_root(std::cout, fcps.best_parse(s, weights));

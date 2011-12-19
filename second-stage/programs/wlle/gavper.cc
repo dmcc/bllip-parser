@@ -330,7 +330,7 @@ struct Estimator1 {
       command += filename;
       in = popen(command.c_str(), "r");
       if (in == NULL) {
-	perror("## Error in cvlm: ");
+	perror("## Error in gavper: ");
 	std::cerr << "## popen(\"" << command << "\", \"r\") failed, usage = " << resource_usage() << std::endl;
       }
       popen_flag = true;
@@ -341,7 +341,7 @@ struct Estimator1 {
       errno = 0;
       in = popen(command.c_str(), "r");
       if (in == NULL) {
-	perror("## Error in cvlm: ");
+	perror("## Error in gavper: ");
 	std::cerr << "## popen(\"" << command << "\", \"r\") failed, usage = " << resource_usage() << std::endl;
       }
       popen_flag = true;
@@ -417,7 +417,7 @@ struct Estimator1 {
     }
 
     if (debug_level >= 0) 
-      std::cerr << "# Regularization classes: " << regclass_identifiers << std::endl;
+      std::cout << "# Regularization classes: " << regclass_identifiers << std::endl;
 
     if (popen_flag)
       pclose(in);
@@ -430,7 +430,7 @@ struct Estimator1 {
     greedy(*this, cs);
     
     if (debug_level > 0) 
-      std::cerr << "# Regularizer class weights = " << cs << std::endl;
+      std::cout << "# Regularizer class weights = " << cs << std::endl;
   }  // Estimator1::estimate()
 
 };  // Estimator1{}

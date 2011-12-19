@@ -1,6 +1,6 @@
 // spfeatures.h
 //
-// Mark Johnson, 10th March 2004, last modified 2nd December 2007
+// Mark Johnson, 10th March 2004, last modified 14th November 2009
 //
 // PLEASE DO NOT MODIFY THIS FILE.  
 //
@@ -19,6 +19,7 @@
 //  modified 25th April 2005; CONNLL feature set defined
 //  modified 5th June 2005; variations on CONNLL feature set
 //  modified 6th June 2005 to downcase tree terminals when required
+//  modified 14th November 2009 to read Berkeley as well as Charniak trees
 
 // Each feature is an instance of a subclass of FeatureClass.  To define
 // FeatureClassPtrs{} is a class that holds one or more FeatureClass
@@ -528,6 +529,8 @@ public:
 
   inline void features_050902();
   inline void features_spnn(bool nngram=false);
+  inline void features_connll_sup();
+  inline void features_nlogp();
 
   //! extract_features() extracts features from the tree file infile.
   //
@@ -568,14 +571,14 @@ public:
     }
     command.clear();
 
-    FILE* parsein = popen(parseincmd, "r");
+    ipstream parsein(parseincmd);
 
-    if (parsein == NULL) {
+    if (!parsein) {
       std::cerr << "## Error: can't popen parseincmd = " << parseincmd << std::endl;
       exit(EXIT_FAILURE);
     }
 
-    FILE* goldin = popen(goldincmd, "r");
+    ipstream goldin(goldincmd);
 
     if (!goldin) {
       std::cerr << "## Error: can't popen goldincmd = " << goldincmd << std::endl;
@@ -583,8 +586,7 @@ public:
     }
 
     unsigned int nsentences;
-    int nread = fscanf(goldin, " %u ", &nsentences);
-    if (nread != 1) {
+    if (!(goldin >> nsentences)) {
       std::cerr << "## Failed to read nsentences from " 
 		<< goldincmd << std::endl;
       exit(EXIT_FAILURE);
@@ -594,12 +596,7 @@ public:
     sp_sentence_type sentence;
     Id_Floats p_i_v;
     for (size_type i = 0; i < nsentences; ++i) {
-      if (!sentence.read(parsein, goldin, lowercase_flag)) {
-	std::cerr << "## Error reading sentence " << i+1  
-		  << " from \"" << parseincmd << "\" and \"" << goldincmd << "\""
-		  << std::endl;
-	exit(EXIT_FAILURE);
-      }
+      sentence.read(parsein, goldin, lowercase_flag);
       precrec_type::edges goldedges(sentence.gold);
       fprintf(out, "G=%u N=%u", goldedges.nedges(), unsigned(sentence.parses.size()));
       p_i_v.clear();                     // Clear feature-counts
@@ -622,8 +619,6 @@ public:
       fprintf(out, "\n");
     }
 
-    pclose(goldin);
-    pclose(parsein);
     pclose(out);
   }  // FeatureClassPtrs::write_features()
 
@@ -2653,7 +2648,6 @@ inline void FeatureClassPtrs::features_conj() {
 }  // FeatureClassPtrs::features_conj()
 */
 
-/*
 inline void FeatureClassPtrs::features_connll_sup() {
   push_back(new NLogCondProb());
 
@@ -2847,7 +2841,6 @@ inline void FeatureClassPtrs::features_connll_sup() {
   push_back(new CoLenPar());
 
 } // FeatureClassPtrs::features_connll_sup()
-*/
 
 /*
 inline void FeatureClassPtrs::features_dp_27Aug05() {
@@ -3281,6 +3274,9 @@ inline void FeatureClassPtrs::features_spnn(bool nngram) {
 
 }  // FeatureClassPtrs::features_spnn()
 
+inline void FeatureClassPtrs::features_nlogp() {
+  push_back(new NLogP());
+}  // FeatureClassPtrs::features_nlogp()
 
 //! FeatureClassPtrs::FeatureClassPtrs() preloads a
 //! set of features.
@@ -3293,6 +3289,10 @@ inline FeatureClassPtrs::FeatureClassPtrs(const char* fcname) {
     features_spnn(false);
   else if (strcmp(fcname, "spnn") == 0)
     features_spnn(true);
+  else if (strcmp(fcname, "connll_sup") == 0)
+    features_connll_sup();
+  else if (strcmp(fcname, "nlogp") == 0)
+    features_nlogp();
   else {
     std::cerr << "## Error in spfeatures.h: FeatureClassPtrs::FeatureClassPtrs(), unknown fcname = "
 	      << fcname << std::endl;

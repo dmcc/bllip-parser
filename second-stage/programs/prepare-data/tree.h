@@ -240,7 +240,7 @@ struct tree_label {
   //
   cat_type simplified_cat() const {
     const std::string& s = cat.string_reference();
-    std::string::size_type pos = s.find('-', 1);
+    std::string::size_type pos = s.find_first_of("-=|^", 1);
     if (pos != std::string::npos && pos+1 < s.size())
       return cat_type(s.substr(0, pos));
     else

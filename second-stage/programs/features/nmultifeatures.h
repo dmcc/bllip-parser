@@ -1,8 +1,8 @@
-// splhfeatures.h
+// nmultifeatures.h
 //
-// Mark Johnson, 6th March 2008
+// Mark Johnson, 24th November 2009
 // 
-// based on spfeatures.h, with corrections to head-finding code 
+// based on spmultifeatures.h, with corrections to head-finding code 
 // for head-to-head dependencies suggested by Liang Huang (thanks!)
 // Also added a WEdge feature which includes words and POS tags.
 //
@@ -23,8 +23,8 @@
 // This version uses sptree instead of tree (sptree are annotated trees).
 //
 // 
-#ifndef SPFEATURES_H
-#define SPFEATURES_H
+
+#pragma once
 
 #include <algorithm>
 // #include <boost/lexical_cast.hpp>
@@ -41,7 +41,7 @@
 
 #include "lexical_cast.h"
 #include "sstring.h"
-#include "sp-data.h"
+#include "sp-multidata.h"
 #include "heads.h"
 #include "popen.h"
 #include "sptree.h"
@@ -184,6 +184,19 @@ public:
   inline static symbol SINV() { static symbol sinv("SINV"); return sinv; }
   inline static symbol VB() { static symbol vb("VB"); return vb; }
   inline static symbol VP() { static symbol vp("VP"); return vp; }
+
+  inline static symbol ZERO() { static symbol zero("0"); return zero; }
+
+  //! symbol() returns a new symbol consisting of the the nsuffixletters
+  //! of s
+  //
+  inline static symbol suffix(symbol s, size_type nsuffixletters) {
+    if (nsuffixletters == 0 || s.string_reference().size() <= nsuffixletters)
+      return s;
+    else
+      return symbol(s.string_reference().substr(s.string_reference().size()-nsuffixletters, 
+						nsuffixletters));
+  }  // FeatureClass::suffix()
 
   //! quantize() is a utility function mapping positive ints to a
   //! small number of discrete values
@@ -517,16 +530,18 @@ private:
 
 public:
 
+  // ##########################################################################################
+
+  inline void nfeatures();
+  inline void sfeatures();
+  inline void rfeatures();
+  inline void nnfeatures(unsigned maxwidth=1, unsigned maxsumwidth=2);
+  inline void mfeatures(unsigned maxwidth=1, unsigned maxsumwidth=2, unsigned maxwords=1);
+  inline void minfeatures();
+
   //! The following load FeatureClassPtrs with various sets of features
   //
   inline FeatureClassPtrs(const char* fcname=NULL);
-
-  inline void features_050902();
-  inline void features_071114();
-  inline void features_connll();
-  inline void features_splh();
-  inline void features_splhextra();
-  inline void features_wedges();
 
   //! extract_features() extracts features from the tree file infile.
   //
@@ -710,7 +725,7 @@ public:
     
     cforeach (IdFloats, it, idweights) {
       const sp_parse_type& parse = sentence.parses[it->first];
-      os << it->second << ' ' << parse.logprob << '\n';
+      os << it->second << ' ' << parse.logprobs << '\n';
       write_tree_noquote_root(os, parse.parse0);
       os << std::endl;
     }
@@ -757,68 +772,75 @@ std::ostream& operator<< (std::ostream& os, const FeatureClassPtrs& fcps) {
 ////////////////////////////////////////////////////////////////////////
 
 
-//! NLogP is the - log parse probability
+//! Parser identifies which parser(s) generated this tree
 //!
-//! The identifier is NLogP
+//! The identifier is Parser
 //
-class NLogP : public FeatureClass {
+class Parser : public FeatureClass {
 public:
 
-  typedef int Feature;  // Always zero
+  typedef unsigned Feature;
 
   std::string identifier_string;
 
-  NLogP() : identifier_string("NLogP") { }
+  Parser() : identifier_string("Parser") { }
 
   template <typename FeatClass, typename Feat_Count>
   void parse_featurecount(FeatClass& fc, const sp_parse_type& parse,
 			  Feat_Count& feat_count) {
-    feat_count[0] -= parse.logprob;
-  }  // NLogP::parse_featurecount();
+    unsigned fid = 0;
+    for (unsigned ip = 0; ip < parse.logprobs.size(); ++ip) 
+      if (parse.logprobs[ip] != 0) {
+	feat_count[ip] = 1;
+	fid += (1 << ip);
+      }
+    feat_count[parse.logprobs.size()+fid];
+  }
 
   // Here is the stuff that every feature needs
 
   virtual const char *identifier() const {
     return identifier_string.c_str();
-  }  // NLogP::identifier()
+  }  // Parser::identifier()
 
   // These virtual functions just pass control to the static template functions
   //
   SPFEATURES_COMMON_DEFINITIONS;
   
-}; // NLogP{}
+}; // Parser{}
 
-
-//! NLogCondP is the - log conditional probability of the parse
+//! RelLogP is the log parse probability relative to the lowest scoring parse
 //!
-//! The identifier is LogCondP
+//! The identifier is RelLogP
 //
-class NLogCondProb : public FeatureClass {
+class RelLogP : public FeatureClass {
 public:
 
-  typedef int Feature;  // Always zero
+  typedef unsigned Feature;  
 
   std::string identifier_string;
 
-  NLogCondProb() : identifier_string("NLogCondP") { }
+  RelLogP() : identifier_string("RelLogP") { }
 
   template <typename FeatClass, typename Feat_Count>
   void parse_featurecount(FeatClass& fc, const sp_parse_type& parse,
 			  Feat_Count& feat_count) {
-    feat_count[0] -= parse.logcondprob;
-  }  // LogCondP::parse_featurecount();
+    for (unsigned ip = 0; ip < parse.logrelprobs.size(); ++ip)
+      if (parse.logprobs[ip] != 0)
+	feat_count[ip] = parse.logrelprobs[ip];
+  }  // RelLogP::parse_featurecount();
 
   // Here is the stuff that every feature needs
 
   virtual const char *identifier() const {
     return identifier_string.c_str();
-  }  // NLogCondP::identifier()
+  }  // RelLogP::identifier()
 
   // These virtual functions just pass control to the static template functions
   //
   SPFEATURES_COMMON_DEFINITIONS;
   
-}; // NLogCondP{}
+}; // RelLogP{}
 
 
 //! BinnedLogCondP defines features which count binned log conditional 
@@ -837,7 +859,7 @@ public:
   Float log_base;
   std::string identifier_string;
 
-  BinnedLogCondP(int nbins=7, Float base=2) 
+  BinnedLogCondP(int nbins=7, Float base=5) 
     : nbins(nbins), base(base), log_base(log(base)),
       identifier_string("BinnedLogCondP:") {
     (identifier_string += lexical_cast<std::string>(nbins)) += ':';
@@ -847,8 +869,13 @@ public:
   template <typename FeatClass, typename Feat_Count>
   void parse_featurecount(FeatClass& fc, const sp_parse_type& parse,
 			  Feat_Count& feat_count) {
-    int bin = std::max(1, std::min(nbins, int(-parse.logcondprob/log_base)));
-    ++feat_count[bin];
+    for (unsigned ip = 0; ip < parse.logcondprobs.size(); ++ip) 
+      if (parse.logcondprobs[ip] == 0)
+	++feat_count[ip*(nbins+1)];
+      else {
+	int bin = std::max(1, std::min(nbins, int(-parse.logcondprobs[ip]/log_base)));
+	++feat_count[ip*(nbins+1)+bin];
+      }
   }  // BinnedLogCondP::parse_featurecount();
 
   // Here is the stuff that every feature needs
@@ -880,7 +907,7 @@ public:
   Float log_base;
   std::string identifier_string;
 
-  InterpLogCondP(int nbins=7, Float base=2) 
+  InterpLogCondP(int nbins=7, Float base=5) 
     : nbins(nbins), base(base), log_base(log(base)),
       identifier_string("InterpLogCondP:") {
     (identifier_string += lexical_cast<std::string>(nbins)) += ':';
@@ -890,8 +917,13 @@ public:
   template <typename FeatClass, typename Feat_Count>
   void parse_featurecount(FeatClass& fc, const sp_parse_type& parse,
 			  Feat_Count& feat_count) {
-    int bin = std::max(1, std::min(nbins, int(-parse.logcondprob/log_base)));
-    feat_count[bin] += -parse.logcondprob/log_base;
+    for (unsigned ip = 0; ip < parse.logcondprobs.size(); ++ip) 
+      if (parse.logcondprobs[ip] == 0)
+	++feat_count[ip*(nbins+1)];
+      else {
+	int bin = std::max(1, std::min(nbins, int(-parse.logcondprobs[ip]/log_base)));
+	feat_count[ip*(nbins+1)+bin] += -parse.logcondprobs[ip]/log_base;;
+      }
   }  // InterpLogCondP::parse_featurecount();
 
   // Here is the stuff that every feature needs
@@ -1132,7 +1164,6 @@ public:
   SPFEATURES_COMMON_DEFINITIONS;
 };  // Rule{}
 
-
 //! NGram
 //!
 //! Identifier is NGram:<frag_len>:<nanccats>:<root>:<conj>:<head>:<functional>:<all>:<type>
@@ -1216,6 +1247,120 @@ public:
  
   SPFEATURES_COMMON_DEFINITIONS;
 };  // NGram{}
+
+//! NNGram
+//!
+//! Identifier is NNGram:<fraglen>:<headdir>:<headdist>:<nanccats>:<root>:<conj>:<head>:<functional>:<all>:<type>
+//
+class NNGram : public RuleFeatureClass {
+public:
+
+  NNGram(size_type fraglen = 3,           //!< Number of children in sequence
+	size_type nanccats = 1,          //!< Number of ancestor categories above trees
+	bool label_root = false,	 //!< Annotate with "in root context"
+	bool label_conjunct = false,     //!< Annotate with "belongs to conjunction"
+	annotation_level head = none,    //!< Amount of head annotation 
+	annotation_level functional = none, //!< Amount of function word annotation
+	annotation_level all = none,     //!< Amount of lexical word annotation
+	annotation_type type = syntactic,   //!< Type of head to use
+	bool headdir = false,            //!< Annotate direction to head
+	bool headdist = false            //!< Annotate distance from head
+	) : RuleFeatureClass(std::string("NNGram:")+lexical_cast<std::string>(fraglen)
+			     +":"+lexical_cast<std::string>(headdir)+":"+lexical_cast<std::string>(headdist), 
+			     nanccats, label_root, label_conjunct, head, functional, 
+			     all, type), 
+	    fraglen(fraglen), headdir(headdir), headdist(headdist) { }
+
+  size_type fraglen;
+  bool headdir, headdist;
+
+  template <typename FeatClass, typename Feat_Count>
+  void node_featurecount(FeatClass& fc, const sptree* node, Feat_Count& feat_count) 
+  {
+    if (!node->is_nonterminal())
+      return;
+
+    const sptree* headchild = (type == semantic 
+			       ? node->label.semantic_headchild 
+			       : node->label.syntactic_headchild);
+
+    size_type nchildren = 0;
+    size_type headlocation = 0;      //!< location of head in sequence of children
+    for (const sptree* child = node->child; child != NULL; child = child->next) {
+      if (child == headchild)
+	headlocation = nchildren;
+      ++nchildren;
+    }
+      
+    if (nchildren+1 < fraglen)
+      return;
+
+    typedef std::vector<const sptree*> Tptrs;
+    Tptrs children;
+    children.push_back(NULL);
+    for (const sptree* child = node->child; child != NULL; child = child->next) 
+      children.push_back(child);
+    children.push_back(NULL);
+
+    symbol headposition = preheadmarker();
+
+    for (size_type start1 = 0; start1+fraglen <= children.size(); ++start1) {
+      if (children[start1] == headchild)
+	headposition = postheadmarker();
+
+      Feature f;
+      annotation_level highest_level = none;
+      bool includes_headchild = false;
+
+      for (size_type pos1 = start1; pos1 < start1+fraglen; ++pos1) {
+	const sptree* child = children[pos1];
+	if (child != NULL) {
+	  push_child_features(child, node, f, highest_level);
+	  if (child == headchild)
+	    includes_headchild = true;
+	}
+	else
+	  f.push_back(endmarker());
+      }
+
+      if (headdir) {
+	if (includes_headchild) {
+	  assert(headlocation+1 >= start1);
+	  f.push_back(symbol_quantize(headlocation+1-start1));
+	}
+	else
+	  f.push_back(headposition);
+      }
+
+      if (headdist) {
+	if (headlocation+1 < start1)
+	  f.push_back(symbol_quantize(start1-headlocation-1));
+	else if (headlocation+1 >= start1+fraglen) {
+	  assert(headlocation + 2 > start1+fraglen);
+	  f.push_back(symbol_quantize(headlocation + 2 - (start1+fraglen)));
+	}
+	else
+	  f.push_back(symbol_quantize(0));
+      }
+
+      if (head != none) {
+	if (headchild != NULL)
+	  push_child_features(headchild, node, f, highest_level);
+	else
+	  f.push_back(headmarker());
+      }
+
+      if (highest_level != max_annotation_level)
+	return;
+      
+      push_ancestor_features(node, f);
+
+      ++feat_count[f];
+    }
+  }  // NNGram::node_featurecount()
+ 
+  SPFEATURES_COMMON_DEFINITIONS;
+};  // NNGram{}
   
 
 //! Word{} collects information on words in their vertical context.
@@ -1388,7 +1533,7 @@ public:
 class LeftBranchLength : public TreeFeatureClass {
 public:
 
-  //! tree_featurecound() counts the length of a rightmost branching chain
+  //! tree_featurecount() counts the length of a rightmost branching chain
   //
   template <typename FeatClass, typename Feat_Count>
   static void tree_featurecount(FeatClass& fc, const sptree* tp, 
@@ -1698,7 +1843,138 @@ public:
   SPFEATURES_COMMON_DEFINITIONS;
 };  // Heads{}
 
+//! WSHeads is a feature of n levels of head-to-head dependencies.
+//! Heads takes special care to follow head dependencies through
+//! conjunctions.
+//!
+//! The identifier string is WSHeads:nsuffixletters:distribute:nheads:governorinfo:dependentinfo:headtype.
+//
+class WSHeads : public NodeFeatureClass {
+public:
 
+  typedef std::vector<symbol> Feature;
+
+  enum head_type_type { syntactic, semantic };
+  enum info_type { pos, closedclass, lexical };
+
+  const size_type nsuffixletters; //!< keep nsuffix letters from words
+  const bool distribute;          //!< distribute head dependencies over coordinate phrases
+  const size_type nheads;         //!< number of levels of heads to use
+  const info_type governorinfo;   //!< use governor's word (in addition to its POS)
+  const info_type dependentinfo;  //!< use dependent's head word (in addition its POS)
+  const head_type_type head_type; //!< type of head dependency to track 
+  std::string identifier_string;
+
+  WSHeads(size_type nsuffixletters=0,        //!< keep nsuffixletters from words
+	  bool distribute = false,           //!< distribute head dependencies over coordinate phrases
+	  size_type nheads = 2,              //!< number of levels of heads to use
+	  info_type governorinfo = lexical,  //!< use governor's word (in addition to its POS)
+	  info_type dependentinfo = lexical, //!< use dependent's head word (in addition to its POS)
+	  head_type_type head_type = syntactic)
+    : nsuffixletters(nsuffixletters), distribute(distribute), nheads(nheads), governorinfo(governorinfo), 
+      dependentinfo(dependentinfo), head_type(head_type), identifier_string("WSHeads:") 
+  { 
+    identifier_string += lexical_cast<std::string>(nsuffixletters) + ":";
+    identifier_string += lexical_cast<std::string>(distribute) + ":";
+    identifier_string += lexical_cast<std::string>(nheads) + ":";
+    identifier_string += lexical_cast<std::string>(governorinfo) + ":";
+    identifier_string += lexical_cast<std::string>(dependentinfo) + ":";
+    identifier_string += lexical_cast<std::string>(head_type);
+  }  // WSHeads::WSHeads()
+
+  const sptree* headchild(const sptree* node) const {
+    return head_type == semantic 
+      ? node->label.semantic_headchild : node->label.syntactic_headchild;
+  }  // WSHeads::headchild();
+
+  //! node_featurecount() uses headchild() to find all of the heads
+  //! of this node and its ancestors.
+  //
+  template <typename FeatClass, typename Feat_Count>
+  void node_featurecount(FeatClass& fc, const sptree* node, 
+			 Feat_Count& feat_count) 
+  {
+    if (!node->is_preterminal())  // only consider preterminal heads
+      return;
+    
+    Feature f;
+    f.push_back(node->label.cat);
+    if (dependentinfo == closedclass)
+      f.push_back(node->child->label.cat);
+    else if (dependentinfo == lexical)
+      f.push_back(suffix(node->child->label.cat, nsuffixletters));
+    
+    visit_ancestors(feat_count, node, 1, f);
+  }  // WSHeads::node_featurecount()
+
+  //! visit_ancestors() is written in continuation-passing style, in order
+  //! to enumerate all possible governors.
+  //
+  template <typename Feat_Count>
+  void visit_ancestors(Feat_Count& feat_count, const sptree* node,
+		       size_type nsofar, Feature& f) {
+    if (nsofar == nheads) {  // are we done?
+      ++feat_count[f];
+      return;
+    }
+
+    const sptree* ancestor = node->label.parent;
+    if (ancestor == NULL)
+      return;     // no more ancestors, so we can't find enough governors
+
+    if (ancestor->is_coordination()) {       // skip this level
+      if (distribute || node->next == NULL)  // if !distribute, don't go up if we aren't on right branch
+	visit_ancestors(feat_count, ancestor, nsofar, f);
+    }
+    else {
+      const sptree* hchild = headchild(ancestor);
+      if (hchild != NULL && node != hchild) 
+	visit_descendants(feat_count, ancestor, nsofar, f, hchild);
+      else
+	visit_ancestors(feat_count, ancestor, nsofar, f);
+    }
+  }  // WSHeads::visit_ancestors()
+
+  //! visit_descendants() collects the head(s) of head and then visits ancestors
+  //
+  template <typename Feat_Count>
+  void visit_descendants(Feat_Count& feat_count, const sptree* ancestor,
+			 size_type nsofar, Feature& f, const sptree* head)
+  {
+    if (head->is_preterminal()) {
+      unsigned oldfsize = f.size();
+      f.push_back(head->label.cat);      // push governor label
+      if (governorinfo == closedclass)
+	f.push_back(head->child->label.cat);
+      else if (governorinfo == lexical)	  
+	f.push_back(suffix(head->child->label.cat, nsuffixletters));
+      visit_ancestors(feat_count, ancestor, nsofar+1, f);        // visit ancestors
+      f.resize(oldfsize);   // pop annotations we just pushed
+    }
+    else {
+      if (head->is_coordination() && distribute) {  // all children count as heads
+	for (const sptree* child = head->child; child != NULL; child = child->next) 
+	  if (child->label.cat == head->label.cat)
+	    visit_descendants(feat_count, ancestor, nsofar, f, child);
+      }
+      else {    // visit head child
+	const sptree* child = headchild(head);  
+	if (child != NULL)
+	  visit_descendants(feat_count, ancestor, nsofar, f, child);
+      }
+    }
+  }  // WSHeads::visit_descendants()
+
+  // Here is the stuff that every feature needs
+
+  //! The identifier string is WSHeads:nheads:governorlex:dependentlex:headtype.
+  //
+  virtual const char *identifier() const {
+    return identifier_string.c_str();
+  }  // WSHeads::identifier()
+
+  SPFEATURES_COMMON_DEFINITIONS;
+};  // WSHeads{}
 
 //! The PTsFeatureClass is an ABC for feature classes where the feature
 //! count for a tree is the sum of feature counts for each node, and the
@@ -1809,6 +2085,134 @@ public:
   SPFEATURES_COMMON_DEFINITIONS;
 };  // Neighbours{}
 
+
+//! The WSEdges{} feature includes the preterminals, annotations and words surrounding
+//! nonterminal categories.
+//!
+//! Its identifier is WSEdges:binnedlength: edge flags
+//
+class WSEdges : public PTsFeatureClass {
+public:
+
+  // required types
+
+  typedef std::vector<symbol> Ss;
+  typedef Ss Feature;
+
+  struct E {
+    int punct;     //!< number of punct to collect
+    int pos;       //!< number of pos to collect
+    int closed;    //!< number of closed class words to collect
+    int word;      //!< number of words to collect
+    int nsuffix;   //!< number of characters to keep from each word
+
+    E(int punct = 0, int pos = 0, int closed = 0, int word = 0, int nsuffix=0) :
+      punct(punct), pos(pos), closed(closed), word(word), nsuffix(nsuffix) { }
+
+    std::string identifier() const {
+      return lexical_cast<std::string>(punct) + ":" + lexical_cast<std::string>(pos) 
+	+ ":" + lexical_cast<std::string>(closed) + ":" + lexical_cast<std::string>(word)
+	+ ":" + lexical_cast<std::string>(nsuffix);
+    }
+
+    int width() const { return std::max(std::max(punct, pos), word); }
+
+    void push_features(const SptreePtrs& preterms, 
+		       int position,
+		       int direction,
+		       Feature& f) const {
+      int n = preterms.size();
+
+      for (int i = 0; i < punct; ++i) {
+	int j = position+i*direction;
+	f.push_back((j < 0 || j >= n) ? endmarker() 
+		    : (preterms[j]->is_punctuation() ? preterms[j]->label.cat : ZERO() ));
+      }
+
+      for (int i = 0; i < pos; ++i) {
+	int j = position+i*direction;
+	f.push_back((j < 0 || j >= n) ? endmarker() :  preterms[j]->label.cat);
+      }
+
+      for (int i = 0; i < closed; ++i) {
+	int j = position+i*direction;
+	f.push_back((j < 0 || j >= n) ? endmarker() 
+		    : (( preterms[j]->is_closed_class() || preterms[j]->is_punctuation() ) 
+		       ? preterms[j]->child->label.cat : preterms[j]->label.cat ));
+      }
+
+      for (int i = 0; i < word; ++i) {
+	int j = position+i*direction;
+	f.push_back((j < 0 || j >= n) ? endmarker() : suffix(preterms[j]->child->label.cat, nsuffix));
+      }
+
+    }  // WSEdges::E:push_features()
+
+  };  // WSEdges::E{}
+
+  WSEdges(const E& leftleft,           //!< left side of constituent's left egde
+	  const E& leftright,          //!< right side of constituent's left egde
+	  const E& rightleft,          //!< left side of constituent's right egde
+	  const E& rightright,         //!< right side of constituent's right egde
+	  bool binned_length = false)  //!< include binned length
+    : leftleft(leftleft), leftright(leftright), rightleft(rightleft), rightright(rightright),
+      binned_length(binned_length), identifier_string("WSEdges:")
+  {
+    (identifier_string += lexical_cast<std::string>(binned_length)) += ":";
+    ((identifier_string += "ll") += leftleft.identifier()) += ":";
+    ((identifier_string += "lr") += leftright.identifier()) += ":";
+    ((identifier_string += "rl") += rightleft.identifier()) += ":";
+    ((identifier_string += "rr") += rightright.identifier());
+  }  // WSEdges::WSEdges()
+    		   
+  const E leftleft, leftright, rightleft, rightright;
+  bool binned_length;             // collect binned length
+  std::string identifier_string;  // will hold its identifier
+
+  template <typename FeatClass, typename Feat_Count>
+  void node_featurecount(FeatClass& fc, const SptreePtrs& preterms,
+			 const sptree* node, Feat_Count& feat_count)
+  {
+    if (!node->is_nonterminal())
+      return;
+
+    int left = node->label.left;
+    int right = node->label.right;
+    int nwords = preterms.size();
+
+    // don't permit feature to overlap both edges
+    //
+    if (left + leftright.width() > right || left + rightleft.width() > right)
+      return;
+
+    if (left + 1 < leftleft.width())
+      return;
+
+    if (right + rightright.width() > nwords)
+      return;
+
+    Feature f;
+
+    f.push_back(node->label.cat);               // category label
+
+    if (binned_length)
+      f.push_back(symbol_quantize(right-left)); // number of preterminals
+
+    leftleft.push_features(preterms, left-1, -1, f);
+    leftright.push_features(preterms, left, 1, f);
+    rightleft.push_features(preterms, right-1, -1, f);
+    rightright.push_features(preterms, right, 1, f);
+    
+    ++feat_count[f];
+  }  // WSEdges::node_featurecount()
+ 
+  virtual const char *identifier() const {
+    return identifier_string.c_str();
+  }  // WSEdges::identifier()
+
+  SPFEATURES_COMMON_DEFINITIONS;
+};  // WSEdges{}
+
 //! The WEdges{} includes the node's category, its binned length
 //! and the left and right POS and words preceding and following the constituent edges
 //!
@@ -1840,7 +2244,7 @@ public:
     (identifier_string += lexical_cast<std::string>(nrightprecw)) += ":";
     (identifier_string += lexical_cast<std::string>(nrightsucc)) += ":";
     identifier_string += lexical_cast<std::string>(nrightsuccw);
-  }  // WEdges:W:Edges()
+  }  // WEdges:WEdges()
     		   
   // required types
 
@@ -1908,7 +2312,7 @@ public:
   }  // WEdges::identifier()
 
   SPFEATURES_COMMON_DEFINITIONS;
-};  // Edges{}
+};  // WEdges{}
 
 //! The Edges{} includes the node's category, its binned length
 //! and the left and right POS preceding and following the constituent edges
@@ -2603,122 +3007,37 @@ public:
   SPFEATURES_COMMON_DEFINITIONS;
 };
 
-inline void FeatureClassPtrs::features_connll() {
-  push_back(new NLogP());
 
-  push_back(new Rule());
-  push_back(new Rule(0, 1));
-  push_back(new Rule(0, 0, true));
-  push_back(new Rule(0, 0, false, true));
-  push_back(new Rule(0, 0, false, false, Rule::lexical));
-  push_back(new Rule(0, 0, false, false, Rule::none, Rule::lexical));
-  push_back(new Rule(0, 0, false, false, Rule::lexical, Rule::lexical));
 
-  push_back(new NGram(1, 1, false, true));
-  push_back(new NGram(2, 1, true, true));
-  push_back(new NGram(3, 1, true, true));
-  push_back(new NGram(2, 1, false, false, NGram::lexical));
-  push_back(new NGram(2, 1, false, false, NGram::none, NGram::lexical));
+inline void FeatureClassPtrs::nfeatures() {
+  push_back(new Parser());
+  push_back(new RelLogP());
+  push_back(new InterpLogCondP());
+  push_back(new RightBranch());
+  push_back(new Heavy());
+
+  push_back(new CoPar(false));
+  push_back(new CoPar(true));
+  push_back(new CoLenPar());
 
   push_back(new Word(1));
   push_back(new Word(2));
 
   push_back(new WProj());
-
-  push_back(new RightBranch());
-
-  push_back(new Heavy());
-
-  push_back(new NGramTree(2, NGramTree::none, true));
-  push_back(new NGramTree(2, NGramTree::all, true));
-  push_back(new NGramTree(3, NGramTree::functional, true));
-
-  push_back(new HeadTree(true, false, 0, HeadTree::syntactic));
-  push_back(new HeadTree(true, false, 0, HeadTree::semantic));
-  push_back(new HeadTree(true, true, 0, HeadTree::semantic));
   
-  push_back(new Heads(2, false, false, Heads::syntactic));
-  push_back(new Heads(2, true, true, Heads::syntactic));
-  push_back(new Heads(2, true, true, Heads::semantic));
-  push_back(new Heads(3, false, false));
-
-  push_back(new Neighbours(0,0));
-  push_back(new Neighbours(0,1));
-  push_back(new Neighbours(1,0));
-
-  push_back(new CoPar(false));
-
-  push_back(new CoLenPar());
-
-} // FeatureClassPtrs::features_connll()
-
-
-inline void FeatureClassPtrs::features_050902() {
-  push_back(new NLogP());
-
-  push_back(new Rule());
-  push_back(new Rule(0, 1));
-  push_back(new Rule(0, 0, true));
-  push_back(new Rule(0, 0, false, true));
-  push_back(new Rule(0, 0, false, false, Rule::lexical));
-  push_back(new Rule(0, 0, false, false, Rule::none, Rule::lexical));
-  push_back(new Rule(0, 0, false, false, Rule::lexical, Rule::lexical));
-
-  push_back(new NGram(1, 1, false, true));
-  push_back(new NGram(2, 1, true, true));
-  push_back(new NGram(3, 1, true, true));
-  push_back(new NGram(2, 1, false, false, NGram::lexical));
-  push_back(new NGram(2, 1, false, false, NGram::none, NGram::lexical));
-
-  push_back(new Word(1));
-  push_back(new Word(2));
-
-  push_back(new WProj());
-
-  push_back(new RightBranch());
-
-  push_back(new Heavy());
-
-  push_back(new NGramTree(2, NGramTree::none, true));
-  push_back(new NGramTree(2, NGramTree::all, true));
-  push_back(new NGramTree(3, NGramTree::functional, true));
-
-  push_back(new HeadTree(true, false, 0, HeadTree::syntactic));
-  push_back(new HeadTree(true, false, 0, HeadTree::semantic));
-  push_back(new HeadTree(true, true, 0, HeadTree::semantic));
-  
-  push_back(new Heads(2, false, false, Heads::syntactic));
-  push_back(new Heads(2, true, true, Heads::syntactic));
-  push_back(new Heads(2, true, true, Heads::semantic));
-  push_back(new Heads(3, false, false));
-
-  push_back(new CoPar(false));
-
-  push_back(new CoLenPar());
-
-  size_type maxwidth = 2, maxsumwidth = 2;
-
-  for (size_type binflag = 0; binflag < 2; ++binflag)
-    for (size_type nleftprec = 0; nleftprec <= maxwidth; ++nleftprec)
-      for (size_type nleftsucc = 0; nleftsucc <= maxwidth; ++nleftsucc)
-	for (size_type nrightprec = 0; nrightprec <= maxwidth; ++nrightprec)
-	  for (size_type nrightsucc = 0; nrightsucc <= maxwidth; ++nrightsucc)
-	    if (nleftprec + nleftsucc + nrightprec + nrightsucc <= maxsumwidth)
-	      push_back(new Edges(binflag, nleftprec, nleftsucc, nrightprec, nrightsucc));
-
-  for (size_type binflag = 0; binflag < 2; ++binflag)
-    for (size_type nleftprec = 0; nleftprec <= maxwidth; ++nleftprec)
-      for (size_type nleftsucc = 0; nleftsucc <= maxwidth; ++nleftsucc)
-	for (size_type nrightprec = 0; nrightprec <= maxwidth; ++nrightprec)
-	  for (size_type nrightsucc = 0; nrightsucc <= maxwidth; ++nrightsucc)
-	    if (nleftprec + nleftsucc + nrightprec + nrightsucc <= maxsumwidth)
-	      push_back(new WordEdges(binflag, nleftprec, nleftsucc, nrightprec, nrightsucc));
-
-}  // FeatureClassPtrs::features_050902()
-
-
-inline void FeatureClassPtrs::features_071114() {
-  push_back(new NLogP());
+  push_back(new WSHeads(0, true, 2, WSHeads::pos, WSHeads::pos, WSHeads::syntactic));
+  push_back(new WSHeads(0, true, 2, WSHeads::pos, WSHeads::closedclass, WSHeads::syntactic));
+  push_back(new WSHeads(0, true, 2, WSHeads::closedclass, WSHeads::pos, WSHeads::syntactic));
+  push_back(new WSHeads(0, true, 2, WSHeads::closedclass, WSHeads::closedclass, WSHeads::syntactic));
+  push_back(new WSHeads(0, true, 2, WSHeads::lexical, WSHeads::closedclass, WSHeads::syntactic));
+  push_back(new WSHeads(0, true, 2, WSHeads::closedclass, WSHeads::lexical, WSHeads::syntactic));
+  push_back(new WSHeads(0, true, 2, WSHeads::lexical, WSHeads::lexical, WSHeads::syntactic));
+  push_back(new WSHeads(0, true, 2, WSHeads::lexical, WSHeads::lexical, WSHeads::semantic));
+  push_back(new WSHeads(0, true, 3, WSHeads::pos, WSHeads::pos, WSHeads::syntactic));
+  push_back(new WSHeads(0, true, 3, WSHeads::pos, WSHeads::pos, WSHeads::semantic));
+  push_back(new WSHeads(0, true, 3, WSHeads::pos, WSHeads::closedclass, WSHeads::syntactic));
+  push_back(new WSHeads(0, true, 3, WSHeads::closedclass, WSHeads::pos, WSHeads::syntactic));
+  push_back(new WSHeads(0, true, 3, WSHeads::closedclass, WSHeads::closedclass, WSHeads::syntactic));
 
   push_back(new RBContext(false, false, false));
   push_back(new RBContext(false, true, false));
@@ -2727,357 +3046,385 @@ inline void FeatureClassPtrs::features_071114() {
   push_back(new RBContext(true, true, false));
   push_back(new RBContext(true, true, true));
 
-  push_back(new Rule(false, false, false, RBContext::syntactic));
-  push_back(new Rule(true, false, false, RBContext::syntactic));
-  push_back(new Rule(true, true, true, RBContext::syntactic));
+  push_back(new RBContext(false, false, false, RBContext::semantic));
+  push_back(new RBContext(true, false, false, RBContext::semantic));
+  push_back(new RBContext(true, true, true, RBContext::semantic));
 
   push_back(new Rule(0, 1));
-  push_back(new Rule(0, 0, true));
-  push_back(new Rule(0, 0, false, true));
-  push_back(new Rule(0, 0, false, false, Rule::lexical));
-  push_back(new Rule(0, 0, false, false, Rule::none, Rule::lexical));
-  push_back(new Rule(0, 0, false, false, Rule::lexical, Rule::lexical));
-
-  push_back(new NGram(1, 1, false, true));
-  push_back(new NGram(2, 1, true, true));
-  push_back(new NGram(3, 1, true, true));
-  push_back(new NGram(2, 1, false, false, NGram::lexical));
-  push_back(new NGram(2, 1, false, false, NGram::none, NGram::lexical));
-
-  push_back(new Word(1));
-  push_back(new Word(2));
-
-  push_back(new WProj());
-
-  push_back(new RightBranch());
-
-  push_back(new Heavy());
-
-  push_back(new NGramTree(2, NGramTree::none, true));
-  push_back(new NGramTree(2, NGramTree::all, true));
-  push_back(new NGramTree(3, NGramTree::functional, true));
-
-  push_back(new HeadTree(true, false, 0, HeadTree::syntactic));
-  push_back(new HeadTree(true, false, 0, HeadTree::semantic));
-  push_back(new HeadTree(true, true, 0, HeadTree::semantic));
-  
-  push_back(new Heads(2, false, false, Heads::syntactic));
-  push_back(new Heads(2, true, true, Heads::syntactic));
-  push_back(new Heads(2, true, true, Heads::semantic));
-  push_back(new Heads(3, false, false));
-
-  push_back(new CoPar(false));
-
-  push_back(new CoLenPar());
-
-  size_type maxwidth = 2, maxsumwidth = 2;
-
-  for (size_type binflag = 0; binflag < 2; ++binflag)
-    for (size_type nleftprec = 0; nleftprec <= maxwidth; ++nleftprec)
-      for (size_type nleftsucc = 0; nleftsucc <= maxwidth; ++nleftsucc)
-	for (size_type nrightprec = 0; nrightprec <= maxwidth; ++nrightprec)
-	  for (size_type nrightsucc = 0; nrightsucc <= maxwidth; ++nrightsucc)
-	    if (nleftprec + nleftsucc + nrightprec + nrightsucc <= maxsumwidth)
-	      push_back(new Edges(binflag, nleftprec, nleftsucc, nrightprec, nrightsucc));
-
-  for (size_type binflag = 0; binflag < 2; ++binflag)
-    for (size_type nleftprec = 0; nleftprec <= maxwidth; ++nleftprec)
-      for (size_type nleftsucc = 0; nleftsucc <= maxwidth; ++nleftsucc)
-	for (size_type nrightprec = 0; nrightprec <= maxwidth; ++nrightprec)
-	  for (size_type nrightsucc = 0; nrightsucc <= maxwidth; ++nrightsucc)
-	    if (nleftprec + nleftsucc + nrightprec + nrightsucc <= maxsumwidth)
-	      push_back(new WordEdges(binflag, nleftprec, nleftsucc, nrightprec, nrightsucc));
-
-}  // FeatureClassPtrs::features_071114()
-
-
-inline void FeatureClassPtrs::features_splh() {
-  push_back(new NLogP());
-
-  push_back(new RBContext(false, false, false));
-  push_back(new RBContext(false, true, false));
-  push_back(new RBContext(false, true, true));
-  push_back(new RBContext(true, false, false));
-  push_back(new RBContext(true, true, false));
-  push_back(new RBContext(true, true, true));
-
-  push_back(new Rule(false, false, false, RBContext::syntactic));
-  push_back(new Rule(true, false, false, RBContext::syntactic));
-  push_back(new Rule(true, true, true, RBContext::syntactic));
-
-  push_back(new Rule(0, 1));
-  push_back(new Rule(0, 0, true));
-  push_back(new Rule(0, 0, false, true));
-  push_back(new Rule(0, 0, false, false, Rule::lexical));
-  push_back(new Rule(0, 0, false, false, Rule::none, Rule::lexical));
-  push_back(new Rule(0, 0, false, false, Rule::lexical, Rule::lexical));
-
-  push_back(new NGram(1, 1, false, true));
-  push_back(new NGram(2, 1, true, true));
-  push_back(new NGram(3, 1, true, true));
-  push_back(new NGram(2, 1, false, false, NGram::lexical));
-  push_back(new NGram(2, 1, false, false, NGram::none, NGram::lexical));
-
-  push_back(new Word(1));
-  push_back(new Word(2));
-
-  push_back(new WProj());
-
-  push_back(new RightBranch());
-
-  push_back(new Heavy());
-
-  push_back(new NGramTree(2, NGramTree::none, true));
-  push_back(new NGramTree(2, NGramTree::all, true));
-  push_back(new NGramTree(3, NGramTree::functional, true));
-
-  push_back(new HeadTree(true, false, 0, HeadTree::syntactic));
-  push_back(new HeadTree(true, false, 0, HeadTree::semantic));
-  push_back(new HeadTree(true, true, 0, HeadTree::semantic));
-  
-  push_back(new Heads(2, false, false, Heads::syntactic));
-  push_back(new Heads(2, true, true, Heads::syntactic));
-  push_back(new Heads(2, true, true, Heads::semantic));
-  push_back(new Heads(3, false, false));
-
-  push_back(new CoPar(false));
-
-  push_back(new CoLenPar());
-
-  size_type maxwidth = 2, maxsumwidth = 3;
-
-  for (size_type binflag = 0; binflag < 2; ++binflag)
-    for (size_type nleftprec = 0; nleftprec <= maxwidth; ++nleftprec)
-      for (size_type nleftsucc = 0; nleftsucc <= maxwidth; ++nleftsucc)
-	for (size_type nrightprec = 0; nrightprec <= maxwidth; ++nrightprec)
-	  for (size_type nrightsucc = 0; nrightsucc <= maxwidth; ++nrightsucc)
-	    if (nleftprec + nleftsucc + nrightprec + nrightsucc <= maxsumwidth)
-	      push_back(new Edges(binflag, nleftprec, nleftsucc, nrightprec, nrightsucc));
-
-  for (size_type binflag = 0; binflag < 2; ++binflag)
-    for (size_type nleftprec = 0; nleftprec <= maxwidth; ++nleftprec)
-      for (size_type nleftsucc = 0; nleftsucc <= maxwidth; ++nleftsucc)
-	for (size_type nrightprec = 0; nrightprec <= maxwidth; ++nrightprec)
-	  for (size_type nrightsucc = 0; nrightsucc <= maxwidth; ++nrightsucc)
-	    if (nleftprec + nleftsucc + nrightprec + nrightsucc <= maxsumwidth)
-	      push_back(new WordEdges(binflag, nleftprec, nleftsucc, nrightprec, nrightsucc));
-
-}  // FeatureClassPtrs::features_splh()
-
-inline void FeatureClassPtrs::features_splhextra() {
-  push_back(new NLogP());
-
-  push_back(new RBContext(false, false, false));
-  push_back(new RBContext(false, true, false));
-  push_back(new RBContext(true, false, false));
-  push_back(new RBContext(true, true, false));
-  push_back(new RBContext(false, false, true));
-  push_back(new RBContext(false, true, true));
-  push_back(new RBContext(true, false, true));
-  push_back(new RBContext(true, true, true));
-
-  push_back(new Rule());
-  push_back(new Rule(0, 1));
-  push_back(new Rule(0, 2));
   push_back(new Rule(1, 0));
   push_back(new Rule(1, 1));
+  push_back(new Rule(0, 2));
   push_back(new Rule(0, 0, true));
   push_back(new Rule(0, 0, false, true));
-  push_back(new Rule(0, 0, true, true));
-  push_back(new Rule(0, 0, false, false, Rule::pos, Rule::none, Rule::none, Rule::syntactic));
-  push_back(new Rule(0, 0, false, false, Rule::lexical, Rule::none, Rule::none, Rule::syntactic));
-  push_back(new Rule(0, 0, false, false, Rule::none, Rule::pos, Rule::none, Rule::syntactic));
-  push_back(new Rule(0, 0, false, false, Rule::none, Rule::lexical, Rule::none, Rule::syntactic));
-  push_back(new Rule(0, 0, false, false, Rule::pos, Rule::lexical, Rule::none, Rule::syntactic));
-  push_back(new Rule(0, 0, false, false, Rule::lexical, Rule::lexical, Rule::none, Rule::syntactic));
-  push_back(new Rule(0, 0, false, false, Rule::none, Rule::lexical, Rule::pos, Rule::syntactic));
-  push_back(new Rule(0, 0, false, false, Rule::pos, Rule::lexical, Rule::pos, Rule::syntactic));
-  push_back(new Rule(0, 0, false, false, Rule::lexical, Rule::lexical, Rule::pos, Rule::syntactic));
-  push_back(new Rule(0, 0, false, false, Rule::lexical, Rule::lexical, Rule::lexical, Rule::syntactic));
-  push_back(new Rule(0, 0, false, false, Rule::lexical, Rule::none, Rule::none, Rule::semantic));
-  push_back(new Rule(0, 0, false, false, Rule::none, Rule::pos, Rule::none, Rule::semantic));
-  push_back(new Rule(0, 0, false, false, Rule::none, Rule::lexical, Rule::none, Rule::semantic));
-  push_back(new Rule(0, 0, false, false, Rule::pos, Rule::lexical, Rule::none, Rule::semantic));
-  push_back(new Rule(0, 0, false, false, Rule::lexical, Rule::lexical, Rule::none, Rule::semantic));
-  push_back(new Rule(0, 0, false, false, Rule::none, Rule::lexical, Rule::pos, Rule::semantic));
-  push_back(new Rule(0, 0, false, false, Rule::pos, Rule::lexical, Rule::pos, Rule::semantic));
-  push_back(new Rule(0, 0, false, false, Rule::lexical, Rule::lexical, Rule::pos, Rule::semantic));
-  push_back(new Rule(0, 0, false, false, Rule::lexical, Rule::lexical, Rule::lexical, Rule::semantic));
+  push_back(new Rule(0, 0, false, false, Rule::lexical));
+  push_back(new Rule(0, 0, false, false, Rule::none, Rule::lexical));
+  push_back(new Rule(0, 0, false, false, Rule::lexical, Rule::lexical));
 
-  push_back(new NGram(1, 0, false, false, NGram::none, NGram::none, NGram::none, NGram::syntactic));
-  push_back(new NGram(2, 0, false, false, NGram::none, NGram::none, NGram::none, NGram::syntactic));
-  push_back(new NGram(3, 0, false, false, NGram::none, NGram::none, NGram::none, NGram::syntactic));
-  push_back(new NGram(4, 0, false, false, NGram::none, NGram::none, NGram::none, NGram::syntactic));
-  push_back(new NGram(5, 0, false, false, NGram::none, NGram::none, NGram::none, NGram::syntactic));
-  push_back(new NGram(1, 0, true, false, NGram::none, NGram::none, NGram::none, NGram::syntactic));
-  push_back(new NGram(2, 0, true, false, NGram::none, NGram::none, NGram::none, NGram::syntactic));
-  push_back(new NGram(3, 0, true, false, NGram::none, NGram::none, NGram::none, NGram::syntactic));
-  push_back(new NGram(4, 0, true, false, NGram::none, NGram::none, NGram::none, NGram::syntactic));
-  push_back(new NGram(5, 0, true, false, NGram::none, NGram::none, NGram::none, NGram::syntactic));
-  push_back(new NGram(1, 0, false, true, NGram::none, NGram::none, NGram::none, NGram::syntactic));
-  push_back(new NGram(2, 0, false, true, NGram::none, NGram::none, NGram::none, NGram::syntactic));
-  push_back(new NGram(3, 0, false, true, NGram::none, NGram::none, NGram::none, NGram::syntactic));
-  push_back(new NGram(4, 0, false, true, NGram::none, NGram::none, NGram::none, NGram::syntactic));
-  push_back(new NGram(5, 0, false, true, NGram::none, NGram::none, NGram::none, NGram::syntactic));
-  push_back(new NGram(1, 1, false, false, NGram::none, NGram::none, NGram::none, NGram::syntactic));
-  push_back(new NGram(2, 1, false, false, NGram::none, NGram::none, NGram::none, NGram::syntactic));
-  push_back(new NGram(3, 1, false, false, NGram::none, NGram::none, NGram::none, NGram::syntactic));
-  push_back(new NGram(1, 0, true, false, NGram::none, NGram::none, NGram::none, NGram::syntactic));
-  push_back(new NGram(2, 0, true, false, NGram::none, NGram::none, NGram::none, NGram::syntactic));
-  push_back(new NGram(3, 0, true, false, NGram::none, NGram::none, NGram::none, NGram::syntactic));
-  push_back(new NGram(1, 0, false, true, NGram::none, NGram::none, NGram::none, NGram::syntactic));
-  push_back(new NGram(2, 0, false, true, NGram::none, NGram::none, NGram::none, NGram::syntactic));
-  push_back(new NGram(3, 0, false, true, NGram::none, NGram::none, NGram::none, NGram::syntactic));
-  push_back(new NGram(1, 0, false, false, NGram::pos, NGram::none, NGram::none, NGram::syntactic));
-  push_back(new NGram(2, 0, false, false, NGram::pos, NGram::none, NGram::none, NGram::syntactic));
-  push_back(new NGram(3, 0, false, false, NGram::pos, NGram::none, NGram::none, NGram::syntactic));
-  push_back(new NGram(1, 0, false, false, NGram::none, NGram::pos, NGram::none, NGram::syntactic));
-  push_back(new NGram(2, 0, false, false, NGram::none, NGram::pos, NGram::none, NGram::syntactic));
-  push_back(new NGram(3, 0, false, false, NGram::none, NGram::pos, NGram::none, NGram::syntactic));
-  push_back(new NGram(1, 0, false, false, NGram::pos, NGram::pos, NGram::none, NGram::syntactic));
-  push_back(new NGram(2, 0, false, false, NGram::pos, NGram::pos, NGram::none, NGram::syntactic));
-  push_back(new NGram(3, 0, false, false, NGram::pos, NGram::pos, NGram::none, NGram::syntactic));
-  push_back(new NGram(1, 0, false, false, NGram::lexical, NGram::none, NGram::none, NGram::syntactic));
-  push_back(new NGram(2, 0, false, false, NGram::lexical, NGram::none, NGram::none, NGram::syntactic));
-  push_back(new NGram(3, 0, false, false, NGram::lexical, NGram::none, NGram::none, NGram::syntactic));
-  push_back(new NGram(1, 0, false, false, NGram::none, NGram::lexical, NGram::none, NGram::syntactic));
-  push_back(new NGram(2, 0, false, false, NGram::none, NGram::lexical, NGram::none, NGram::syntactic));
-  push_back(new NGram(3, 0, false, false, NGram::none, NGram::lexical, NGram::none, NGram::syntactic));
-  push_back(new NGram(1, 0, false, false, NGram::lexical, NGram::lexical, NGram::none, NGram::syntactic));
-  push_back(new NGram(2, 0, false, false, NGram::lexical, NGram::lexical, NGram::none, NGram::syntactic));
-  push_back(new NGram(3, 0, false, false, NGram::lexical, NGram::lexical, NGram::none, NGram::syntactic));
-  push_back(new NGram(1, 0, false, false, NGram::lexical, NGram::pos, NGram::none, NGram::syntactic));
-  push_back(new NGram(2, 0, false, false, NGram::lexical, NGram::pos, NGram::none, NGram::syntactic));
-  push_back(new NGram(3, 0, false, false, NGram::lexical, NGram::pos, NGram::none, NGram::syntactic));
-  push_back(new NGram(1, 0, false, false, NGram::lexical, NGram::lexical, NGram::pos, NGram::syntactic));
-  push_back(new NGram(2, 0, false, false, NGram::lexical, NGram::lexical, NGram::pos, NGram::syntactic));
-  push_back(new NGram(1, 0, false, false, NGram::lexical, NGram::lexical, NGram::lexical, NGram::syntactic));
-  push_back(new NGram(2, 0, false, false, NGram::lexical, NGram::lexical, NGram::lexical, NGram::syntactic));
-  push_back(new NGram(1, 0, false, false, NGram::none, NGram::none, NGram::none, NGram::semantic));
-  push_back(new NGram(2, 0, false, false, NGram::none, NGram::none, NGram::none, NGram::semantic));
-  push_back(new NGram(3, 0, false, false, NGram::none, NGram::none, NGram::none, NGram::semantic));
-  push_back(new NGram(4, 0, false, false, NGram::none, NGram::none, NGram::none, NGram::semantic));
-  push_back(new NGram(5, 0, false, false, NGram::none, NGram::none, NGram::none, NGram::semantic));
-  push_back(new NGram(1, 0, true, false, NGram::none, NGram::none, NGram::none, NGram::semantic));
-  push_back(new NGram(2, 0, true, false, NGram::none, NGram::none, NGram::none, NGram::semantic));
-  push_back(new NGram(3, 0, true, false, NGram::none, NGram::none, NGram::none, NGram::semantic));
-  push_back(new NGram(4, 0, true, false, NGram::none, NGram::none, NGram::none, NGram::semantic));
-  push_back(new NGram(5, 0, true, false, NGram::none, NGram::none, NGram::none, NGram::semantic));
-  push_back(new NGram(1, 0, false, true, NGram::none, NGram::none, NGram::none, NGram::semantic));
-  push_back(new NGram(2, 0, false, true, NGram::none, NGram::none, NGram::none, NGram::semantic));
-  push_back(new NGram(3, 0, false, true, NGram::none, NGram::none, NGram::none, NGram::semantic));
-  push_back(new NGram(4, 0, false, true, NGram::none, NGram::none, NGram::none, NGram::semantic));
-  push_back(new NGram(5, 0, false, true, NGram::none, NGram::none, NGram::none, NGram::semantic));
-  push_back(new NGram(1, 1, false, false, NGram::none, NGram::none, NGram::none, NGram::semantic));
-  push_back(new NGram(2, 1, false, false, NGram::none, NGram::none, NGram::none, NGram::semantic));
-  push_back(new NGram(3, 1, false, false, NGram::none, NGram::none, NGram::none, NGram::semantic));
-  push_back(new NGram(1, 0, true, false, NGram::none, NGram::none, NGram::none, NGram::semantic));
-  push_back(new NGram(2, 0, true, false, NGram::none, NGram::none, NGram::none, NGram::semantic));
-  push_back(new NGram(3, 0, true, false, NGram::none, NGram::none, NGram::none, NGram::semantic));
-  push_back(new NGram(1, 0, false, true, NGram::none, NGram::none, NGram::none, NGram::semantic));
-  push_back(new NGram(2, 0, false, true, NGram::none, NGram::none, NGram::none, NGram::semantic));
-  push_back(new NGram(3, 0, false, true, NGram::none, NGram::none, NGram::none, NGram::semantic));
-  push_back(new NGram(1, 0, false, false, NGram::pos, NGram::none, NGram::none, NGram::semantic));
-  push_back(new NGram(2, 0, false, false, NGram::pos, NGram::none, NGram::none, NGram::semantic));
-  push_back(new NGram(3, 0, false, false, NGram::pos, NGram::none, NGram::none, NGram::semantic));
-  push_back(new NGram(1, 0, false, false, NGram::none, NGram::pos, NGram::none, NGram::semantic));
-  push_back(new NGram(2, 0, false, false, NGram::none, NGram::pos, NGram::none, NGram::semantic));
-  push_back(new NGram(3, 0, false, false, NGram::none, NGram::pos, NGram::none, NGram::semantic));
-  push_back(new NGram(1, 0, false, false, NGram::pos, NGram::pos, NGram::none, NGram::semantic));
-  push_back(new NGram(2, 0, false, false, NGram::pos, NGram::pos, NGram::none, NGram::semantic));
-  push_back(new NGram(3, 0, false, false, NGram::pos, NGram::pos, NGram::none, NGram::semantic));
-  push_back(new NGram(1, 0, false, false, NGram::lexical, NGram::none, NGram::none, NGram::semantic));
-  push_back(new NGram(2, 0, false, false, NGram::lexical, NGram::none, NGram::none, NGram::semantic));
-  push_back(new NGram(3, 0, false, false, NGram::lexical, NGram::none, NGram::none, NGram::semantic));
-  push_back(new NGram(1, 0, false, false, NGram::none, NGram::lexical, NGram::none, NGram::semantic));
-  push_back(new NGram(2, 0, false, false, NGram::none, NGram::lexical, NGram::none, NGram::semantic));
-  push_back(new NGram(3, 0, false, false, NGram::none, NGram::lexical, NGram::none, NGram::semantic));
-  push_back(new NGram(1, 0, false, false, NGram::lexical, NGram::lexical, NGram::none, NGram::semantic));
-  push_back(new NGram(2, 0, false, false, NGram::lexical, NGram::lexical, NGram::none, NGram::semantic));
-  push_back(new NGram(3, 0, false, false, NGram::lexical, NGram::lexical, NGram::none, NGram::semantic));
-  push_back(new NGram(1, 0, false, false, NGram::lexical, NGram::pos, NGram::none, NGram::semantic));
-  push_back(new NGram(2, 0, false, false, NGram::lexical, NGram::pos, NGram::none, NGram::semantic));
-  push_back(new NGram(3, 0, false, false, NGram::lexical, NGram::pos, NGram::none, NGram::semantic));
-  push_back(new NGram(1, 0, false, false, NGram::lexical, NGram::lexical, NGram::pos, NGram::semantic));
-  push_back(new NGram(2, 0, false, false, NGram::lexical, NGram::lexical, NGram::pos, NGram::semantic));
-  push_back(new NGram(1, 0, false, false, NGram::lexical, NGram::lexical, NGram::lexical, NGram::semantic));
-  push_back(new NGram(2, 0, false, false, NGram::lexical, NGram::lexical, NGram::lexical, NGram::semantic));
-
-  push_back(new Word(1));
-  push_back(new Word(2));
-  push_back(new Word(3));
-
-  push_back(new WProj(WProj::semantic, false, 1));
-  push_back(new WProj(WProj::syntactic, false, 1));
-  push_back(new WProj(WProj::semantic, true, 1));
-  push_back(new WProj(WProj::syntactic, true, 1));
-  push_back(new WProj(WProj::semantic, false, 2));
-  push_back(new WProj(WProj::syntactic, false, 2));
-
-
-  push_back(new RightBranch());
-
-  push_back(new Heavy());
+  push_back(new NGram(1, 1, false, true));
+  push_back(new NGram(2, 1, false, false));
+  push_back(new NGram(2, 1, true, true));
+  push_back(new NGram(3, 1, false, false));
+  push_back(new NGram(3, 1, true, true));
+  push_back(new NGram(4, 1, false, false));
+  push_back(new NGram(2, 1, false, false, NGram::lexical));
+  push_back(new NGram(2, 1, false, false, NGram::none, NGram::lexical));
 
   push_back(new NGramTree(2, NGramTree::none, true));
-  push_back(new NGramTree(2, NGramTree::closed_class, true));
+  push_back(new NGramTree(2, NGramTree::functional, true));
   push_back(new NGramTree(2, NGramTree::all, true));
+  push_back(new NGramTree(3, NGramTree::none, true));
   push_back(new NGramTree(3, NGramTree::functional, true));
-  push_back(new NGramTree(2, NGramTree::none, false));
-  push_back(new NGramTree(2, NGramTree::all, false));
-  push_back(new NGramTree(3, NGramTree::functional, false));
 
-  push_back(new HeadTree(false, false, 0, HeadTree::syntactic));
-  push_back(new HeadTree(false, false, 0, HeadTree::semantic));
   push_back(new HeadTree(true, false, 0, HeadTree::syntactic));
   push_back(new HeadTree(true, false, 0, HeadTree::semantic));
-  push_back(new HeadTree(true, true, 0, HeadTree::syntactic));
   push_back(new HeadTree(true, true, 0, HeadTree::semantic));
-  push_back(new HeadTree(false, false, 1, HeadTree::syntactic));
-  push_back(new HeadTree(false, false, 1, HeadTree::semantic));
-  push_back(new HeadTree(true, false, 1, HeadTree::syntactic));
+
+  {
+    typedef std::vector<WSEdges::E> Es;
+    Es es;   //!< flags specifying how far to look around each constituent boundary
+
+    WSEdges::E empty(0,0,0,0), punct1(1,0,0,0), pos1(1,1,0,0), closed1(1,1,1,0), word1(1,1,1,1), 
+      punct2(2,0,0,0), pos2(2,1,0,0), closed2(2,1,1,0), word2(2,1,1,1);
+
+    push_back(new WSEdges(punct1, empty, empty, empty, false));
+    push_back(new WSEdges(pos1, empty, empty, empty, false));
+    push_back(new WSEdges(closed1, empty, empty, empty, false));
+    push_back(new WSEdges(punct1, empty, punct1, punct1, false));
+    push_back(new WSEdges(punct1, empty, punct1, punct1, true));
+    push_back(new WSEdges(closed1, closed1, empty, empty, false));
+    push_back(new WSEdges(closed1, closed1, empty, empty, true));
+    push_back(new WSEdges(closed1, closed1, punct1, punct1, false));
+    push_back(new WSEdges(word1, word1, empty, empty, false));
+
+    push_back(new WSEdges(empty, punct1, empty, empty, false));
+    push_back(new WSEdges(empty, pos1, empty, empty, false));
+    push_back(new WSEdges(empty, closed1, empty, empty, false));
+    push_back(new WSEdges(empty, word1, empty, empty, false));
+    push_back(new WSEdges(empty, punct2, empty, empty, false));
+    push_back(new WSEdges(empty, pos2, empty, empty, false));
+    push_back(new WSEdges(empty, closed2, empty, empty, false));
+    push_back(new WSEdges(empty, punct1, empty, punct1, false));
+    push_back(new WSEdges(empty, pos1, empty, punct1, false));
+    push_back(new WSEdges(empty, closed1, empty, punct1, false));
+    push_back(new WSEdges(empty, punct1, empty, pos1, false));
+    push_back(new WSEdges(empty, pos1, empty, pos1, false));
+    push_back(new WSEdges(empty, closed1, empty, pos1, false));
+    push_back(new WSEdges(empty, punct1, empty, closed1, false));
+    push_back(new WSEdges(empty, pos1, empty, closed1, false));
+    push_back(new WSEdges(empty, closed1, empty, closed1, false));
+
+    push_back(new WSEdges(empty, empty, punct1, empty, false));
+    push_back(new WSEdges(empty, empty, pos1, empty, false));
+    push_back(new WSEdges(empty, empty, closed1, empty, false));
+    push_back(new WSEdges(empty, empty, word1, empty, false));
+    push_back(new WSEdges(empty, empty, punct2, empty, false));
+    push_back(new WSEdges(empty, empty, pos2, empty, false));
+    push_back(new WSEdges(empty, empty, closed2, empty, false));
+    push_back(new WSEdges(empty, empty, punct1, punct1, false));
+    push_back(new WSEdges(empty, empty, pos1, punct1, false));
+    push_back(new WSEdges(empty, empty, closed1, punct1, false));
+    push_back(new WSEdges(empty, empty, punct1, pos1, false));
+    push_back(new WSEdges(empty, empty, pos1, pos1, false));
+    push_back(new WSEdges(empty, empty, closed1, pos1, false));
+    push_back(new WSEdges(empty, empty, punct1, closed1, false));
+    push_back(new WSEdges(empty, empty, pos1, closed1, false));
+    push_back(new WSEdges(empty, empty, closed1, closed1, false));
+
+    push_back(new WSEdges(empty, empty, empty, punct1, false));
+    push_back(new WSEdges(empty, empty, empty, punct1, true));
+    push_back(new WSEdges(empty, empty, empty, punct2, false));
+    push_back(new WSEdges(empty, empty, empty, pos1, false));
+    push_back(new WSEdges(empty, empty, empty, pos1, true));
+    push_back(new WSEdges(empty, empty, empty, pos2, false));
+    push_back(new WSEdges(empty, empty, empty, closed1, false));
+    push_back(new WSEdges(empty, empty, empty, closed1, true));
+    push_back(new WSEdges(empty, empty, empty, closed2, false));
+    push_back(new WSEdges(empty, empty, empty, word1, false));
+    push_back(new WSEdges(empty, empty, empty, word1, true));
+    push_back(new WSEdges(empty, empty, empty, word2, false));
+  }
+}  // FeatureClassPtrs::nfeatures()
+
+inline void FeatureClassPtrs::sfeatures() {
+  push_back(new Parser());
+  push_back(new RelLogP());
+  push_back(new InterpLogCondP());
+  push_back(new RightBranch());
+  push_back(new Heavy());
+
+  push_back(new CoPar(false));
+
+  push_back(new RBContext(false, true, false));
+  push_back(new RBContext(false, true, true));
+  push_back(new RBContext(true, false, false));
+  push_back(new RBContext(true, true, false));
+  push_back(new RBContext(true, true, true));
+
+  push_back(new Rule(0, 0, true));
+  push_back(new Rule(0, 0, false, false, Rule::lexical, Rule::lexical));
+
+  push_back(new NGram(2, 1, false, false));
+  push_back(new NGram(2, 1, false, false, NGram::none, NGram::lexical));
+
+  push_back(new WProj());
+
+  push_back(new NGramTree(2, NGramTree::all, true));
+
+  push_back(new HeadTree(true, false, 0, HeadTree::syntactic));
+  
+  push_back(new WSHeads(0, true, 2, WSHeads::lexical, WSHeads::lexical, WSHeads::semantic));
+  push_back(new WSHeads(0, true, 3, WSHeads::pos, WSHeads::pos, WSHeads::semantic));
+  push_back(new WSHeads(0, true, 3, WSHeads::closedclass, WSHeads::closedclass, WSHeads::syntactic));
+
+  {
+    typedef std::vector<WSEdges::E> Es;
+    Es es;   //!< flags specifying how far to look around each constituent boundary
+
+    WSEdges::E empty(0,0,0,0), punct1(1,0,0,0), pos1(1,1,0,0), closed1(1,1,1,0), word1(1,1,1,1), 
+      punct2(2,0,0,0), pos2(2,1,0,0), closed2(2,1,1,0), word2(2,1,1,1);
+
+    push_back(new WSEdges(closed1, empty, empty, empty, false));
+    push_back(new WSEdges(punct1, empty, punct1, punct1, false));
+    push_back(new WSEdges(punct1, empty, punct1, punct1, true));
+    push_back(new WSEdges(closed1, closed1, empty, empty, false));
+    push_back(new WSEdges(closed1, closed1, empty, empty, true));
+    push_back(new WSEdges(word1, word1, empty, empty, false));
+
+    push_back(new WSEdges(empty, closed1, empty, empty, false));
+    push_back(new WSEdges(empty, word1, empty, empty, false));
+    push_back(new WSEdges(empty, punct2, empty, empty, false));
+    push_back(new WSEdges(empty, closed1, empty, punct1, false));
+    push_back(new WSEdges(empty, punct1, empty, closed1, false));
+
+    push_back(new WSEdges(empty, empty, punct1, empty, false));
+    push_back(new WSEdges(empty, empty, punct2, empty, false));
+    push_back(new WSEdges(empty, empty, punct1, punct1, false));
+    push_back(new WSEdges(empty, empty, punct1, closed1, false));
+    push_back(new WSEdges(empty, empty, pos1, closed1, false));
+
+    push_back(new WSEdges(empty, empty, empty, punct1, false));
+    push_back(new WSEdges(empty, empty, empty, punct2, false));
+    push_back(new WSEdges(empty, empty, empty, pos1, false));
+    push_back(new WSEdges(empty, empty, empty, pos1, true));
+    push_back(new WSEdges(empty, empty, empty, closed1, false));
+    push_back(new WSEdges(empty, empty, empty, closed2, false));
+  }
+}  // FeatureClassPtrs::sfeatures()
+
+inline void FeatureClassPtrs::rfeatures() {
+  push_back(new Parser());
+  push_back(new RelLogP());
+  push_back(new InterpLogCondP());
+  push_back(new RightBranch());
+  push_back(new Heavy());
+
+  push_back(new Rule(0, 0, false, false, Rule::none, Rule::none, Rule::none, Rule::syntactic));
+  push_back(new Rule(0, 0, true, false, Rule::none, Rule::none, Rule::none, Rule::syntactic));
+  push_back(new Rule(0, 0, false, true, Rule::none, Rule::none, Rule::none, Rule::syntactic));
+  push_back(new Rule(1, 0, false, false, Rule::none, Rule::none, Rule::none, Rule::syntactic));
+  push_back(new Rule(1, 0, true, false, Rule::none, Rule::none, Rule::none, Rule::syntactic));
+  push_back(new Rule(1, 0, false, true, Rule::none, Rule::none, Rule::none, Rule::syntactic));
+  push_back(new Rule(0, 1, false, false, Rule::none, Rule::none, Rule::none, Rule::syntactic));
+  push_back(new Rule(0, 1, true, false, Rule::none, Rule::none, Rule::none, Rule::syntactic));
+  push_back(new Rule(0, 1, false, true, Rule::none, Rule::none, Rule::none, Rule::syntactic));
+
+  push_back(new Rule(0, 0, false, false, Rule::pos, Rule::none, Rule::none, Rule::syntactic));
+  push_back(new Rule(0, 0, false, false, Rule::none, Rule::pos, Rule::none, Rule::syntactic));
+  push_back(new Rule(0, 0, false, false, Rule::none, Rule::none, Rule::pos, Rule::syntactic));
+  push_back(new Rule(0, 0, false, false, Rule::pos, Rule::none, Rule::none, Rule::semantic));
+  push_back(new Rule(0, 0, false, false, Rule::none, Rule::pos, Rule::none, Rule::semantic));
+  push_back(new Rule(0, 0, false, false, Rule::none, Rule::none, Rule::pos, Rule::semantic));
+  push_back(new Rule(0, 0, false, false, Rule::lexical, Rule::none, Rule::none, Rule::syntactic));
+  push_back(new Rule(0, 0, false, false, Rule::none, Rule::lexical, Rule::none, Rule::syntactic));
+  push_back(new Rule(0, 0, false, false, Rule::none, Rule::none, Rule::lexical, Rule::syntactic));
+  push_back(new Rule(0, 0, false, false, Rule::lexical, Rule::none, Rule::none, Rule::semantic));
+  push_back(new Rule(0, 0, false, false, Rule::none, Rule::lexical, Rule::none, Rule::semantic));
+  push_back(new Rule(0, 0, false, false, Rule::none, Rule::none, Rule::lexical, Rule::semantic));
+
+  push_back(new NGram(1, 1, false, false));
+  push_back(new NGram(1, 1, false, true));
+  push_back(new NGram(1, 1, true, false));
+  push_back(new NGram(1, 1, true, true));
+  push_back(new NGram(2, 1, true, true));
+  push_back(new NGram(3, 1, true, true));
+  push_back(new NGram(1, 1, false, false, NGram::lexical, NGram::none));
+  push_back(new NGram(1, 1, false, false, NGram::none, NGram::lexical));
+  push_back(new NGram(1, 1, false, false, NGram::lexical, NGram::lexical));
+  push_back(new NGram(2, 1, false, false, NGram::lexical, NGram::none));
+  push_back(new NGram(2, 1, false, false, NGram::none, NGram::lexical));
+  push_back(new NGram(1, 1, true, false, NGram::lexical, NGram::none));
+  push_back(new NGram(1, 1, true, false, NGram::none, NGram::lexical));
+  push_back(new NGram(1, 1, true, false, NGram::lexical, NGram::lexical));
+  push_back(new NGram(2, 1, true, false, NGram::lexical, NGram::none));
+  push_back(new NGram(2, 1, true, false, NGram::none, NGram::lexical));
+  push_back(new NGram(1, 1, false, true, NGram::lexical, NGram::none));
+  push_back(new NGram(1, 1, false, true, NGram::none, NGram::lexical));
+  push_back(new NGram(1, 1, false, true, NGram::lexical, NGram::lexical));
+  push_back(new NGram(2, 1, false, true, NGram::lexical, NGram::none));
+  push_back(new NGram(2, 1, false, true, NGram::none, NGram::lexical));
 
   push_back(new Heads(2, false, false, Heads::syntactic));
   push_back(new Heads(2, false, false, Heads::semantic));
+  push_back(new Heads(2, true, false, Heads::syntactic));
+  push_back(new Heads(2, true, false, Heads::semantic));
+  push_back(new Heads(2, false, true, Heads::syntactic));
+  push_back(new Heads(2, false, true, Heads::semantic));
   push_back(new Heads(2, true, true, Heads::syntactic));
   push_back(new Heads(2, true, true, Heads::semantic));
   push_back(new Heads(3, false, false, Heads::syntactic));
   push_back(new Heads(3, false, false, Heads::semantic));
-  push_back(new Heads(3, true, true, Heads::syntactic));
-  push_back(new Heads(3, true, true, Heads::semantic));
+
+  push_back(new SynSemHeads(SynSemHeads::none));
+  push_back(new SynSemHeads(SynSemHeads::lex_syn));
+  push_back(new SynSemHeads(SynSemHeads::lex_all));
+
+  push_back(new RBContext(false, false, false, RBContext::syntactic));
+  push_back(new RBContext(false, false, false, RBContext::semantic));
+  push_back(new RBContext(true, false, false, RBContext::syntactic));
+  push_back(new RBContext(true, false, false, RBContext::semantic));
+  push_back(new RBContext(false, true, false, RBContext::syntactic));
+  push_back(new RBContext(false, true, false, RBContext::semantic));
+  push_back(new RBContext(false, false, true, RBContext::syntactic));
+  push_back(new RBContext(false, false, true, RBContext::semantic));
+
+  push_back(new NNGram(3, 1, false, false, NNGram::none, NNGram::none, NNGram::none, NNGram::syntactic, false, false));
+  push_back(new NNGram(3, 1, false, false, NNGram::none, NNGram::none, NNGram::none, NNGram::syntactic, true, false));
+  push_back(new NNGram(3, 1, false, false, NNGram::none, NNGram::none, NNGram::none, NNGram::syntactic, true, true));
+  push_back(new NNGram(3, 2, false, false, NNGram::none, NNGram::none, NNGram::none, NNGram::syntactic, false, false));
+  push_back(new NNGram(3, 1, true, false, NNGram::none, NNGram::none, NNGram::none, NNGram::syntactic, false, false));
+  push_back(new NNGram(3, 1, false, true, NNGram::none, NNGram::none, NNGram::none, NNGram::syntactic, false, false));
+  push_back(new NNGram(3, 1, false, false, NNGram::pos, NNGram::none, NNGram::none, NNGram::syntactic, false, false));
+  push_back(new NNGram(3, 1, false, false, NNGram::pos, NNGram::pos, NNGram::none, NNGram::syntactic, false, false));
+  push_back(new NNGram(3, 1, false, false, NNGram::pos, NNGram::pos, NNGram::pos, NNGram::syntactic, false, false));
+  push_back(new NNGram(3, 1, false, false, NNGram::lexical, NNGram::pos, NNGram::pos, NNGram::syntactic, false, false));
+  push_back(new NNGram(3, 1, false, false, NNGram::pos, NNGram::none, NNGram::none, NNGram::semantic, false, false));
+  push_back(new NNGram(3, 1, false, false, NNGram::pos, NNGram::pos, NNGram::none, NNGram::semantic, false, false));
+  push_back(new NNGram(3, 1, false, false, NNGram::pos, NNGram::pos, NNGram::pos, NNGram::semantic, false, false));
+  push_back(new NNGram(3, 1, false, false, NNGram::lexical, NNGram::pos, NNGram::pos, NNGram::semantic, false, false));
+
+  push_back(new SubjVerbAgr());
 
   push_back(new CoPar(false));
+  push_back(new CoPar(true));
+  push_back(new CoLenPar());
+}  // FeatureClassPtrs::rfeatures()
 
+
+inline void FeatureClassPtrs::nnfeatures(unsigned maxwidth, unsigned maxsumwidth) {
+  push_back(new Parser());
+  push_back(new RelLogP());
+  push_back(new InterpLogCondP());
+  push_back(new RightBranch());
+  push_back(new Heavy());
+  push_back(new LeftBranchLength());
+  push_back(new RightBranchLength());
+
+  push_back(new Rule(0, 0, false, false, Rule::none, Rule::none, Rule::none, Rule::syntactic));
+  push_back(new Rule(0, 0, true, false, Rule::none, Rule::none, Rule::none, Rule::syntactic));
+  push_back(new Rule(0, 0, false, true, Rule::none, Rule::none, Rule::none, Rule::syntactic));
+  push_back(new Rule(1, 0, false, false, Rule::none, Rule::none, Rule::none, Rule::syntactic));
+  push_back(new Rule(1, 0, true, false, Rule::none, Rule::none, Rule::none, Rule::syntactic));
+  push_back(new Rule(1, 0, false, true, Rule::none, Rule::none, Rule::none, Rule::syntactic));
+  push_back(new Rule(0, 1, false, false, Rule::none, Rule::none, Rule::none, Rule::syntactic));
+  push_back(new Rule(0, 1, true, false, Rule::none, Rule::none, Rule::none, Rule::syntactic));
+  push_back(new Rule(0, 1, false, true, Rule::none, Rule::none, Rule::none, Rule::syntactic));
+
+  push_back(new Rule(0, 0, false, false, Rule::pos, Rule::none, Rule::none, Rule::syntactic));
+  push_back(new Rule(0, 0, false, false, Rule::none, Rule::pos, Rule::none, Rule::syntactic));
+  push_back(new Rule(0, 0, false, false, Rule::none, Rule::none, Rule::pos, Rule::syntactic));
+  push_back(new Rule(0, 0, false, false, Rule::pos, Rule::none, Rule::none, Rule::semantic));
+  push_back(new Rule(0, 0, false, false, Rule::none, Rule::pos, Rule::none, Rule::semantic));
+  push_back(new Rule(0, 0, false, false, Rule::none, Rule::none, Rule::pos, Rule::semantic));
+  push_back(new Rule(0, 0, false, false, Rule::lexical, Rule::none, Rule::none, Rule::syntactic));
+  push_back(new Rule(0, 0, false, false, Rule::none, Rule::lexical, Rule::none, Rule::syntactic));
+  push_back(new Rule(0, 0, false, false, Rule::none, Rule::none, Rule::lexical, Rule::syntactic));
+  push_back(new Rule(0, 0, false, false, Rule::lexical, Rule::none, Rule::none, Rule::semantic));
+  push_back(new Rule(0, 0, false, false, Rule::none, Rule::lexical, Rule::none, Rule::semantic));
+  push_back(new Rule(0, 0, false, false, Rule::none, Rule::none, Rule::lexical, Rule::semantic));
+
+  push_back(new NNGram(1, 1, false, false, NNGram::none, NNGram::none, NNGram::none, NNGram::syntactic, false, false));
+  push_back(new NNGram(1, 1, false, false, NNGram::none, NNGram::none, NNGram::none, NNGram::syntactic, true, false));
+  push_back(new NNGram(1, 1, false, false, NNGram::none, NNGram::none, NNGram::none, NNGram::syntactic, true, true));
+  push_back(new NNGram(1, 2, false, false, NNGram::none, NNGram::none, NNGram::none, NNGram::syntactic, false, false));
+  push_back(new NNGram(1, 1, true, false, NNGram::none, NNGram::none, NNGram::none, NNGram::syntactic, false, false));
+  push_back(new NNGram(1, 1, false, true, NNGram::none, NNGram::none, NNGram::none, NNGram::syntactic, false, false));
+  push_back(new NNGram(1, 1, false, false, NNGram::pos, NNGram::none, NNGram::none, NNGram::syntactic, false, false));
+  push_back(new NNGram(1, 1, false, false, NNGram::pos, NNGram::pos, NNGram::none, NNGram::syntactic, false, false));
+  push_back(new NNGram(1, 1, false, false, NNGram::pos, NNGram::pos, NNGram::pos, NNGram::syntactic, false, false));
+  push_back(new NNGram(1, 1, false, false, NNGram::lexical, NNGram::pos, NNGram::pos, NNGram::syntactic, false, false));
+  push_back(new NNGram(1, 1, false, false, NNGram::pos, NNGram::none, NNGram::none, NNGram::semantic, false, false));
+  push_back(new NNGram(1, 1, false, false, NNGram::pos, NNGram::pos, NNGram::none, NNGram::semantic, false, false));
+  push_back(new NNGram(1, 1, false, false, NNGram::pos, NNGram::pos, NNGram::pos, NNGram::semantic, false, false));
+  push_back(new NNGram(1, 1, false, false, NNGram::lexical, NNGram::pos, NNGram::pos, NNGram::semantic, false, false));
+
+  push_back(new NNGram(2, 1, false, false, NNGram::none, NNGram::none, NNGram::none, NNGram::syntactic, false, false));
+  push_back(new NNGram(2, 1, false, false, NNGram::none, NNGram::none, NNGram::none, NNGram::syntactic, true, false));
+  push_back(new NNGram(2, 1, false, false, NNGram::none, NNGram::none, NNGram::none, NNGram::syntactic, true, true));
+  push_back(new NNGram(2, 2, false, false, NNGram::none, NNGram::none, NNGram::none, NNGram::syntactic, false, false));
+  push_back(new NNGram(2, 1, true, false, NNGram::none, NNGram::none, NNGram::none, NNGram::syntactic, false, false));
+  push_back(new NNGram(2, 1, false, true, NNGram::none, NNGram::none, NNGram::none, NNGram::syntactic, false, false));
+  push_back(new NNGram(2, 1, false, false, NNGram::pos, NNGram::none, NNGram::none, NNGram::syntactic, false, false));
+  push_back(new NNGram(2, 1, false, false, NNGram::pos, NNGram::pos, NNGram::none, NNGram::syntactic, false, false));
+  push_back(new NNGram(2, 1, false, false, NNGram::pos, NNGram::pos, NNGram::pos, NNGram::syntactic, false, false));
+  push_back(new NNGram(2, 1, false, false, NNGram::lexical, NNGram::pos, NNGram::pos, NNGram::syntactic, false, false));
+  push_back(new NNGram(2, 1, false, false, NNGram::pos, NNGram::none, NNGram::none, NNGram::semantic, false, false));
+  push_back(new NNGram(2, 1, false, false, NNGram::pos, NNGram::pos, NNGram::none, NNGram::semantic, false, false));
+  push_back(new NNGram(2, 1, false, false, NNGram::pos, NNGram::pos, NNGram::pos, NNGram::semantic, false, false));
+  push_back(new NNGram(2, 1, false, false, NNGram::lexical, NNGram::pos, NNGram::pos, NNGram::semantic, false, false));
+
+  push_back(new NNGram(3, 1, false, false, NNGram::none, NNGram::none, NNGram::none, NNGram::syntactic, false, false));
+  push_back(new NNGram(3, 1, false, false, NNGram::none, NNGram::none, NNGram::none, NNGram::syntactic, true, false));
+  push_back(new NNGram(3, 1, false, false, NNGram::none, NNGram::none, NNGram::none, NNGram::syntactic, true, true));
+  push_back(new NNGram(3, 2, false, false, NNGram::none, NNGram::none, NNGram::none, NNGram::syntactic, false, false));
+  push_back(new NNGram(3, 1, true, false, NNGram::none, NNGram::none, NNGram::none, NNGram::syntactic, false, false));
+  push_back(new NNGram(3, 1, false, true, NNGram::none, NNGram::none, NNGram::none, NNGram::syntactic, false, false));
+  push_back(new NNGram(3, 1, false, false, NNGram::pos, NNGram::none, NNGram::none, NNGram::syntactic, false, false));
+  push_back(new NNGram(3, 1, false, false, NNGram::pos, NNGram::pos, NNGram::none, NNGram::syntactic, false, false));
+  push_back(new NNGram(3, 1, false, false, NNGram::pos, NNGram::pos, NNGram::pos, NNGram::syntactic, false, false));
+  push_back(new NNGram(3, 1, false, false, NNGram::lexical, NNGram::pos, NNGram::pos, NNGram::syntactic, false, false));
+  push_back(new NNGram(3, 1, false, false, NNGram::pos, NNGram::none, NNGram::none, NNGram::semantic, false, false));
+  push_back(new NNGram(3, 1, false, false, NNGram::pos, NNGram::pos, NNGram::none, NNGram::semantic, false, false));
+  push_back(new NNGram(3, 1, false, false, NNGram::pos, NNGram::pos, NNGram::pos, NNGram::semantic, false, false));
+  push_back(new NNGram(3, 1, false, false, NNGram::lexical, NNGram::pos, NNGram::pos, NNGram::semantic, false, false));
+
+  push_back(new Heads(2, false, false, Heads::syntactic));
+  push_back(new Heads(2, false, false, Heads::semantic));
+  push_back(new Heads(2, true, false, Heads::syntactic));
+  push_back(new Heads(2, true, false, Heads::semantic));
+  push_back(new Heads(2, false, true, Heads::syntactic));
+  push_back(new Heads(2, false, true, Heads::semantic));
+  push_back(new Heads(2, true, true, Heads::syntactic));
+  push_back(new Heads(2, true, true, Heads::semantic));
+  push_back(new Heads(3, false, false, Heads::syntactic));
+  push_back(new Heads(3, false, false, Heads::semantic));
+
+  push_back(new SynSemHeads(SynSemHeads::none));
+  push_back(new SynSemHeads(SynSemHeads::lex_syn));
+  push_back(new SynSemHeads(SynSemHeads::lex_all));
+
+  push_back(new RBContext(false, false, false, RBContext::syntactic));
+  push_back(new RBContext(false, false, false, RBContext::semantic));
+  push_back(new RBContext(true, false, false, RBContext::syntactic));
+  push_back(new RBContext(true, false, false, RBContext::semantic));
+  push_back(new RBContext(false, true, false, RBContext::syntactic));
+  push_back(new RBContext(false, true, false, RBContext::semantic));
+  push_back(new RBContext(false, false, true, RBContext::syntactic));
+  push_back(new RBContext(false, false, true, RBContext::semantic));
+
+  push_back(new SubjVerbAgr());
+
+  push_back(new CoPar(false));
+  push_back(new CoPar(true));
   push_back(new CoLenPar());
 
-  size_type maxwidth = 2, maxsumwidth = 3;
+  push_back(new Word(1));
+  push_back(new Word(2));
 
-  for (size_type binflag = 0; binflag < 2; ++binflag)
-    for (size_type nleftprec = 0; nleftprec <= maxwidth; ++nleftprec)
-      for (size_type nleftsucc = 0; nleftsucc <= maxwidth; ++nleftsucc)
-	for (size_type nrightprec = 0; nrightprec <= maxwidth; ++nrightprec)
-	  for (size_type nrightsucc = 0; nrightsucc <= maxwidth; ++nrightsucc)
-	    if (nleftprec + nleftsucc + nrightprec + nrightsucc <= maxsumwidth)
-	      push_back(new Edges(binflag, nleftprec, nleftsucc, nrightprec, nrightsucc));
-
-  for (size_type binflag = 0; binflag < 2; ++binflag)
-    for (size_type nleftprec = 0; nleftprec <= maxwidth; ++nleftprec)
-      for (size_type nleftsucc = 0; nleftsucc <= maxwidth; ++nleftsucc)
-	for (size_type nrightprec = 0; nrightprec <= maxwidth; ++nrightprec)
-	  for (size_type nrightsucc = 0; nrightsucc <= maxwidth; ++nrightsucc)
-	    if (nleftprec + nleftsucc + nrightprec + nrightsucc <= maxsumwidth)
-	      push_back(new WordEdges(binflag, nleftprec, nleftsucc, nrightprec, nrightsucc));
-
-}  // FeatureClassPtrs::features_071114()
-
-inline void FeatureClassPtrs::features_wedges() {
-  push_back(new NLogP());
-
+  push_back(new WProj());
+ 
   push_back(new RightBranch());
 
   push_back(new Heavy());
-
-  size_type maxwidth = 1, maxsumwidth = 2;
 
   for (size_type binflag = 0; binflag < 2; ++binflag)
     for (size_type nleftprec = 0; nleftprec <= maxwidth; ++nleftprec)
@@ -3091,27 +3438,217 @@ inline void FeatureClassPtrs::features_wedges() {
 		    for (size_type nrightsuccw = 0; nrightsuccw <= nrightsucc; ++nrightsuccw)
 		      push_back(new WEdges(binflag, nleftprec, nleftprecw, nleftsucc, nleftsuccw, nrightprec, nrightprecw, nrightsucc, nrightsuccw));
 
-}  // FeatureClassPtrs::features_wedges()
+  push_back(new NGramTree(2, NGramTree::none, true));
+  push_back(new NGramTree(2, NGramTree::functional, true));
+  push_back(new NGramTree(2, NGramTree::all, true));
+  push_back(new NGramTree(3, NGramTree::none, true));
+  push_back(new NGramTree(3, NGramTree::functional, true));
+
+  push_back(new HeadTree(false, false, 0, HeadTree::syntactic));
+  push_back(new HeadTree(false, false, 0, HeadTree::semantic));
+  push_back(new HeadTree(true, false, 0, HeadTree::syntactic));
+  push_back(new HeadTree(true, false, 0, HeadTree::semantic));
+  push_back(new HeadTree(true, true, 0, HeadTree::syntactic));
+  push_back(new HeadTree(true, true, 0, HeadTree::semantic));
+}  // FeatureClassPtrs::nnfeatures()
+
+
+inline void FeatureClassPtrs::mfeatures(unsigned maxwidth, unsigned maxsumwidth, unsigned maxwords) {
+  push_back(new Parser());
+  push_back(new RelLogP());
+  push_back(new InterpLogCondP(2, 5));
+  push_back(new InterpLogCondP(2, 10));
+  push_back(new InterpLogCondP(7, 5));
+  push_back(new InterpLogCondP(7, 20));
+  push_back(new InterpLogCondP(10, 5));
+  push_back(new InterpLogCondP(20, 10));
+  push_back(new InterpLogCondP(50, 20));
+  push_back(new RightBranch());
+  push_back(new Heavy());
+  push_back(new LeftBranchLength());
+  push_back(new RightBranchLength());
+
+  push_back(new Rule(0, 0, false, false, Rule::none, Rule::none, Rule::none, Rule::syntactic));
+  push_back(new Rule(0, 0, true, false, Rule::none, Rule::none, Rule::none, Rule::syntactic));
+  push_back(new Rule(0, 0, false, true, Rule::none, Rule::none, Rule::none, Rule::syntactic));
+  // push_back(new Rule(1, 0, false, false, Rule::none, Rule::none, Rule::none, Rule::syntactic));
+  // push_back(new Rule(1, 0, true, false, Rule::none, Rule::none, Rule::none, Rule::syntactic));
+  // push_back(new Rule(1, 0, false, true, Rule::none, Rule::none, Rule::none, Rule::syntactic));
+  push_back(new Rule(0, 1, false, false, Rule::none, Rule::none, Rule::none, Rule::syntactic));
+  push_back(new Rule(0, 1, true, false, Rule::none, Rule::none, Rule::none, Rule::syntactic));
+  push_back(new Rule(0, 1, false, true, Rule::none, Rule::none, Rule::none, Rule::syntactic));
+
+  push_back(new Rule(0, 0, false, false, Rule::pos, Rule::none, Rule::none, Rule::syntactic));
+  push_back(new Rule(0, 0, false, false, Rule::none, Rule::pos, Rule::none, Rule::syntactic));
+  push_back(new Rule(0, 0, false, false, Rule::none, Rule::none, Rule::pos, Rule::syntactic));
+  push_back(new Rule(0, 0, false, false, Rule::pos, Rule::none, Rule::none, Rule::semantic));
+  push_back(new Rule(0, 0, false, false, Rule::none, Rule::pos, Rule::none, Rule::semantic));
+  push_back(new Rule(0, 0, false, false, Rule::none, Rule::none, Rule::pos, Rule::semantic));
+  push_back(new Rule(0, 0, false, false, Rule::lexical, Rule::none, Rule::none, Rule::syntactic));
+  push_back(new Rule(0, 0, false, false, Rule::none, Rule::lexical, Rule::none, Rule::syntactic));
+  push_back(new Rule(0, 0, false, false, Rule::none, Rule::none, Rule::lexical, Rule::syntactic));
+  push_back(new Rule(0, 0, false, false, Rule::lexical, Rule::none, Rule::none, Rule::semantic));
+  push_back(new Rule(0, 0, false, false, Rule::none, Rule::lexical, Rule::none, Rule::semantic));
+  push_back(new Rule(0, 0, false, false, Rule::none, Rule::none, Rule::lexical, Rule::semantic));
+
+  push_back(new NNGram(1, 1, false, false, NNGram::none, NNGram::none, NNGram::none, NNGram::syntactic, false, false));
+  push_back(new NNGram(1, 1, false, false, NNGram::none, NNGram::none, NNGram::none, NNGram::syntactic, true, false));
+  push_back(new NNGram(1, 1, false, false, NNGram::none, NNGram::none, NNGram::none, NNGram::syntactic, true, true));
+  push_back(new NNGram(1, 2, false, false, NNGram::none, NNGram::none, NNGram::none, NNGram::syntactic, false, false));
+  push_back(new NNGram(1, 1, true, false, NNGram::none, NNGram::none, NNGram::none, NNGram::syntactic, false, false));
+  push_back(new NNGram(1, 1, false, true, NNGram::none, NNGram::none, NNGram::none, NNGram::syntactic, false, false));
+  push_back(new NNGram(1, 1, false, false, NNGram::pos, NNGram::none, NNGram::none, NNGram::syntactic, false, false));
+  push_back(new NNGram(1, 1, false, false, NNGram::pos, NNGram::pos, NNGram::none, NNGram::syntactic, false, false));
+  push_back(new NNGram(1, 1, false, false, NNGram::pos, NNGram::pos, NNGram::pos, NNGram::syntactic, false, false));
+  // push_back(new NNGram(1, 1, false, false, NNGram::lexical, NNGram::pos, NNGram::pos, NNGram::syntactic, false, false));
+  push_back(new NNGram(1, 1, false, false, NNGram::pos, NNGram::none, NNGram::none, NNGram::semantic, false, false));
+  push_back(new NNGram(1, 1, false, false, NNGram::pos, NNGram::pos, NNGram::none, NNGram::semantic, false, false));
+  push_back(new NNGram(1, 1, false, false, NNGram::pos, NNGram::pos, NNGram::pos, NNGram::semantic, false, false));
+  // push_back(new NNGram(1, 1, false, false, NNGram::lexical, NNGram::pos, NNGram::pos, NNGram::semantic, false, false));
+
+  push_back(new NNGram(2, 1, false, false, NNGram::none, NNGram::none, NNGram::none, NNGram::syntactic, false, false));
+  push_back(new NNGram(2, 1, false, false, NNGram::none, NNGram::none, NNGram::none, NNGram::syntactic, true, false));
+  push_back(new NNGram(2, 1, false, false, NNGram::none, NNGram::none, NNGram::none, NNGram::syntactic, true, true));
+  push_back(new NNGram(2, 2, false, false, NNGram::none, NNGram::none, NNGram::none, NNGram::syntactic, false, false));
+  push_back(new NNGram(2, 1, true, false, NNGram::none, NNGram::none, NNGram::none, NNGram::syntactic, false, false));
+  push_back(new NNGram(2, 1, false, true, NNGram::none, NNGram::none, NNGram::none, NNGram::syntactic, false, false));
+  push_back(new NNGram(2, 1, false, false, NNGram::pos, NNGram::none, NNGram::none, NNGram::syntactic, false, false));
+  push_back(new NNGram(2, 1, false, false, NNGram::pos, NNGram::pos, NNGram::none, NNGram::syntactic, false, false));
+  push_back(new NNGram(2, 1, false, false, NNGram::pos, NNGram::pos, NNGram::pos, NNGram::syntactic, false, false));
+  // push_back(new NNGram(2, 1, false, false, NNGram::lexical, NNGram::pos, NNGram::pos, NNGram::syntactic, false, false));
+  push_back(new NNGram(2, 1, false, false, NNGram::pos, NNGram::none, NNGram::none, NNGram::semantic, false, false));
+  push_back(new NNGram(2, 1, false, false, NNGram::pos, NNGram::pos, NNGram::none, NNGram::semantic, false, false));
+  push_back(new NNGram(2, 1, false, false, NNGram::pos, NNGram::pos, NNGram::pos, NNGram::semantic, false, false));
+  // push_back(new NNGram(2, 1, false, false, NNGram::lexical, NNGram::pos, NNGram::pos, NNGram::semantic, false, false));
+
+  push_back(new NNGram(3, 1, false, false, NNGram::none, NNGram::none, NNGram::none, NNGram::syntactic, false, false));
+  push_back(new NNGram(3, 1, false, false, NNGram::none, NNGram::none, NNGram::none, NNGram::syntactic, true, false));
+  push_back(new NNGram(3, 1, false, false, NNGram::none, NNGram::none, NNGram::none, NNGram::syntactic, true, true));
+  push_back(new NNGram(3, 2, false, false, NNGram::none, NNGram::none, NNGram::none, NNGram::syntactic, false, false));
+  push_back(new NNGram(3, 1, true, false, NNGram::none, NNGram::none, NNGram::none, NNGram::syntactic, false, false));
+  push_back(new NNGram(3, 1, false, true, NNGram::none, NNGram::none, NNGram::none, NNGram::syntactic, false, false));
+  push_back(new NNGram(3, 1, false, false, NNGram::pos, NNGram::none, NNGram::none, NNGram::syntactic, false, false));
+  push_back(new NNGram(3, 1, false, false, NNGram::pos, NNGram::pos, NNGram::none, NNGram::syntactic, false, false));
+  push_back(new NNGram(3, 1, false, false, NNGram::pos, NNGram::pos, NNGram::pos, NNGram::syntactic, false, false));
+  // push_back(new NNGram(3, 1, false, false, NNGram::lexical, NNGram::pos, NNGram::pos, NNGram::syntactic, false, false));
+  push_back(new NNGram(3, 1, false, false, NNGram::pos, NNGram::none, NNGram::none, NNGram::semantic, false, false));
+  push_back(new NNGram(3, 1, false, false, NNGram::pos, NNGram::pos, NNGram::none, NNGram::semantic, false, false));
+  push_back(new NNGram(3, 1, false, false, NNGram::pos, NNGram::pos, NNGram::pos, NNGram::semantic, false, false));
+  // push_back(new NNGram(3, 1, false, false, NNGram::lexical, NNGram::pos, NNGram::pos, NNGram::semantic, false, false));
+
+  push_back(new Heads(2, false, false, Heads::syntactic));
+  push_back(new Heads(2, false, false, Heads::semantic));
+  push_back(new Heads(2, true, false, Heads::syntactic));
+  push_back(new Heads(2, true, false, Heads::semantic));
+  push_back(new Heads(2, false, true, Heads::syntactic));
+  push_back(new Heads(2, false, true, Heads::semantic));
+  push_back(new Heads(2, true, true, Heads::syntactic));
+  push_back(new Heads(2, true, true, Heads::semantic));
+  push_back(new Heads(3, false, false, Heads::syntactic));
+  push_back(new Heads(3, false, false, Heads::semantic));
+
+  push_back(new SynSemHeads(SynSemHeads::none));
+  push_back(new SynSemHeads(SynSemHeads::lex_syn));
+  // push_back(new SynSemHeads(SynSemHeads::lex_all));
+
+  push_back(new RBContext(false, false, false, RBContext::syntactic));
+  push_back(new RBContext(false, false, false, RBContext::semantic));
+  push_back(new RBContext(true, false, false, RBContext::syntactic));
+  push_back(new RBContext(true, false, false, RBContext::semantic));
+  push_back(new RBContext(false, true, false, RBContext::syntactic));
+  push_back(new RBContext(false, true, false, RBContext::semantic));
+  push_back(new RBContext(false, false, true, RBContext::syntactic));
+  push_back(new RBContext(false, false, true, RBContext::semantic));
+
+  push_back(new SubjVerbAgr());
+
+  push_back(new CoPar(false));
+  push_back(new CoPar(true));
+  push_back(new CoLenPar());
+
+  push_back(new Word(1));
+  push_back(new Word(2));
+
+  push_back(new WProj());
+ 
+  push_back(new RightBranch());
+
+  push_back(new Heavy());
+
+  for (size_type binflag = 0; binflag < 2; ++binflag)
+    for (size_type nleftprec = 0; nleftprec <= maxwidth; ++nleftprec)
+      for (size_type nleftsucc = 0; nleftsucc <= maxwidth; ++nleftsucc)
+	for (size_type nrightprec = 0; nrightprec <= maxwidth; ++nrightprec)
+	  for (size_type nrightsucc = 0; nrightsucc <= maxwidth; ++nrightsucc)
+	    if (nleftprec + nleftsucc + nrightprec + nrightsucc <= maxsumwidth)
+	      for (size_type nleftprecw = 0; nleftprecw <= nleftprec; ++nleftprecw)
+		for (size_type nleftsuccw = 0; nleftsuccw <= nleftsucc; ++nleftsuccw)
+		  for (size_type nrightprecw = 0; nrightprecw <= nrightprec; ++nrightprecw)
+		    for (size_type nrightsuccw = 0; nrightsuccw <= nrightsucc; ++nrightsuccw)
+		      if (nleftprecw + nleftsuccw + nrightprecw + nrightsuccw <= maxwords)
+			push_back(new WEdges(binflag, nleftprec, nleftprecw, nleftsucc, nleftsuccw, nrightprec, nrightprecw, nrightsucc, nrightsuccw));
+
+  push_back(new NGramTree(2, NGramTree::none, false));
+  push_back(new NGramTree(2, NGramTree::functional, false));
+  push_back(new NGramTree(2, NGramTree::all, false));
+  push_back(new NGramTree(2, NGramTree::none, true));
+  push_back(new NGramTree(2, NGramTree::functional, true));
+  push_back(new NGramTree(2, NGramTree::all, true));
+  // push_back(new NGramTree(3, NGramTree::none, true));
+  // push_back(new NGramTree(3, NGramTree::functional, true));
+
+  push_back(new HeadTree(false, false, 0, HeadTree::syntactic));
+  push_back(new HeadTree(false, false, 0, HeadTree::semantic));
+  push_back(new HeadTree(true, false, 0, HeadTree::syntactic));
+  push_back(new HeadTree(true, false, 0, HeadTree::semantic));
+  push_back(new HeadTree(true, true, 0, HeadTree::syntactic));
+  push_back(new HeadTree(true, true, 0, HeadTree::semantic));
+}  // mfeatures()
+
+inline void FeatureClassPtrs::minfeatures() {
+  push_back(new Parser());
+  push_back(new RelLogP());
+  push_back(new InterpLogCondP(2,5));
+  push_back(new InterpLogCondP(2,10));
+  push_back(new InterpLogCondP(2,20));
+  push_back(new InterpLogCondP(2,50));
+  push_back(new InterpLogCondP(7,5));
+  push_back(new InterpLogCondP(7,10));
+  push_back(new InterpLogCondP(7,20));
+  push_back(new InterpLogCondP(7,50));
+  push_back(new InterpLogCondP(10,5));
+  push_back(new InterpLogCondP(10,10));
+  push_back(new InterpLogCondP(10,20));
+  push_back(new InterpLogCondP(10,50));
+  push_back(new InterpLogCondP(20,5));
+  push_back(new InterpLogCondP(20,10));
+  push_back(new InterpLogCondP(20,20));
+  push_back(new InterpLogCondP(20,50));
+  push_back(new InterpLogCondP(50,5));
+  push_back(new InterpLogCondP(50,10));
+  push_back(new InterpLogCondP(50,20));
+  push_back(new InterpLogCondP(50,50));
+}  // minfeatures()
+
 
 //! FeatureClassPtrs::FeatureClassPtrs() preloads a
 //! set of features.
 //
 inline FeatureClassPtrs::FeatureClassPtrs(const char* fcname) {
-  // features_connll();
-  if (fcname == NULL)
-    features_050902();
-  else if (strcmp(fcname, "071114") == 0)
-    features_071114(); 
-  else if (strcmp(fcname, "conll") == 0)
-    features_connll();
-  else if (strcmp(fcname, "splh") == 0)
-    features_splh();
-  else if (strcmp(fcname, "splhextra") == 0)
-    features_splhextra();
-  else if (strcmp(fcname, "wedges") == 0)
-    features_wedges();
+  if (fcname == NULL || strcmp(fcname, "nfeatures") == 0)
+    nfeatures();
+  else if (strcmp(fcname, "nnfeatures") == 0)
+    nnfeatures();
+  else if (strcmp(fcname, "mfeatures") == 0)
+    mfeatures();
+  else if (strcmp(fcname, "rfeatures") == 0)
+    rfeatures();
+  else if (strcmp(fcname, "sfeatures") == 0)
+    sfeatures();
+  else if (strcmp(fcname, "minfeatures") == 0)
+    minfeatures();
   else {
-    std::cerr << "## Error in splhfeatures.h: FeatureClassPtrs::FeatureClassPtrs(), unknown fcname = "
+    std::cerr << "## Error in nmultifeatures.h: FeatureClassPtrs::FeatureClassPtrs(), unknown fcname = "
 	      << fcname << std::endl;
     exit(EXIT_FAILURE);
   }
@@ -3122,4 +3659,3 @@ inline FeatureClassPtrs::FeatureClassPtrs(const char* fcname) {
 
 #undef FloatTol
 
-#endif // SPFEATURES_H
