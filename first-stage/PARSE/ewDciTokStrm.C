@@ -135,25 +135,6 @@ read()             // tion, savedWrd_  may or may not be empty, and nextWrd_
 	return "</s>";                          //  ing Error" (unbracketed
     }                                           //  text) that follows.
 
-    while( savedWrd_ == "<s>"               // Starting in 1989, lines brack-
-           &&  nextWrd_ == "@" )            //  eted as sentences but with an
-    {                                       //   @  following the  <s>  hold
-        //cerr << "before @ flush" << endl;				      
-	savedWrd_ = flush_to_sentence();    //  data arranged as charts or
-        //cerr << "aft @ flush" << endl;				      
-	if(useCin)
-	  {
-	    if( !cin )                        //  tables.  It is non-text-like
-	      nextWrd_ = "";                  //  and should be discarded.
-	    else cin >> nextWrd_;
-	  }
-	else
-	  {
-	    if( !istr_ )                      //  tables.  It is non-text-like
-	      nextWrd_ = "";                  //  and should be discarded.
-	    else istr_ >> nextWrd_;
-	  }
-    }
     if(docEnd)
       {
 	docEnd = 0;
