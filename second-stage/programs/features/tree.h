@@ -1231,6 +1231,9 @@ int get_head_num(const tree_node<label_type>* t, bool syntactic_head)
 
   const tree_node<label_type>* head_child = syntactic_head ? tree_syntacticHeadChild(t): tree_semanticHeadChild(t);
 
+  if (!head_child)
+    return 0;
+
   int head_num = 0;
   tree_node<label_type> *p = t->child;
   while(p != head_child)
