@@ -403,7 +403,7 @@ wordPlist(Wrd* word, int word_num)
   if(!ans.empty()) return ans;
   if(printDebug(500))
     cerr << "wordPlist " << *word << endl;
-  char temp[512];
+  char temp[1024];
   ECString head(word->lexeme());
   ECString headL(langAwareToLower(head.c_str(),temp));
   int wint = wtoInt(headL); 
@@ -507,7 +507,7 @@ pCapgt(const Wrd* shU, int t)
     return 1;
   //cerr << "pCapgt = " << pcap << endl;
   if(shU->lexeme().length() < 2) return 1;  //ignore words of length 1;
-  char temp[512];
+  char temp[1024];
   ECString sh(langAwareToLower(shU->lexeme().c_str(),temp));
   bool cap = false;
   /* if all caps, ignore capitalization evidence */
@@ -554,7 +554,7 @@ psutt(const Wrd* shU, int t)
   assert(ans >= 0);
   if(Term::fromInt(t)->openClass())
     {
-      char temp[512];
+      char temp[1024];
       ECString sh(langAwareToLower(shU->lexeme().c_str(),temp));
       float phegt = pegt(sh,t);
       if(phegt == 0) phegt = .00001;

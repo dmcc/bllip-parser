@@ -68,7 +68,7 @@ char*
 toLower(const char* str, char* temp)
 {
   int l = strlen(str);
-  assert(l < 512);
+  assert(l < 1024);
   for(int i = 0 ; i <= l ; i++)
     {
       char n = str[i];

@@ -83,7 +83,7 @@ addWwData(InputTree* tree)
   if( tree->word() != ""  )
     {
       ECString hdLexU(tree->word());
-      char temp[512];
+      char temp[1024];
       ECString hdLex(langAwareToLower(hdLexU.c_str(),temp));
       int len = hdLex.length();
       const WordInfo* wi = Pst::get(hdLex); //???;

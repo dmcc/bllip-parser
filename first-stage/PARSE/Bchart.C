@@ -73,7 +73,7 @@ Bchart(SentRep & sentence, int id)
   lastWord[id]=lastKnownWord;
   int i,j;
   assert(len <= MAXSENTLEN);
-  char temp[512];
+  char temp[1024];
   for(i = 0 ; i < len ; i++)
     {
       ECString wl = langAwareToLower(sentence[i].lexeme().c_str(), temp);
@@ -99,7 +99,7 @@ Bchart(SentRep & sentence, ExtPos& extPos,int id)
   lastWord[id]=lastKnownWord;
   int i,j;
   assert(len <= MAXSENTLEN);
-  char temp[512];
+  char temp[1024];
   for(i = 0 ; i < len ; i++)
     {
       ECString wl = langAwareToLower(sentence[i].lexeme().c_str(), temp);

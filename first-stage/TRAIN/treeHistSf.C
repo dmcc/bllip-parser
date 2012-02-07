@@ -302,7 +302,7 @@ int
 headFromTree(InputTree* tree)
 {
 
-  char temp[512];
+  char temp[1024];
   string wrdStr(langAwareToLower(tree->head().c_str(), temp));
   const WordInfo* wi = Pst::get(wrdStr);
   if(!wi)
@@ -408,7 +408,7 @@ tree_grandparent_head(TreeHist* treeh)
   pt = pt->parent();
   if(!pt) return topInt;
 
-  char temp[512];
+  char temp[1024];
   ECString wrdStr(langAwareToLower(pt->head().c_str(),temp));
   const WordInfo* wi = Pst::get(wrdStr);
   if(!wi)
@@ -756,7 +756,7 @@ tree_watpos(int pos)
       return nullWordInt;
     }
   ECString wrd = sentence[pos]->head();
-  char tmp[512];
+  char tmp[1024];
   ECString wrdl=langAwareToLower(wrd.c_str(), tmp);
   const WordInfo* wi = Pst::get(wrdl);
   assert(wi);

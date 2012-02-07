@@ -83,7 +83,7 @@ Pst::
 wordPlistConstruct(const ECString& head, int word_num)
 {
   list<double> ans;
-  char temp[512];
+  char temp[1024];
   ECString headL(langAwareToLower(head.c_str(), temp));
   const WordInfo* wi = useHeadC( headL );
   if( wi )
@@ -125,7 +125,7 @@ double
 Pst::
 pstt(ECString& shU, int t, int word_num)
 {
-  char temp[512];
+  char temp[1024];
   ECString sh(langAwareToLower(shU.c_str(), temp));
   const Term* tTerm = Term::fromInt(t);
   double phst = pHst(sh, t);
@@ -140,7 +140,7 @@ double
 Pst::
 psktt(const ECString& shU, int t, int word_num)
 {
-  char temp[512];
+  char temp[1024];
   ECString sh(langAwareToLower(shU.c_str(), temp));
   double ans = pHst(sh, t);
   double phcp = pCapgt(shU,t, word_num);
@@ -167,7 +167,7 @@ psutt(const ECString& shU, int t, int word_num)
   ans *= .000001;
   if(Term::fromInt(t)->openClass())
     {
-      char temp[512];
+      char temp[1024];
       ECString sh(langAwareToLower(shU.c_str(),temp));
       float phegt = pegt(sh,t);
       if(phegt == 0) phegt = .00001;
@@ -189,7 +189,7 @@ pCapgt(const ECString& shU, int t, int word_num)
   if(word_num == 0) return 1;
   //cerr << "pCapgt = " << pcap << endl;
   if(shU.length() < 2) return 1;  //ignore words of length 1;
-  char temp[512];
+  char temp[1024];
   ECString sh(langAwareToLower(shU.c_str(),temp));
   bool cap = false;
   if(shU[0] != sh[0] && shU[1] == sh[1]) cap = true;

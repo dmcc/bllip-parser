@@ -136,7 +136,7 @@ next(Item*& itm, int& dir)
 {
   //if(pos_ > 20) cerr << "MOGI pos " << pos_ << " " << size_ << " " << *firstRight_<<endl;
   if(pos_ < 0) return false;
-  assert(pos_ < 256);
+  assert(pos_ < 400);
   itm = lrarray[pos_];
   //if(pos_ > 20) cerr << "MOGI itm " << *itm << endl;
   dir = dir_;
@@ -166,7 +166,7 @@ MiddleOutGotIter(Edge* e)
   int i = 0;
   while(gi.next(itm))
     {
-      assert(i < 256);
+      assert(i < 400);
       lrarray[i] = itm;
       //cerr << "lrgi " << *itm << endl;
       if(itm->start() == spos && !startRight)

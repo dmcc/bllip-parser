@@ -50,7 +50,7 @@ int                 numTerm[MAXNUMNTS];
 void
 incrWordData(int lhsInt, ECString wupper)
 {
-  char temp[512];
+  char temp[1024];
   ECString w(langAwareToLower(wupper.c_str(), temp));
   numTerm[lhsInt]++;
   WordMap::iterator wmi = wordMap.find(w);

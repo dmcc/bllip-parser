@@ -80,7 +80,7 @@ char*
 langAwareToLower(const char* str, char* temp)
 {
   int l = strlen(str);
-  assert(l < 512);
+  assert(l < 1024);
 
   /* Arabic doesn't get lowercased, all other languages do (for now) */
   if (Term::Language == "Ar") {
@@ -95,7 +95,7 @@ char*
 toLower(const char* str, char* temp)
 {
   int l = strlen(str);
-  assert(l < 512);
+  assert(l < 1024);
   for(int i = 0 ; i <= l ; i++)
     {
       char n = str[i];

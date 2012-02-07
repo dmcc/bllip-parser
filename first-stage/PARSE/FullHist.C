@@ -32,7 +32,7 @@ extendByEdge(Edge* e1)
       int termInt = itm->term()->toInt();
       //cerr << "ebei " << termInt << endl;
       FullHist* st = new FullHist(termInt, this,itm);
-      assert(i < 256);
+      assert(i < 400);
       fharray[i++] = st;
       st->cpos = 0;
     }

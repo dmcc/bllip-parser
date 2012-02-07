@@ -61,7 +61,7 @@ class           MiddleOutGotIter
   int     dir() { return dir_; }
  private:
   void         makelrgi(Edge* edge);
-  Item*        lrarray[256];
+  Item*        lrarray[400];
   int          pos_;
   int          size_;
   int          dir_;

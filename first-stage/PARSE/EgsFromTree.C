@@ -45,7 +45,7 @@ edgesFromTree(InputTree* tree)
   if(trm->terminal_p())
     {
       ECString tmpW1 = tree->word();
-      char chars[512];
+      char chars[1024];
       ECString tmpW = langAwareToLower(tmpW1.c_str(), chars);
       
       int wInt = wtoInt(tmpW);
