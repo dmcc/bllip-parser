@@ -833,7 +833,6 @@ addSubFeatureFns()
   stopTermInt = stopTerm->toInt();
   ECString wrdm = "^^";
   const WordInfo* wmi = Pst::get(wrdm);
-  cout << "wrdm: " << wrdm << endl;
   assert(wmi);
   int ans = wmi->toInt();
   nullWordInt = ans;
