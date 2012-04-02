@@ -84,11 +84,13 @@ machine this is:
 
 PENNWSJTREEBANK=/usr/local/data/Penn3/parsed/mrg/wsj/
 
-You'll also need the Boost C++ and the Petsc/Tao C++ libraries in
-order to retrain the reranker.  The environment variables PETSC_DIR
-and TAO_DIR should all point to the installation directories of this
-software.  I define these variables in my .login file as follows on my
-machine.
+If you're using cvlm as your estimator (note that this is no longer the
+default), you'll also need the Boost C++ and the Petsc/Tao C++ libraries
+in order to retrain the reranker.  If you're using cvlm-owlqn as your
+estimator, you can ignore these steps.  Install instructions for Petsc/Tao
+are given later in this document.  The environment variables PETSC_DIR and
+TAO_DIR should all point to the installation directories of this software.
+I define these variables in my .login file as follows on my machine.
 
 setenv PETSC_DIR /usr/local/share/petsc
 setenv TAO_DIR /usr/local/share/tao
@@ -199,8 +201,9 @@ Then run oparse.sh, rather than parse.sh.
 INSTALLING PETSC AND TAO
 ========================
 
-You'll need to have PETSc and Tao installed in order to 
-retrain the reranker.
+If you're using cvlm as your estimator, you'll need to have PETSc and
+Tao installed in order to retrain the reranker.  Otherwise, you can
+safely ignore this section.
 
 These installation instructions work for gcc version 4.2.1 (you also
 need g++ and gfortran).
