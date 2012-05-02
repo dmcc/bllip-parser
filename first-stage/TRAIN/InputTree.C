@@ -202,10 +202,14 @@ newParse(istream& is, int& strt, InputTree* par)
 		}
 	}
     }
-  if(Term::Language == "Ch" && trm == "PU") trm = wrd;
+  if(Term::Language == "Ch" && trm == "PU") {
+    if (Term::get(wrd)) {
+      trm = wrd;
+    }
+  }
   if (!Term::get(trm))
     {
-      cerr<<trm<<endl;
+      cerr << "Couldn't find term: " << trm << endl;
       assert(Term::get(trm));
     }
   if(wrd == "" && subTrs.size() == 0) return NULL;

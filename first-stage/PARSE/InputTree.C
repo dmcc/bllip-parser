@@ -174,7 +174,9 @@ newParse(istream& is, int& strt, InputTree* par)
   /* fixes bugs in Chinese Treebank */
   if(Term::Language == "Ch")
     {
-      if(trm == "PU") trm = wrd;
+      if (trm == "PU" && Term::get(wrd)) {
+        trm = wrd;
+      }
       const Term* ctrm = Term::get(trm);
       if(!ctrm)
 	{
