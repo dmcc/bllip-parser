@@ -1,4 +1,3 @@
-
 #include "ExtPos.h"
 #include "utils.h"
 #include <sstream>
@@ -51,4 +50,15 @@ read(ifstream* isp,SentRep& sr)
     }
     push_back(vt);
   }
+}
+
+bool ExtPos::hasExtPos() {
+    for (size_t i = 0; i < size(); i ++) {
+        vector<const Term*> terms = operator[](i);
+        if (terms.size() > 0) {
+            return true;
+        }
+    }
+
+    return false;
 }

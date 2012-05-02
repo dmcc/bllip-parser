@@ -19,6 +19,8 @@
  * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ *
+ * vi:ts=8
  */
 
 #include <pthread.h>
@@ -65,6 +67,8 @@ typedef list<printStruct> PrintStack;
 static void* mainLoop (void* arg);
 static void printSkipped( SentRep *srp, MeChart *chart,PrintStack& pstk, printStruct& ps);
 static void workOnPrintStack(PrintStack* printStack);
+static bool decodeParses(int len, int locCount, SentRep* srp, MeChart* chart, printStruct& printS, 
+                         PrintStack& printStack);
 
 //-----------------------
 // Constants
@@ -232,76 +236,50 @@ mainLoop(void* arg)
       Item* topS = chart->topS();
       if(!topS)
 	{
-	  WARN( "Parse failed: !topS" );
-	  printSkipped(srp,chart,printStack,printS);
-	  delete chart;
-	  continue;
+          if (extPos.hasExtPos()) {
+              WARN("Parse failed: !topS -- reparsing without POS constraints");
+              chart = new MeChart(*srp, *id);
+              chart->parse();
+              topS = chart->topS();
+              if (!topS) {
+                  WARN("Reparsing without POS constraints failed too: !topS");
+                  printSkipped(srp, chart, printStack, printS);
+                  delete chart;
+                  continue;
+              }
+          } else {
+              WARN( "Parse failed: !topS" );
+              printSkipped(srp,chart,printStack,printS);
+              delete chart;
+              continue;
+          }
 	}
-      // compute the outside probabilities on the items so that we can
-      // skip doing detailed computations on the really bad ones 
-      chart->set_Alphas();
 
-      Bst& bst = chart->findMapParse();
-      if( bst.empty())
-	{
-	  WARN( "Parse failed: chart->findMapParse().empty()" );
-	  printSkipped(srp,chart,printStack,printS);
-	  delete chart;
-	  continue;
-	}
-      if(Feature::isLM)
-	{
-	  double lgram = log2(bst.sum());
-	  lgram -= (len*log600);
-	  double pgram = pow(2,lgram);
-	  double iptri =chart->triGram();;
-	  double ltri = (log2(iptri)-len*log600);
-	  double ptri = pow(2.0,ltri);
-	  double pcomb = (0.667 * pgram)+(0.333 * ptri);
-	  double lmix = log2(pcomb);
-	  if(locCount%10==9)cout << lgram << "\t" << ltri << "\t" << lmix << "\n";
-	}
-      int numVersions = 0;
-      Link diffs(0);
-      //cerr << "Need num diff: " << Bchart::Nth << endl;
-      for(numVersions = 0 ; ; numVersions++)
-	{
-	  short pos = 0;
-	  Val* v = bst.next(numVersions);
-	  if(!v) break;
-	  double vp = v->prob();
-	  if(vp == 0) break;
-	  if(isnan(vp)) break;
-	  if(isinf(vp)) break;
-	  InputTree* mapparse=inputTreeFromBsts(v,pos,*srp);
-	  bool isU;
-	  int cnt = 0;
-	  diffs.is_unique(mapparse, isU,cnt);
-	  if(cnt != len)
-	    {
-	      cerr << "Bad length parse for: " << *srp << endl;
-	      cerr << *mapparse << endl;
-	      assert(cnt == len);
-	    }
-	  if(isU)
-	    {
-	      printS.probs.push_back(v->prob());
-	      printS.trees.push_back(mapparse);
-	      printS.numDiff++;
-	    }
-	  else
-	    {
-	      delete mapparse;
-	    }
-	  if(printS.numDiff >= Bchart::Nth) break;
-	  if(numVersions > 20000) break;
-	}
+      bool failed = decodeParses(len, locCount, srp, chart, printS, printStack);
+      if (failed) {
+        continue;
+      }
+
       if( printS.numDiff == 0)
 	{
-	  WARN( "Parse failed from 0, inf or nan probabililty" );
-	  printSkipped(srp,chart,printStack,printS);
-	  delete chart;
-	  continue;
+          if (extPos.hasExtPos()) {
+              WARN("Parse failed from 0, inf or nan probabililty -- reparsing without POS constraints");
+              chart = new MeChart(*srp, *id);
+              chart->parse();
+
+              bool failed = decodeParses(len, locCount, srp, chart, printS, printStack);
+              if (failed || printS.numDiff == 0) {
+                WARN("Parse failed from 0, inf or nan probabililty -- failed even without POS constraints");
+                printSkipped(srp,chart,printStack,printS);
+                delete chart;
+                continue;
+              }
+          } else {
+              WARN("Parse failed from 0, inf or nan probabililty");
+              printSkipped(srp,chart,printStack,printS);
+              delete chart;
+              continue;
+          }
 	}
 
       /* put the sentence with which we just finished at the end of the printStack*/
@@ -316,6 +294,69 @@ mainLoop(void* arg)
   }
   
   return 0;
+}
+
+static bool decodeParses(int len, int locCount, SentRep* srp, MeChart* chart, printStruct& printS, 
+                         PrintStack& printStack) {
+  // compute the outside probabilities on the items so that we can
+  // skip doing detailed computations on the really bad ones 
+  chart->set_Alphas();
+  Bst& bst = chart->findMapParse();
+  if( bst.empty())
+    {
+      WARN( "Parse failed: chart->findMapParse().empty()" );
+      printSkipped(srp,chart,printStack,printS);
+      delete chart;
+      return true;
+    }
+  if(Feature::isLM)
+    {
+      double lgram = log2(bst.sum());
+      lgram -= (len*log600);
+      double pgram = pow(2,lgram);
+      double iptri =chart->triGram();;
+      double ltri = (log2(iptri)-len*log600);
+      double ptri = pow(2.0,ltri);
+      double pcomb = (0.667 * pgram)+(0.333 * ptri);
+      double lmix = log2(pcomb);
+      if(locCount%10==9)cout << lgram << "\t" << ltri << "\t" << lmix << "\n";
+    }
+  int numVersions = 0;
+  Link diffs(0);
+  for(numVersions = 0 ; ; numVersions++)
+    {
+      short pos = 0;
+      Val* v = bst.next(numVersions);
+      if(!v) break;
+      double vp = v->prob();
+      if(vp == 0) break;
+      if(isnan(vp)) break;
+      if(isinf(vp)) break;
+      InputTree* mapparse=inputTreeFromBsts(v,pos,*srp);
+      bool isUnique;
+      int cnt = 0;
+      diffs.is_unique(mapparse, isUnique,cnt);
+      if(cnt != len)
+        {
+          cerr << "Bad length parse for: " << *srp << endl;
+          cerr << *mapparse << endl;
+          assert(cnt == len);
+        }
+      if(isUnique)
+        {
+          printS.probs.push_back(v->prob());
+          printS.trees.push_back(mapparse);
+          printS.numDiff++;
+        }
+      else
+        {
+          delete mapparse;
+        }
+      if(printS.numDiff >= Bchart::Nth) break;
+      if(numVersions > 20000) break;
+    }
+
+    return false;
 }
 
 //------------------------------
