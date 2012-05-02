@@ -81,7 +81,6 @@ addWwData(InputTree* tree)
       subTree = *subTreeIter;
       addWwData(subTree);
     }
-  //cerr << *tree << endl;
   if( tree->word() != ""  )
     {
       ECString w = tree->word();
@@ -107,7 +106,6 @@ main(int argc, char *argv[])
   if(args.isset('L')) Term::Language = args.value('L');
   readHeadInfo(path);
 
-
   int sentenceCount = 0;
 
   ECString s1lex("^^");
@@ -118,8 +116,6 @@ main(int argc, char *argv[])
   ur.init();
   while(cin)
     {
-      //if(sentenceCount > 4000) break;
-
       if(sentenceCount%10000 == 0) cerr << sentenceCount << endl;
 
       InputTree  parse;
