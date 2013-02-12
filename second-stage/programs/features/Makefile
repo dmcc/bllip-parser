@@ -1,3 +1,15 @@
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License.  You may obtain
+# a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+# License for the specific language governing permissions and limitations
+# under the License.
+
 TARGETS = best-parses best-splhparses best-spmparses extract-spmfeatures best-nmparses extract-nmfeatures extract-spmultifeatures extract-nmultifeatures extract-spfeatures extract-splhfeatures extract-nfeatures oracle-score
 SOURCES = best-parses.cc best-splhparses.cc best-spmparses.cc extract-spmultifeatures.cc extract-spmfeatures.cc extract-nmultifeatures.cc best-nmparses.cc extract-nmfeatures.cc extract-nfeatures.cc extract-splhfeatures.cc extract-spfeatures.cc heads.cc read-tree.l sym.cc oracle-score.cc
 OBJECTS = $(patsubst %.l,%.o,$(patsubst %.c,%.o,$(SOURCES:%.cc=%.o)))

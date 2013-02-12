@@ -84,13 +84,19 @@ machine this is:
 
 PENNWSJTREEBANK=/usr/local/data/Penn3/parsed/mrg/wsj/
 
-If you're using cvlm as your estimator (note that this is no longer the
-default), you'll also need the Boost C++ and the Petsc/Tao C++ libraries
-in order to retrain the reranker.  If you're using cvlm-owlqn as your
-estimator, you can ignore these steps.  Install instructions for Petsc/Tao
-are given later in this document.  The environment variables PETSC_DIR and
-TAO_DIR should all point to the installation directories of this software.
-I define these variables in my .login file as follows on my machine.
+On estimators: There are multiple estimators one can use when retraining
+the reranker.  cvlm and cvlm-owlqn are the main ones of interest.
+cvlm-owlqn is significantly faster than cvlm but unfortunately has been
+removed from this distribution due to licensing conflicts (but see the
+license section at the bottom of this file).
+
+If you're using cvlm as your estimator (the default), you'll also need
+the Boost C++ and the Petsc/Tao C++ libraries in order to retrain the
+reranker.  If you're using cvlm-owlqn as your estimator, you can ignore
+these steps.  Install instructions for Petsc/Tao are given later in
+this document.  The environment variables PETSC_DIR and TAO_DIR should
+all point to the installation directories of this software.  I define
+these variables in my .login file as follows on my machine.
 
 setenv PETSC_DIR /usr/local/share/petsc
 setenv TAO_DIR /usr/local/share/tao
@@ -232,3 +238,10 @@ make all
 
 cd ../tao
 make all
+
+QUESTIONABLY LICENSED FILES
+===========================
+The parser is now available under the Apache 2.0 license.  Any files with
+incompatible licenses have been removed from the distribution.  They can
+be restored with the script restore_questionably_licensed_files.sh
+You should consult with your local attorney if you're unsure what this means.

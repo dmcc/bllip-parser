@@ -1,3 +1,15 @@
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License.  You may obtain
+# a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+# License for the specific language governing permissions and limitations
+# under the License.
+
 # Top-level makefile for reranking parser
 # Mark Johnson, 28th July 2008 -- added EXEC prefix to major commands
 
@@ -169,14 +181,14 @@ FEATURESNICKNAME=sp
 # perceptron).  If you decide to use a different feature weight
 # estimator you should also change ESTIMATORNICKNAME below.
 #
-ESTIMATOR=second-stage/programs/wlle/cvlm-owlqn
+ESTIMATOR=second-stage/programs/wlle/cvlm
 
 # ESTIMATORFLAGS are flags given to the estimator
 #
-# These flags are for cvlm-owlqn:
-ESTIMATORFLAGS=-l 1 -c 10 -F 1 -d 10 -n -1
-# The equivalent ESTIMATORFLAGS for cvlm:
-#   ESTIMATORFLAGS=-l 1 -c0 10 -Pyx_factor 1 -debug 10 -ns -1
+# These flags are for cvlm:
+ESTIMATORFLAGS=-l 1 -c0 10 -Pyx_factor 1 -debug 10 -ns -1
+# The equivalent ESTIMATORFLAGS for cvlm-owlqn:
+# ESTIMATORFLAGS=-l 1 -c 10 -F 1 -d 10 -n -1
 
 # ESTIMATORNICKNAME is used to name the feature weights file
 #

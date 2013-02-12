@@ -1,4 +1,16 @@
 #! /bin/sh
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License.  You may obtain
+# a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+# License for the specific language governing permissions and limitations
+# under the License.
+
 # RERANKDATA=ec50-connll-ic-s5
 RERANKDATA=ec50-f050902-lics5
 first-stage/PARSE/parseIt -l999 -N50 -K first-stage/DATA/EN/ $* | second-stage/programs/features/best-parses -l -m 1 second-stage/features/$RERANKDATA/traindev-feat.gz second-stage/features/$RERANKDATA/cvlm-l1-c10-Pyx1-ns-1/traindev-weights.gz
