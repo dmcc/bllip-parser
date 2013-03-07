@@ -29,21 +29,17 @@
 class ewDciTokStrm
 {
   public:
-    ewDciTokStrm( const ECString& );
-    ewDciTokStrm( istream& is);
+    ewDciTokStrm( istream& );
     virtual ~ewDciTokStrm() {}
 
     ECString	read();
     int		operator!()
       {
-        return (savedWrd_.length()==0 && nextWrd_.length()==0 &&
-		(useCin ? !cin : !istr_));
-	//!istr_ );
+        return savedWrd_.length() == 0 && nextWrd_.length() == 0 && !istr_;
       }
-    int         useCin;
     ECString    sentenceName;
  protected:
-    ifstream	istr_;
+    istream& istr_;
   private:
     virtual ECString   nextWrd2();
     ECString	savedWrd_;

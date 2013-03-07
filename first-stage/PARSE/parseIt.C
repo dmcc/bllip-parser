@@ -144,8 +144,13 @@ main(int argc, char *argv[])
   if(args.nargs()==2) flnm = args.arg(1);
   if(Bchart::tokenize)
     {
-      tokStream = new ewDciTokStrm(flnm);
-      if(args.nargs() ==1) tokStream->useCin = 1;
+      if (args.nargs() == 1) {
+        tokStream = new ewDciTokStrm(cin);
+      }
+      else {
+        ifstream* stream = new ifstream(flnm.c_str());
+        tokStream = new ewDciTokStrm(*stream);
+      }
     }
   if(args.nargs()==2) nontokStream = new ifstream(args.arg(1).c_str());
   else nontokStream = &cin;

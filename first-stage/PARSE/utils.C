@@ -92,7 +92,7 @@ vECfind(const ECString& s, ECStrings& sts)
   return ( find(sts.begin(),sts.end(),s) != sts.end() );
 }
 
-void find_and_replace(std::string & tInput, std::string tFind, std::string tReplace) {
+void findAndReplace(std::string & tInput, std::string tFind, std::string tReplace) {
     size_t uPos = 0;
     size_t uFindLen = tFind.length();
     size_t uReplaceLen = tReplace.length();
@@ -107,11 +107,11 @@ void find_and_replace(std::string & tInput, std::string tFind, std::string tRepl
     }
 }
 
-void escape_parens(ECString& word) {
-    find_and_replace(word, "(", "-LRB-");
-    find_and_replace(word, ")", "-RRB-");
-    find_and_replace(word, "{", "-LCB-");
-    find_and_replace(word, "}", "-RCB-");
-    find_and_replace(word, "[", "-LSB-");
-    find_and_replace(word, "]", "-RSB-");
+void escapeParens(ECString& word) {
+    findAndReplace(word, "(", "-LRB-");
+    findAndReplace(word, ")", "-RRB-");
+    findAndReplace(word, "{", "-LCB-");
+    findAndReplace(word, "}", "-RCB-");
+    findAndReplace(word, "[", "-LSB-");
+    findAndReplace(word, "]", "-RSB-");
 }

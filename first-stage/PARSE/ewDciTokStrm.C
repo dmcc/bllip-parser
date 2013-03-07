@@ -33,64 +33,23 @@ inline int has_alnum( ECString, int );
 inline int has_one( char, ECString, int );
 
 ewDciTokStrm::
-ewDciTokStrm( const ECString& name )
+ewDciTokStrm( istream& stream )
   :
-  useCin(0),
   sentenceName(""),
-  istr_(name.c_str()),
+  istr_(stream),
   savedWrd_( "" ),             // holds not-yet-processed parts of current Wrd
   nextWrd_( "" ),              // holds "on-deck" Wrd
   parenFlag( 0 ),                        // ParenFlag = 0 except while words
   ellipFlag( 0 )                   // counts how many dots are in an ellipsis
-{}
-
-
-
-
-int docEnd = 0;
-
-
-ECString                                    // Discard Wrds from input stream
-ewDciTokStrm::                               //  until reaching the next <s> ;
-flush_to_sentence()                          //  return the <s> . Return empty
-{                                            //  string if stream runs dry.
-    ECString	str;
-    for( ; ; )
-    {
-      if(useCin &&!cin) break;
-      if(!useCin &&!istr_) break;
-      if(useCin) cin >> str;
-      else istr_ >> str;
-      if( str == "</DOC>") docEnd = 1;
-
-      if( str == "<s")
-	{
-	  if(useCin) cin >> str;
-	  else istr_ >> str;
-	  sentenceName = str;
-	  if(useCin) cin >> str;
-	  else istr_ >> str;
-	  str = "<s>";
-	  return str;
-	}
-
-      if( str == "<s>" || str == "<S>" )
-	return str;
-    }
-    str = "";
-    return str;
+{
 }
 
-
- 
 ECString
 ewDciTokStrm::
 nextWrd2()
 {
   ECString str;
-  if(useCin && !cin) return "";
-  if(!useCin && !istr_) return "";
-  if(useCin)   cin >> str;
+  if(!istr_) return "";
   else istr_ >> str;
   return str;
 }
@@ -101,39 +60,21 @@ ewDciTokStrm::     // ing splitAtPunc on savedWrd_ .  Upon entry to this func-
 read()             // tion, savedWrd_  may or may not be empty, and nextWrd_
                    // will be empty only if the input stream has run dry.
 {
-    if (nextWrd_ == "</s>") {
-        if (savedWrd_.length()) { // return saved word first
-            ECString saved = savedWrd_;
-            savedWrd_ = "";
-            return saved;
-        } else {
+    if (!savedWrd_.length()) { // if no current word
+        savedWrd_ = nextWrd_;
+        // if the next word is the end of this sentence, don't call nextWrd2()
+        // since that could make us block.
+        if (nextWrd_ == "</s>" || nextWrd_ == "</S>") {
             nextWrd_ = "";
-            return "</s>";
+        } else {
+            nextWrd_ = nextWrd2(); // read in next word from input stream
         }
-    }
 
-    if( !savedWrd_.length() )
-    {
-	savedWrd_ = nextWrd_;
-	nextWrd_ = nextWrd2();
-
-/*** Execution reaches this point iff. a new Wrd has just "come on deck." ***/
+        /*** Execution reaches this point iff. a new Wrd has just "come on deck." ***/
 
 	if( parenFlag > 0 ) parenFlag++;
     }
 
-    if( savedWrd_ == "<COMMENT>" )              // Comments occur only as the
-    {                                           //  last Wrds in a <s>...</s>
-	nextWrd_ = flush_to_sentence();         //  line.  Discard the comment
-	savedWrd_ = "";                         //  itself and the "Paragraph-
-	return "</s>";                          //  ing Error" (unbracketed
-    }                                           //  text) that follows.
-
-    if(docEnd)
-      {
-	docEnd = 0;
-	return "</DOC>";
-      }
                                         // remember that global savedWrd_ gets
                                                   // reset (side effect) while;
     ECString retWrd = splitAtPunc( savedWrd_ );   // <-- this line executes!
@@ -153,7 +94,7 @@ read()             // tion, savedWrd_  may or may not be empty, and nextWrd_
                                                                      //    .
     if( retWrd == ")" || retWrd == "</s>" || retWrd == "</S>" ) { parenFlag = 0; }     //.....
 
-    escape_parens(retWrd);
+    escapeParens(retWrd);
 
     // a hack so that '' comes out as closed quote;
     if(savedWrd_ == "\'\'") savedWrd_ = "\"";
@@ -287,6 +228,7 @@ splitAtPunc( ECString seq )      // savedWrd_ to hold everything that's left.
 	    && !has_one( '?', seq, puncIndex )       // has finalPunc already:
 	    && !has_one( '!', seq, puncIndex )      //eg     Lee, Ky.). </s>
 	    && !has_one( ':', seq, puncIndex )      //eg      why L.A.? </s>
+	    && !has_one( '"', seq, puncIndex )      //eg      "G.B." </s>
 	    && !has_one( ';', seq, puncIndex ) )    //eg     Lee, Ky.): </s>
 
 

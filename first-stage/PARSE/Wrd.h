@@ -43,7 +43,7 @@ public:
     {
       ECString lx;
       is >> lx;
-      escape_parens(w.lexeme_);
+      escapeParens(w.lexeme_);
       return is;
     }
   friend ostream& operator<<(ostream& os, const Wrd& w)

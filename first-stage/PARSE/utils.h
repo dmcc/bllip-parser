@@ -35,8 +35,7 @@ typedef vector<ECString> ECStrings;
 typedef ECStrings::iterator ECStringsIter;
 bool vECfind(const ECString& st, ECStrings& sts);
 
-void find_and_replace(std::string & tInput, std::string tFind, std::string tReplace);
-void escape_parens(ECString& word);
+void findAndReplace(std::string & tInput, std::string tFind, std::string tReplace);
+void escapeParens(ECString& word);
 
 #endif /* ! UTILS_H */
-

@@ -17,11 +17,13 @@
 #include <sstream>
 
 /*
-  external pos file is of form
+  external pos file is of the form:
 
-  tag1 tag2 //tages for first word 
-  tag3
-  ---
+      word1 tag1 tag2 // tags for first word
+      word2 tag3
+      ---
+
+  where --- is a sentence separator.
 */
 
 void
@@ -46,7 +48,7 @@ read(ifstream* isp,SentRep& sr)
     stringstream ss(buf);
     ECString wrd;
     ss>>wrd;  //First entry on each line is the word, not a tag.
-    escape_parens(wrd);
+    escapeParens(wrd);
     if (wrd != sr[i].lexeme()) {
       cerr << "wrd:            '" << wrd << "'" << endl;
       cerr << "sr[i].lexeme(): '" << sr[i].lexeme() << "'" << endl;

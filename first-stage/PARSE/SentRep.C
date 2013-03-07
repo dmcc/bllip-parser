@@ -101,7 +101,7 @@ static T& readSentence( T& istr, vector<Wrd>& sent, ECString& name)
 
       // XXX previously:
       // Wrd::substBracket(w);
-      escape_parens(w);
+      escapeParens(w);
       int pos = sent.size();
       sent.push_back(Wrd(w,pos));
     }
