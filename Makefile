@@ -221,13 +221,13 @@ top: $(TARGETS)
 #
 .PHONY: PARSE
 PARSE:
-	make -C $(NBESTPARSERBASEDIR)/PARSE parseIt
+	$(MAKE) -C $(NBESTPARSERBASEDIR)/PARSE parseIt
 
 # TRAIN builds the programs needed to train the first-stage parser.
 #
 .PHONY: TRAIN
 TRAIN:
-	make -C $(NBESTPARSERBASEDIR)/TRAIN all
+	$(MAKE) -C $(NBESTPARSERBASEDIR)/TRAIN all
 
 # reranker-runtime builds the run-time components of the reranker.
 # These include best-parses, which reranks the n-best parses produced
@@ -237,8 +237,8 @@ TRAIN:
 #
 .PHONY: reranker-runtime
 reranker-runtime:
-	make -C second-stage/programs/features best-parses
-	make -C second-stage/programs/prepare-data ptb
+	$(MAKE) -C second-stage/programs/features best-parses
+	$(MAKE) -C second-stage/programs/prepare-data ptb
 
 # reranker builds the training and run-time components of the reranker.
 # These include:
@@ -251,22 +251,22 @@ reranker-runtime:
 #
 .PHONY: reranker
 reranker: top TRAIN
-	make -C second-stage
+	$(MAKE) -C second-stage
 
 # Good old EVALB!
 #
 .PHONY: evalb
 evalb: 
-	make -C evalb evalb
+	$(MAKE) -C evalb evalb
 
 # clean removes object files.
 #
 .PHONY: clean
 clean:
 	(cd $(NBESTPARSERBASEDIR); rm -f PARSE/*.o; rm -f TRAIN/*.o)
-	make -C $(NBESTPARSERBASEDIR)/TRAIN clean
-	make -C $(NBESTPARSERBASEDIR)/PARSE clean
-	make -C second-stage clean
+	$(MAKE) -C $(NBESTPARSERBASEDIR)/TRAIN clean
+	$(MAKE) -C $(NBESTPARSERBASEDIR)/PARSE clean
+	$(MAKE) -C second-stage clean
 
 # nbesttrain-clean removes temporary files used in constructing the 20
 # folds of n-best training data.
@@ -279,7 +279,7 @@ nbesttrain-clean:
 .PHONY: train-clean
 train-clean: nbesttrain-clean
 	rm -fr results
-	make -C second-stage train-clean
+	$(MAKE) -C second-stage train-clean
 
 # real-clean tries to get rid of all object and binary files to
 # produce a version for distribution.  But Eugene writes new programs
@@ -288,7 +288,7 @@ train-clean: nbesttrain-clean
 .PHONY: real-clean
 real-clean: clean train-clean
 	(cd $(NBESTPARSERBASEDIR); rm -f PARSE/parseIt)
-	make -C second-stage real-clean
+	$(MAKE) -C second-stage real-clean
 
 ########################################################################
 #                                                                      #
