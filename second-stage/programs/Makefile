@@ -20,25 +20,25 @@ export LDFLAGS
 
 .PHONY: all
 all:
-	make -C eval-beam
-	make -C eval-weights
-	make -C features
-	make -C prepare-data
-	make -C wlle
+	$(MAKE) -C eval-beam
+	$(MAKE) -C eval-weights
+	$(MAKE) -C features
+	$(MAKE) -C prepare-data
+	$(MAKE) -C wlle
 
 .PHONY: clean
 clean:
 	rm -fr *~
-	make -C eval-beam clean
-	make -C eval-weights clean
-	make -C features clean
-	make -C prepare-data clean
-	make -C wlle clean
+	$(MAKE) -C eval-beam clean
+	$(MAKE) -C eval-weights clean
+	$(MAKE) -C features clean
+	$(MAKE) -C prepare-data clean
+	$(MAKE) -C wlle clean
 
 .PHONY: real-clean
 real-clean:
-	make -C eval-beam real-clean
-	make -C eval-weights real-clean
-	make -C features real-clean
-	make -C prepare-data real-clean
-	make -C wlle real-clean
+	$(MAKE) -C eval-beam real-clean
+	$(MAKE) -C eval-weights real-clean
+	$(MAKE) -C features real-clean
+	$(MAKE) -C prepare-data real-clean
+	$(MAKE) -C wlle real-clean
