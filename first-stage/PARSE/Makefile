@@ -15,7 +15,11 @@ default: parseIt
 all: parseIt parseAndEval evalTree
 
 clean:
-	rm -f *.o parseIt parseAndEval rParse *~ threads evalTree
+	rm -f *.o oparseIt parseIt parseAndEval evalTree *~ threads TAGS tags
+
+.PHONY: real-clean
+real-clean: clean swig-clean
+	rm -f *.d Makefile.dep
 
 # this rule automatically makes our dependency files.
 # run "make Makefile.dep" if you add any files or change dependencies.
@@ -25,12 +29,17 @@ Makefile.dep:
 # include the automatically generated dependency files
 -include Makefile.dep
 
-CFLAGS=-Wall -O3 -fPIC
+# typical usage -- the ?= sets this only if it hasn't been set previously
+# (specifically in the master ../../Makefile)
+CFLAGS ?= -Wall -O3
+# for debugging
 # CFLAGS=-g
+
 .C.o:
 	$(CXX) $(CFLAGS) -c $<
 
-PARSEANDEVAL_OBJS = \
+# all binaries need these
+COMMON_OBJS = \
 	Bchart.o \
 	BchartSm.o \
 	Bst.o \
@@ -67,144 +76,103 @@ PARSEANDEVAL_OBJS = \
 	headFinderCh.o \
 	utils.o \
 	MeChart.o \
-	parseAndEval.o 
+
+PARSEANDEVAL_OBJS = $(COMMON_OBJS) parseAndEval.o
+PARSE_OBJS = $(COMMON_OBJS) parseIt.o
+OPARSE_OBJS = $(COMMON_OBJS) oparseIt.o
+EVALTREE_OBJS = $(COMMON_OBJS) evalTree.o
 
 parseAndEval: $(PARSEANDEVAL_OBJS)
-	$(CXX) $(CFLAGS) ${PARSEANDEVAL_OBJS} -o parseAndEval  -D_REENTRANT -D_XOPEN_SOURCE=600 -lpthread
-
-
-PARSE_OBJS = \
-	Bchart.o \
-	BchartSm.o \
-	Bst.o \
-	FBinaryArray.o \
-	CntxArray.o \
-	ChartBase.o \
-	ClassRule.o \
-	ECArgs.o \
-	Edge.o \
-	EdgeHeap.o \
-	ExtPos.o \
-	Feat.o \
-	Feature.o \
-	FeatureTree.o \
-	Field.o \
-	FullHist.o \
-	GotIter.o \
-	InputTree.o \
-	Item.o \
-	Link.o \
-	Params.o \
-	ParseStats.o \
-	SentRep.o \
-	Term.o \
-	TimeIt.o \
-	UnitRules.o \
-	ValHeap.o \
-	edgeSubFns.o \
-	ewDciTokStrm.o \
-	extraMain.o \
-	fhSubFns.o \
-	headFinder.o \
-	headFinderCh.o \
-	utils.o \
-	MeChart.o \
-	parseIt.o 
+	$(CXX) $(CFLAGS) ${PARSEANDEVAL_OBJS} -o parseAndEval -D_REENTRANT -D_XOPEN_SOURCE=600 -lpthread
 
 parseIt: $(PARSE_OBJS)
-	$(CXX) $(CFLAGS) $(PARSE_OBJS) -o parseIt   -D_REENTRANT -D_XOPEN_SOURCE=600 -lpthread
-
-
-OPARSE_OBJS = \
-	Bchart.o \
-	BchartSm.o \
-	Bst.o \
-	FBinaryArray.o \
-	CntxArray.o \
-	ChartBase.o \
-	ClassRule.o \
-	ECArgs.o \
-	Edge.o \
-	EdgeHeap.o \
-	Feat.o \
-	Feature.o \
-	FeatureTree.o \
-	Field.o \
-	FullHist.o \
-	GotIter.o \
-	InputTree.o \
-	Item.o \
-	Link.o \
-	Params.o \
-	ParseStats.o \
-	SentRep.o \
-	Term.o \
-	TimeIt.o \
-	UnitRules.o \
-	ValHeap.o \
-	edgeSubFns.o \
-	ewDciTokStrm.o \
-	extraMain.o \
-	fhSubFns.o \
-	headFinder.o \
-	headFinderCh.o \
-	utils.o \
-	MeChart.o \
-	oparseIt.o 
+	$(CXX) $(CFLAGS) $(PARSE_OBJS) -o parseIt -D_REENTRANT -D_XOPEN_SOURCE=600 -lpthread
 
 oparseIt: $(OPARSE_OBJS)
 	$(CXX) $(CFLAGS) $(PARSE_OBJS) -o oparseIt 
 
-
-FPT_OBJS = \
-	ECArgs.o \
-	utils.o \
-	ParseStats.o \
-	finPTest.o
-
-finPTest: $(FPT_OBJS)
-	$(CXX) $(CFLAGS) $(FPT_OBJS) -o finPTest
-
-
-
-EVALTREE_OBJS = \
-	Bchart.o \
-	BchartSm.o \
-	Bst.o \
-	FBinaryArray.o \
-	CntxArray.o \
-	ChartBase.o \
-	ClassRule.o \
-	ECArgs.o \
-	Edge.o \
-	EdgeHeap.o \
-	Feat.o \
-	Feature.o \
-	FeatureTree.o \
-	Field.o \
-	FullHist.o \
-	GotIter.o \
-	InputTree.o \
-	Item.o \
-	Link.o \
-	Params.o \
-	ParseStats.o \
-	SentRep.o \
-	ScoreTree.o \
-	Term.o \
-	TimeIt.o \
-	UnitRules.o \
-	ValHeap.o \
-	edgeSubFns.o \
-	ewDciTokStrm.o \
-	extraMain.o \
-	fhSubFns.o \
-	headFinder.o \
-	headFinderCh.o \
-	utils.o \
-	MeChart.o \
-	evalTree.o 
-
 evalTree: $(EVALTREE_OBJS)
-	$(CXX) $(CFLAGS) ${EVALTREE_OBJS} -o evalTree  -D_REENTRANT -D_XOPEN_SOURCE=600 -lpthread
+	$(CXX) $(CFLAGS) ${EVALTREE_OBJS} -o evalTree -D_REENTRANT -D_XOPEN_SOURCE=600 -lpthread
 
+#
+# SWIG wrappers for Java and Python
+#
+
+# These paths are likely not very portable and may need to be edited
+# (they also can be overridden by the root ../../Makefile or environment
+# variables)
+
+# this should be the path to jni.h
+SWIG_JAVA_GCCFLAGS ?= -I/usr/lib/jvm/java-1.6.0-openjdk-1.6.0.0.x86_64/include/ \
+	-I/usr/lib/jvm/java-1.6.0-openjdk-1.6.0.0.x86_64/include/linux/
+# this should be the path to Python.h
+SWIG_PYTHON_GCCFLAGS ?= -I/usr/include/python2.6/
+# -L should have the path to libstdc++.so
+SWIG_LINKER_FLAGS ?= -lstdc++ -L/usr/lib/gcc/x86_64-redhat-linux/4.4.4/
+SWIG_OBJS = ThreadManager.o
+
+# Edit or set these variables as needed
+SWIG_PARSER_MODULE_NAME ?= SWIGParser
+# SWIG_JAVA_PACKAGE ?= your.package.name.for.the.swig.wrapper
+
+# 
+# main SWIG targets
+#
+swig-java: CFLAGS += -fPIC -fno-strict-aliasing
+swig-java: swig/java/lib/lib$(SWIG_PARSER_MODULE_NAME).so
+
+swig-java-test: swig-java
+	javac swig/java/lib/*.java
+	javac -cp swig/java/lib/ swig/java/test/*.java
+	java -cp swig/java/lib:swig/java/test -Djava.library.path=swig/java/lib test
+
+swig-python: CFLAGS += -fPIC -fno-strict-aliasing
+swig-python: swig/python/lib/_$(SWIG_PARSER_MODULE_NAME).so
+
+swig-python-test: swig-python
+	PYTHONPATH=$(PYTHONPATH):swig/python/lib python swig/python/test/test.py
+
+swig-clean:
+	rm -rf swig/build swig/python/lib swig/java/lib swig/java/test/*.class swig/python/test/*.py[co]
+
+#
+# Java SWIG helpers
+#
+swig/build/java_wrapper.cxx: swig/wrapper.i
+	mkdir -p swig/build
+	mkdir -p swig/java/lib
+ifeq ($(strip $(SWIG_JAVA_PACKAGE)),)
+	swig -module $(SWIG_PARSER_MODULE_NAME) -Wall -c++ -java -outdir swig/java/lib \
+		-o swig/build/java_wrapper.cxx swig/wrapper.i
+else
+	swig -module $(SWIG_PARSER_MODULE_NAME) -Wall -c++ -java -outdir swig/java/lib \
+		-package ${SWIG_JAVA_PACKAGE} \
+		-o swig/build/java_wrapper.cxx swig/wrapper.i
+endif
+
+swig/build/java_wrapper.o: swig/build/java_wrapper.cxx
+	$(CC) -O3 $(CFLAGS) -c $(SWIG_JAVA_GCCFLAGS) -I. \
+		swig/build/java_wrapper.cxx -o swig/build/java_wrapper.o
+
+swig/java/lib/lib$(SWIG_PARSER_MODULE_NAME).so: swig/build/java_wrapper.o $(COMMON_OBJS) $(SWIG_OBJS)
+	$(CC) $(SWIG_LINKER_FLAGS) -shared \
+		-o swig/java/lib/lib$(SWIG_PARSER_MODULE_NAME).so \
+		$(COMMON_OBJS) $(SWIG_OBJS) swig/build/java_wrapper.o
+
+#
+# Python SWIG helpers
+#
+swig/build/python_wrapper.cxx: swig/wrapper.i
+	mkdir -p swig/build
+	mkdir -p swig/python/lib
+	swig -module $(SWIG_PARSER_MODULE_NAME) -Wall -c++ -python -classic \
+		-outdir swig/python/lib -o swig/build/python_wrapper.cxx swig/wrapper.i
+
+swig/build/python_wrapper.o: swig/build/python_wrapper.cxx
+	$(CC) -O3 -fno-strict-aliasing -fPIC -c $(SWIG_PYTHON_GCCFLAGS) \
+		-I. swig/build/python_wrapper.cxx -o swig/build/python_wrapper.o
+
+swig/python/lib/_$(SWIG_PARSER_MODULE_NAME).so: swig/build/python_wrapper.o $(COMMON_OBJS) $(SWIG_OBJS)
+	$(CC) $(SWIG_LINKER_FLAGS) -shared \
+		-o swig/python/lib/_$(SWIG_PARSER_MODULE_NAME).so \
+		$(COMMON_OBJS) $(SWIG_OBJS) swig/build/python_wrapper.o

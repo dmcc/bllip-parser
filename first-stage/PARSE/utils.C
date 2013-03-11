@@ -24,6 +24,12 @@
 
 extern int sentenceCount; // from parseIt.C
 
+// this makes error() "weak" so we can override it in SWIG.
+// unfortunately, this is a gcc specific trick.
+#ifdef __GNUC__
+#include "weakdecls.h"
+#endif
+
 void 
 warn( const char *filename, int filelinenum, const char *msg )
 {
