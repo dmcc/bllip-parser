@@ -371,6 +371,10 @@ all: rCounts selFeats iScale trainRs pSgT pTgNt pUgT kn3Counts pSfgT
 clean: 
 	rm -f *.o rCounts selFeats iScale trainRs pSgT pTgNt pUgT kn3Counts pSfgT
 
+.PHONY: real-clean
+real-clean: clean
+	rm -f *.d Makefile.dep TAGS tags
+
 #---------------------------------------------------------------------
 
 #ifeq ($(SWITCH),-LCh)
