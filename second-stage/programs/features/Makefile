@@ -86,12 +86,78 @@ read-tree.cc: read-tree.l
 	flex -oread-tree.cc read-tree.l
 
 .PHONY: 
-clean: 
-	rm -fr *.o *.d *~ core read-tree.cc 
+clean:
+	rm -fr *.o *.d *~ core read-tree.cc
 
 .PHONY: real-clean
-real-clean: clean 
-	rm -fr $(TARGETS)
+real-clean: clean
+	rm -fr $(TARGETS) tags TAGS
+
+#
+# SWIG wrappers for Java and Python
+#
+
+# These paths are likely not very portable and may need to be edited
+# (they also can be overridden by the root ../../Makefile)
+
+# this should be the path to jni.h
+SWIG_JAVA_GCCFLAGS ?= -I/usr/lib/jvm/java-1.6.0-openjdk-1.6.0.0.x86_64/include/ \
+	-I/usr/lib/jvm/java-1.6.0-openjdk-1.6.0.0.x86_64/include/linux/
+# this should be the path to Python.h
+SWIG_PYTHON_GCCFLAGS ?= -I/usr/include/python2.6/
+# -L should have the path to libstdc++.so
+SWIG_LINKER_FLAGS ?= -lstdc++ -L/usr/lib/gcc/x86_64-redhat-linux/4.4.4/
+
+# Edit these variables as needed
+SWIG_RERANKER_MODULE_NAME ?= SWIGReranker
+SWIG_JAVA_PACKAGE ?= ${SWIG_RERANKER_MODULE_NAME}
+
+SWIG_OBJS = simple-api.o heads.o read-tree.o sym.o
+
+# for some reason, optimization flags make some functions disappear
+# (sp_sentence_type::nparses() for example) so we need to turn off
+# optimization (highly unfortunate -- would be nice to work this out)
+simple-api.o: CXXFLAGS += -O0
+simple-api.o: simple-api.cc
+	$(CXX) -c $(CXXFLAGS) $(FOPENMP) $< -o $@
+
+.PHONY: swig-java
+swig-java: swig/java/lib/lib$(SWIG_RERANKER_MODULE_NAME).so
+
+swig/java/lib/lib$(SWIG_RERANKER_MODULE_NAME).so: CXXFLAGS += -fPIC -fno-strict-aliasing -Wno-deprecated
+swig/java/lib/lib$(SWIG_RERANKER_MODULE_NAME).so: $(SWIG_OBJS)
+	mkdir -p swig/build
+	mkdir -p swig/java/lib
+	swig -module $(SWIG_RERANKER_MODULE_NAME) -Wall -c++ -java -outdir swig/java/lib \
+		-package ${SWIG_JAVA_PACKAGE} \
+		-o swig/build/java_wrapper.cxx swig/wrapper.i
+	gcc -O2 $(CXXFLAGS) -c $(SWIG_JAVA_GCCFLAGS) -iquote . \
+		swig/build/java_wrapper.cxx -o swig/build/java_wrapper.o
+	gcc $(SWIG_LINKER_FLAGS) -shared -o \
+		swig/java/lib/lib$(SWIG_RERANKER_MODULE_NAME).so \
+		$(SWIG_OBJS) swig/build/java_wrapper.o
+
+.PHONY: swig-python
+swig-python: swig/python/lib/_$(SWIG_RERANKER_MODULE_NAME).so
+
+swig/python/lib/_$(SWIG_RERANKER_MODULE_NAME).so: CXXFLAGS += -fPIC -fno-strict-aliasing -Wno-deprecated
+swig/python/lib/_$(SWIG_RERANKER_MODULE_NAME).so: $(SWIG_OBJS)
+	mkdir -p swig/build
+	mkdir -p swig/python/lib
+	swig -module $(SWIG_RERANKER_MODULE_NAME) -Wall -c++ -python -classic -outdir \
+		swig/python/lib -o swig/build/python_wrapper.cxx swig/wrapper.i
+	g++ -fno-strict-aliasing $(CXXFLAGS) -Wfatal-errors \
+		-c -iquote . $(SWIG_PYTHON_GCCFLAGS) \
+		swig/build/python_wrapper.cxx -o swig/build/python_wrapper.o
+	gcc $(SWIG_LINKER_FLAGS) -shared $(SWIG_OBJS) \
+		swig/build/python_wrapper.o -o swig/python/lib/_$(SWIG_RERANKER_MODULE_NAME).so
+
+.PHONY: swig-python
+swig-python-test: swig-python
+	PYTHONPATH=swig/python/lib/ python swig/python/test/test.py
+
+swig-clean:
+	rm -rf swig/build swig/python/lib swig/java/lib swig/java/test/*.class swig/python/test/*.py[co] simple-api.o
 
 # this command tells GNU make to look for dependencies in *.d files
 -include $(patsubst %.l,%.d,$(patsubst %.c,%.d,$(SOURCES:%.cc=%.d)))
