@@ -27,7 +27,12 @@ glob:second-stage/programs/prepare-data/prepare-ec-data
 glob:second-stage/programs/prepare-data/prepare-ec-data100
 glob:second-stage/programs/prepare-data/prepare-new-data
 glob:second-stage/programs/prepare-data/ptb
+glob:second-stage/programs/wlle/avper
+glob:second-stage/programs/wlle/gavper
+glob:second-stage/programs/wlle/cvlm
+glob:second-stage/programs/wlle/oracle
 glob:*.swp
+glob:*.orig
 glob:tags
 glob:TAGS
 glob:first-stage/PARSE/evalTree
