@@ -75,6 +75,12 @@ CFLAGS = -MMD -O6 -Wall -ffast-math -finline-functions -fomit-frame-pointer -fst
 LDFLAGS = $(GCCLDFLAGS)
 EXEC = time
 
+# for SWIG wrappers, use these flags instead
+#
+CFLAGS = -MMD -O6 -Wall -ffast-math -finline-functions -fomit-frame-pointer -fno-strict-aliasing -fPIC $(GCCFLAGS)
+LDFLAGS = $(GCCLDFLAGS)
+EXEC = time
+
 # for debugging, uncomment the following CFLAGS, LDFLAGS and EXEC
 #
 # CFLAGS = -g -O -MMD -Wall -ffast-math -fstrict-aliasing $(GCCFLAGS)
@@ -267,6 +273,7 @@ clean:
 	$(MAKE) -C $(NBESTPARSERBASEDIR)/TRAIN clean
 	$(MAKE) -C $(NBESTPARSERBASEDIR)/PARSE clean
 	$(MAKE) -C second-stage clean
+	rm -f swig/*.py[co]
 
 # nbesttrain-clean removes temporary files used in constructing the 20
 # folds of n-best training data.
@@ -284,10 +291,12 @@ train-clean: nbesttrain-clean
 # real-clean tries to get rid of all object and binary files to
 # produce a version for distribution.  But Eugene writes new programs
 # faster than I can make real-clean clean them up!
+# NOTE: This erases the reranker model directory!
 #
 .PHONY: real-clean
-real-clean: clean train-clean
-	(cd $(NBESTPARSERBASEDIR); rm -f PARSE/parseIt)
+real-clean: clean train-clean swig-clean
+	$(MAKE) -C $(NBESTPARSERBASEDIR)/TRAIN real-clean
+	$(MAKE) -C $(NBESTPARSERBASEDIR)/PARSE real-clean
 	$(MAKE) -C second-stage real-clean
 
 ########################################################################
@@ -527,3 +536,36 @@ $(EVALDIR)/dev-parsediffs.gz: $(WEIGHTSFILEGZ) $(FEATDIR)/test1.gz $(NBESTDIR)/s
 	 | second-stage/programs/eval-weights/best-parses $(NBESTDIR)/section24.gz \
 	 | second-stage/programs/eval-weights/pretty-print -d \
 	 | gzip > $(EVALDIR)/dev-parsediffs.gz
+
+########################################################################
+#                                                                      #
+# swig-{java,python} builds SWIG wrapper extensions for {Java,Python}  #
+#                                                                      #
+########################################################################
+
+# These paths are likely not very portable and may need to be edited
+
+# this should be the path to jni.h
+SWIG_JAVA_GCCFLAGS=-I/usr/lib/jvm/java-1.6.0-openjdk-1.6.0.0.x86_64/include/ \
+	-I/usr/lib/jvm/java-1.6.0-openjdk-1.6.0.0.x86_64/include/linux/
+# this should be the path to Python.h
+SWIG_PYTHON_GCCFLAGS=-I/usr/include/python2.6/
+# -L should have the path to libstdc++.so
+SWIG_LINKER_FLAGS=-lstdc++ -L/usr/lib/gcc/x86_64-redhat-linux/4.4.4/
+export SWIG_JAVA_GCCFLAGS
+export SWIG_PYTHON_GCCFLAGS
+export SWIG_LINKER_FLAGS
+
+swig-python: CXXFLAGS += -fPIC -fno-strict-aliasing -Wno-deprecated
+swig-python: PARSE reranker-runtime
+	$(MAKE) -C $(NBESTPARSERBASEDIR)/PARSE swig-python
+	$(MAKE) -C second-stage/programs/features swig-python
+
+swig-java: CXXFLAGS += -fPIC -fno-strict-aliasing -Wno-deprecated
+swig-java: PARSE reranker-runtime
+	$(MAKE) -C $(NBESTPARSERBASEDIR)/PARSE swig-java
+	$(MAKE) -C second-stage/programs/features swig-java
+
+swig-clean:
+	$(MAKE) -C $(NBESTPARSERBASEDIR)/PARSE swig-clean
+	$(MAKE) -C second-stage/programs/features swig-clean
