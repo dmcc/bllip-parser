@@ -115,3 +115,9 @@ void escapeParens(ECString& word) {
     findAndReplace(word, "[", "-LSB-");
     findAndReplace(word, "]", "-RSB-");
 }
+
+// returns whether string ends with pattern
+bool endsWith(ECString str, ECString pattern) {
+    int index = str.rfind(pattern);
+    return index == ((signed int)str.size() - (signed int)pattern.size());
+}

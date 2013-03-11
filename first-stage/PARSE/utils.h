@@ -37,5 +37,6 @@ bool vECfind(const ECString& st, ECStrings& sts);
 
 void findAndReplace(std::string & tInput, std::string tFind, std::string tReplace);
 void escapeParens(ECString& word);
+bool endsWith(ECString str, ECString pattern);
 
 #endif /* ! UTILS_H */

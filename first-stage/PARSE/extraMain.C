@@ -22,6 +22,7 @@
 #include "MeChart.h"
 #include "headFinder.h"
 #include "ClassRule.h"
+#include "utils.h"
 
 void
 generalInit(ECString path)
@@ -40,6 +41,11 @@ generalInit(ECString path)
       stack_limits.rlim_cur = stack_limits.rlim_max;
       setrlimit( RLIMIT_STACK, &stack_limits );
     }
+
+  if (!endsWith(path, "/")) {
+    path += "/";
+  }
+
   Term::init( path );
   readHeadInfo(path);
   InputTree::init();
