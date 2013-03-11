@@ -127,6 +127,7 @@ main(int argc, char *argv[])
   ECArgs args( argc, argv );
   assert(args.nargs() == 1);
   ECString path(args.arg(0));
+  repairPath(path);
   cerr << "At start of pTgNt" << endl;
 
   for(int n = 0 ; n < MAXNUMTS ; n++)
@@ -140,7 +141,6 @@ main(int argc, char *argv[])
   readHeadInfo(path);
   Pst pst(path);
 
-  int sentenceCount = 0;
   int wordCount = 0;
   int processedCount = 0;
 

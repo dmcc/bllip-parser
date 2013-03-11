@@ -133,3 +133,15 @@ ECString lastCharacter(const ECString& s)
         }else f=f+s[len-1];
         return f;
 }
+
+// returns whether string ends with pattern
+bool endsWith(ECString str, ECString pattern) {
+    int index = str.rfind(pattern);
+    return index == ((signed int)str.size() - (signed int)pattern.size());
+}
+
+void repairPath(ECString& str) {
+    if (!endsWith(str, "/")) {
+        str = str + "/";
+    }
+}

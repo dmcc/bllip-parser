@@ -72,7 +72,6 @@ void
 initFeatVals()
 {
   FeatIter fi(features); 
-  int m, i;
   Feat* f;
   for( ; fi.alive() ; fi.next() )
     {
@@ -121,7 +120,8 @@ main(int argc, char *argv[])
 
    ECArgs args( argc, argv );
    Feat::Usage = ISCALE;
-   ECString  path( args.arg( 1 ) );
+   ECString path(args.arg(1));
+   repairPath(path);
    Term::init(path);
 
    conditionedType = args.arg(0);

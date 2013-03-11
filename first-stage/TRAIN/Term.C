@@ -117,4 +117,3 @@ get(const ECString& nm)
   if( ti == termMap_.end()) return NULL;
   return (*ti).second;
 }
-

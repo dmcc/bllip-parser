@@ -293,7 +293,8 @@ main(int argc, char *argv[])
   percentDesiredFeatures = (float)atoi(args.arg(1).c_str())/100.0;
   cerr << "start selFeats: " << conditionedType
        << " " << percentDesiredFeatures  << endl;
-  ECString  path( args.arg( 2 ) );
+  ECString path(args.arg(2));
+  repairPath(path);
   ECString fHp(path);
   fHp += conditionedType;
   fHp += ".ff";

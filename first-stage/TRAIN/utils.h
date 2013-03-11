@@ -32,11 +32,11 @@ ECString intToString(int i);
 typedef vector<ECString> ECStrings;
 typedef ECStrings::iterator ECStringsIter;
 bool vECfind(ECString st, ECStrings& sts);
-enum DGStatus  { OK, NOT_OK };
 
 void ignoreComment(ifstream& input);
 ECString lastCharacter(const ECString& s);
 ECString firstCharacter(const ECString& s);
+bool endsWith(ECString str, ECString pattern);
+void repairPath(ECString& str);
 
 #endif /* ! UTILS_H */
-

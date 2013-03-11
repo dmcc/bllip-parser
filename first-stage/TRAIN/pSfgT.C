@@ -59,8 +59,6 @@ incrEndData(int lhsInt, ECString e)
 void
 addWwData(InputTree* tree)
 {
-  bool okSit = true;
-
   if( tree->word() != ""  )
     {
       ECString wTagNm = tree->term();
@@ -91,18 +89,7 @@ addWwData(InputTree* tree)
 	}//if openClass
       return;
     }
-  /*ECString fixedTerm(tree->term());
-  if(fixedTerm == "") fixedTerm = "S1";
-  const Term* lhs = Term::get(fixedTerm);
-  /* If we cannot recognize the term, don't abort, just warn and do not
-     create a rule here or one level up. */
-  /*if(!lhs)
-    {
-      lhs = Term::get("GARBAGE");
-      okSit = false;
-      cerr << "Garbage term: " << tree->term() << endl;
-    }
-  */
+
   InputTrees& st = tree->subTrees();
   InputTrees::iterator  subTreeIter= st.begin();
   InputTree  *subTree;
@@ -126,6 +113,7 @@ main(int argc, char *argv[])
   ECArgs args( argc, argv );
   assert(args.nargs() == 1);
   ECString path(args.arg(0));
+  repairPath(path);
   cerr << "At start of pSfgt" << endl;
 
   for(int n = 0 ; n < 140 ; n++)
@@ -139,7 +127,6 @@ main(int argc, char *argv[])
   readHeadInfo(path);
   Pst pst(path); //???;
 
-  int sentenceCount = 0;
   int wordCount = 0;
   int processedCount = 0;
 

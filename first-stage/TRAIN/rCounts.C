@@ -224,7 +224,8 @@ main(int argc, char *argv[])
        Feat::Usage = PARSE;
        cerr << "Special Version for MJ";
      }
-   ECString  path( args.arg( 1 ) );
+   ECString path(args.arg(1));
+   repairPath(path);
 
    int minCount = 1;
    if(args.isset('m')) minCount = atoi(args.value('m').c_str());

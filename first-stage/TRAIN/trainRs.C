@@ -38,7 +38,8 @@ main(int argc, char *argv[])
    conditionedType = args.arg(0);
    cerr << "start trainRs: " << conditionedType << endl;
   
-   ECString  path( args.arg( 1 ) );
+   ECString path(args.arg(1));
+   repairPath(path);
    if(args.isset('M')) Feature::setLM();
    if(args.isset('L')) Term::Language = args.value('L');
 

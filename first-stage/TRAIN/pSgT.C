@@ -90,7 +90,8 @@ main(int argc, char *argv[])
   ECArgs args( argc, argv );
   assert(args.nargs() == 1);
   ECString path(args.arg(0));
-  cerr << "At start of pHsgt" << endl;
+  repairPath(path);
+  cerr << "At start of pSgT" << endl;
 
   for(int n = 0 ; n < MAXNUMNTS ; n++)
     numTerm[n] = 0;
@@ -133,11 +134,9 @@ main(int argc, char *argv[])
   ofstream     resultsStream(resultsString.c_str());
   assert(resultsStream);
 
-  int numWords = 0;
   resultsStream << "       \n";  //leave space for number of words;
   resultsStream.precision(3);
   ECString lastWord;
-  int wordFreq = 0;
   WordMap::iterator wmi = wordMap.begin();
   resultsStream << wordMap.size() << "\n\n";
   for( ; wmi != wordMap.end() ; wmi++)
