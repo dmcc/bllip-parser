@@ -240,15 +240,14 @@ splitAtPunc( ECString seq )      // savedWrd_ to hold everything that's left.
 		{                                       //   ...
 		    int index = puncIndex;
 		    while( seq[index] != ')' && index < length )    //  ...
-		    {  index++;  }                                  // so add
+		    {  index++;  }
 		    savedWrd_
-                     = seq.substr( puncIndex, 1+index-puncIndex ); // dot in-
-		    savedWrd_ += "." ;
-		    savedWrd_ += seq.substr(index+1,length-index-1);//side the
-		    return seq.substr(0,puncIndex);             // close-paren
-		} else {                                        // ...  unless
-		    savedWrd_ = seq.substr(puncIndex,length-puncIndex);// close-paren
-		    return seq.substr( 0,puncIndex );           // is missing!
+                     = seq.substr( puncIndex, 1+index-puncIndex );
+		    savedWrd_ += seq.substr(index+1,length-index-1);
+		    return seq.substr(0,puncIndex);
+		} else {
+		    savedWrd_ = seq.substr(puncIndex,length-puncIndex);
+		    return seq.substr( 0,puncIndex );
 		}
 
 	    if( puncIndex < length
@@ -263,7 +262,8 @@ splitAtPunc( ECString seq )      // savedWrd_ to hold everything that's left.
 
 	    if( puncIndex == length )
 	    {				     // If != length, there were unex-
-		savedWrd_ = ".";	     //  pected trailing characters,
+		savedWrd_ = nextWrd_;	     //  pected trailing characters,
+		nextWrd_ = "";
 		return seq;		     //  and we won't add a dot.
 	    }
 	}
