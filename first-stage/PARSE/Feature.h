@@ -24,7 +24,7 @@
 
 #define MAXNUMFS 30
 #define MAXNUMCALCS 15
-#define MAXNUMTHREADS 8
+#define MAXNUMTHREADS 64
 
 #define RCALC 0
 #define HCALC 1
