@@ -156,7 +156,6 @@ class ParsingShell(Cmd):
         print
 
     def got_nbest_list(self, nbest_list):
-        self.rrp.rerank(nbest_list)
         nbest_list.sort_by_reranker_scores()
         self.last_nbest_list = nbest_list
 

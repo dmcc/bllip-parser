@@ -96,31 +96,41 @@ class RerankingParser:
         parser.setOptions(language, case_insensitive, nbest, small_corpus,
                           overparsing, debug)
 
-    def parse(self, sentence, max_sentence_length=399):
+    def parse(self, sentence, rerank=True, max_sentence_length=399):
         """Parse some text or tokens and return an NBestList with the
         results.  sentence can be a string or a sequence.  If it is a
-        string, it will be tokenized."""
+        string, it will be tokenized.  If rerank is True, we will rerank
+        the n-best list."""
         assert self._parser_model_loaded
 
         sentence = Sentence(sentence, max_sentence_length)
         parses = parser.parse(sentence.sentrep, self._parser_thread_slot)
-        return NBestList(sentence, parses)
+        nbest_list = NBestList(sentence, parses)
+        if rerank:
+            self.rerank(nbest_list)
+        return nbest_list
 
-    def parse_tagged(self, tokens, possible_tags):
+    def parse_tagged(self, tokens, possible_tags, rerank=True):
         """Parse some pre-tagged, pre-tokenized text.  tokens is a
         sequence of strings.  possible_tags is map from token indices
         to possible POS tags.  Tokens without an entry in possible_tags
-        will be unconstrained by POS."""
+        will be unconstrained by POS.  If rerank is True, we will
+        rerank the n-best list."""
         assert self._parser_model_loaded
 
         ext_pos = parser.ExtPos()
         for index in range(len(tokens)):
             tags = possible_tags.get(index, [])
+            if isinstance(tags, basestring):
+                tags = [tags]
             ext_pos.addTagConstraints(parser.VectorString(tags))
 
         sentence = Sentence(tokens)
         parses = parser.parse(sentence.sentrep, ext_pos, self._parser_thread_slot)
-        return NBestList(sentence, parses)
+        nbest_list = NBestList(sentence, parses)
+        if rerank:
+            self.rerank(nbest_list)
+        return nbest_list
 
     def load_reranker_model(self, features_filename, weights_filename,
                             feature_class=None):
