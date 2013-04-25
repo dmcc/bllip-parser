@@ -238,10 +238,3 @@ make all
 
 cd ../tao
 make all
-
-QUESTIONABLY LICENSED FILES
-===========================
-The parser is now available under the Apache 2.0 license.  Any files with
-incompatible licenses have been removed from the distribution.  They can
-be restored with the script restore_questionably_licensed_files.sh
-You should consult with your local attorney if you're unsure what this means.
