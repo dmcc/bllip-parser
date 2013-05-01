@@ -21,6 +21,7 @@ static const char usage[] =
 
 #include <cmath>
 #include <iostream>
+#include <getopt.h>
 
 #include "dp-data.h"
 #include "tree.h"

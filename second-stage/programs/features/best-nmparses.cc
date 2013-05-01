@@ -43,6 +43,7 @@ const char usage[] =
 #include <cassert>
 #include <cstdlib>
 #include <vector>
+#include <getopt.h>
 
 #include "popen.h"
 #include "nmfeatures.h"
