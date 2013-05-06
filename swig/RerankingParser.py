@@ -13,12 +13,20 @@
 import sys
 
 # this makes this work without modifications to PYTHONPATH in the swig/
-# directory
+# or the base directory
 sys.path.extend(['../first-stage/PARSE/swig/python/lib',
-                 '../second-stage/programs/features/swig/python/lib'])
+                 '../second-stage/programs/features/swig/python/lib',
+                 'first-stage/PARSE/swig/python/lib',
+                 'second-stage/programs/features/swig/python/lib'])
 
-import SWIGParser as parser
-import SWIGReranker as reranker
+try:
+    import SWIGParser as parser
+    import SWIGReranker as reranker
+except ImportError:
+    print "Couldn't find SWIG bindings for parser or reranker."
+    print "Please run 'make swig-python' first."
+    print
+    raise
 
 class ScoredParse:
     def __init__(self, ptb_parse, parser_score=None, reranker_score=None,
@@ -150,10 +158,17 @@ class RerankingParser:
             nbest_list_item.reranker_rank = index
 
 def load_included_model():
+    import os
     rrp = RerankingParser()
-    rrp.load_parsing_model('../first-stage/DATA/EN')
+    if os.path.isdir('../first-stage/DATA/EN'):
+        rrp.load_parsing_model('../first-stage/DATA/EN')
+    else:
+        rrp.load_parsing_model('first-stage/DATA/EN')
 
     reranker_model_dir = '../second-stage/models/ec50spfinal/'
+    if not os.path.isdir(reranker_model_dir):
+        reranker_model_dir = 'second-stage/models/ec50spfinal/'
+
     features_filename = reranker_model_dir + 'features.gz'
     weights_filename = reranker_model_dir + 'cvlm-l1c10P1-weights.gz'
 
