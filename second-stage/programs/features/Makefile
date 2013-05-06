@@ -110,7 +110,7 @@ SWIG_LINKER_FLAGS ?= -lstdc++ -L/usr/lib/gcc/x86_64-redhat-linux/4.4.4/
 
 # Edit these variables as needed
 SWIG_RERANKER_MODULE_NAME ?= SWIGReranker
-SWIG_JAVA_PACKAGE ?= ${SWIG_RERANKER_MODULE_NAME}
+SWIG_JAVA_PACKAGE ?= ''
 
 SWIG_OBJS = simple-api.o heads.o read-tree.o sym.o
 
@@ -137,6 +137,12 @@ swig/java/lib/lib$(SWIG_RERANKER_MODULE_NAME).so: $(SWIG_OBJS)
 		swig/java/lib/lib$(SWIG_RERANKER_MODULE_NAME).so \
 		$(SWIG_OBJS) swig/build/java_wrapper.o
 
+.PHONY: swig-java-test
+swig-java-test: swig-java
+	javac swig/java/lib/*.java
+	javac -cp swig/java/lib/ swig/java/test/*.java
+	java -cp swig/java/lib:swig/java/test -Djava.library.path=swig/java/lib test
+
 .PHONY: swig-python
 swig-python: swig/python/lib/_$(SWIG_RERANKER_MODULE_NAME).so
 
@@ -152,7 +158,7 @@ swig/python/lib/_$(SWIG_RERANKER_MODULE_NAME).so: $(SWIG_OBJS)
 	gcc $(SWIG_LINKER_FLAGS) -shared $(SWIG_OBJS) \
 		swig/build/python_wrapper.o -o swig/python/lib/_$(SWIG_RERANKER_MODULE_NAME).so
 
-.PHONY: swig-python
+.PHONY: swig-python-test
 swig-python-test: swig-python
 	PYTHONPATH=swig/python/lib/ python swig/python/test/test.py
 
