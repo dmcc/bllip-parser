@@ -295,6 +295,7 @@ class SentRep {
 
                 MeChart* chart = new MeChart(*$self, threadSlot.getThreadSlotIndex());
                 if ($self->length() >= MAXSENTLEN) {
+                    delete chart;
                     error("Sentence is too long.");
                 }
                 InputTrees dummy1;

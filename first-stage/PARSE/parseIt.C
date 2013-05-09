@@ -410,6 +410,7 @@ static void makeFlat(SentRep *srp, MeChart *chart, InputTree*& t)
     }
   st->subTrees()=its;
   t=s1;
+  delete chart;
 }
 
 //------------------------------
