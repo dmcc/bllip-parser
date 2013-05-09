@@ -48,11 +48,25 @@ E.g.,
 The script parse-eval.sh takes a list of treebank files as arguments
 and extracts the terminal strings from them, runs the two-stage parser
 on those terminal strings and then evaluates the parsing accuracy with
-the U. Penn EVAL-B program.  For example, on my machine the Penn
+the Sparseval program[*].  For example, on my machine the Penn
 Treebank 3 CD-ROM is installed at /usr/local/data/Penn3/, so the
 following code evaluates the two-stage parser on section 24.
 
 > parse-eval.sh /usr/local/data/Penn3/parsed/mrg/wsj/24/wsj*.mrg
+
+[*] Sparseval is available from 
+	http://old-site.clsp.jhu.edu/ws2005/groups/eventdetect/files/SParseval.tgz
+    The Makefile will automatically download and build it if you run "make sparseval"
+    See this paper for more information:
+    @inproceedings{roark2006sparseval,
+        title={SParseval: Evaluation metrics for parsing speech},
+        author={Roark, Brian and Harper, Mary and Charniak, Eugene and Dorr, Bonnie and Johnson, Mark and Kahn, Jeremy G and Liu, Yang and Ostendorf, Mari and Hale, John and Krasnyanskaya, Anna and others},
+        booktitle={Proc. LREC},
+        year={2006}
+    }
+
+    We no longer distribute evalb with the parser, but it is still available:
+    http://nlp.cs.nyu.edu/evalb/
 
 USING THE PARSER
 ================

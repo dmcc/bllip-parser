@@ -218,7 +218,7 @@ ESTIMATORENV=
 # TARGETS is the list of targets built when make is called
 # without arguments
 #
-TARGETS = PARSE reranker-runtime evalb
+TARGETS = PARSE reranker-runtime sparseval
 
 .PHONY: top
 top: $(TARGETS)
@@ -239,7 +239,7 @@ TRAIN:
 # These include best-parses, which reranks the n-best parses produced
 # by the first-stage parser, and ptb, which is a program that converts
 # Penn Treebank trees into the various formats needed by Eugene's
-# parser, the reranker training programs, EVALB, etc.  
+# parser, the reranker training programs, sparseval, etc.  
 #
 .PHONY: reranker-runtime
 reranker-runtime:
@@ -250,7 +250,7 @@ reranker-runtime:
 # These include:
 #  ptb, which converts the Penn Treebank parse trees into
 #       the various formats needed by Eugene's parser, the reranker training
-#       program, EVALB, etc., 
+#       program, sparseval, etc., 
 #  extract-spfeatures, which produces feature-count files used to train 
 #       the reranker, 
 #  cvlm, which estimates the feature weights.
@@ -259,11 +259,18 @@ reranker-runtime:
 reranker: top TRAIN
 	$(MAKE) -C second-stage
 
-# Good old EVALB!
+# EVALB has been replaced with sparseval (nearly the same features with fewer bugs)
 #
-.PHONY: evalb
-evalb: 
-	$(MAKE) -C evalb evalb
+sparseval: SParseval/src/sparseval
+
+SParseval:
+	wget http://old-site.clsp.jhu.edu/ws2005/groups/eventdetect/files/SParseval.tgz
+	tar xvzf SParseval.tgz
+	rm SParseval.tgz
+
+SParseval/src/sparseval: SParseval
+	rm -f SParseval/src/*.o
+	$(MAKE) -C SParseval/src sparseval
 
 # clean removes object files.
 #

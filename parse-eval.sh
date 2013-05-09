@@ -11,11 +11,14 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 #
-# Parses a section of treebank and evaluates the parser output using evalb
+# Parses a section of treebank and evaluates the parser output using sparseval
 #
 # Should be called with the treebank source files as an argument
+# You may need to run "make sparseval" before running this command.
 
-second-stage/programs/prepare-data/ptb -c $* | parse.sh -K > parse-trees.tmp
+second-stage/programs/prepare-data/ptb -c $* | ./parse.sh -K > parse-trees.tmp
 second-stage/programs/prepare-data/ptb -e $* > gold-trees.tmp
-evalb/evalb -p evalb/new.prm gold-trees.tmp parse-trees.tmp
+SParseval/src/sparseval -v -h SParseval/headInfo.txt -p SParseval/SPEECHPAR.prm gold-trees.tmp parse-trees.tmp
+# back in the days of evalb, the above command was:
+# evalb/evalb -p evalb/new.prm gold-trees.tmp parse-trees.tmp
 rm parse-trees.tmp gold-trees.tmp
