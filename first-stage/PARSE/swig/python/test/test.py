@@ -29,7 +29,7 @@ def display_parses(parses):
 def initialize(n=10):
     # this assumes we're in PARSE/
     parser.loadModel("../DATA/EN")
-    parser.setOptions('En', False, n, True, 21, 0)
+    parser.setOptions('En', False, n, True, 21, 0, 0)
 
 def test_tokenizer():
     sr = parser.tokenize("junk <s> It's some text to tokenize, if you feel like it -- or not. </s>", 399)
@@ -124,7 +124,7 @@ if __name__ == "__main__":
     if 1:
         initialize(n=5)
         test_as_nbest_list()
-        for x in range(10): # memory leak detection
+        for x in range(1000): # memory leak detection
             print 'iteration', x
             test_tokenizer()
             test_parse()

@@ -75,6 +75,7 @@ public:
   static bool prettyPrint;
   static bool silent;
   static bool smallCorpus;
+  static float smoothPosAmount;
   static const char *HEADWORD_S1;
   Item*   edgesFromTree(InputTree* tree);
   void  set_Betas();

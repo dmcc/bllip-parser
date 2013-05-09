@@ -99,9 +99,10 @@ static void usage(const char *program)
   cerr << "-N: n-best parsing\n"; 
 
   cerr << "\nPerformance/Quality:\n";
-  cerr << "-s: small training corpus flag\n";
+  cerr << "-s: small training corpus flag [off by default]\n";
   cerr << "-t: number of threads [2]\n";
   cerr << "-T: over-parsing level [210]\n";
+  cerr << "-P: smooth known part of speech probabilities. Set to a float to enable. [0]\n";
 
   cerr << "\nInput:\n";
   cerr << "-C: case-insensitive flag\n";

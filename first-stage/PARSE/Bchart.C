@@ -49,9 +49,9 @@ bool  Bchart::tokenize = true;
 bool  Bchart::prettyPrint = false;
 int   Bchart::Nth = 1;
 bool  Bchart::silent = false;
+float Bchart::smoothPosAmount = 0;
 const char * Bchart::HEADWORD_S1 = "^^";
 
-
 Bchart::
 Bchart(SentRep & sentence, int id)
   : ChartBase( sentence,id ),
@@ -445,9 +445,12 @@ addFinishedEdge(Edge* newEdge)
       add_reg_item(regi);
     }
   
-  if(newEdge->finishedParent())
+  if(newEdge->finishedParent()) {
     assert(newEdge->finishedParent() == regi);
-  else newEdge->setFinishedParent( regi );    
+  }
+  else {
+    newEdge->setFinishedParent( regi );
+  }
 
   regi->ineed().push_back( newEdge );
   /* setFinishedParent tells newEdge that the consitutent that it

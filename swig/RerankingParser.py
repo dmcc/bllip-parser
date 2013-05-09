@@ -97,12 +97,12 @@ class RerankingParser:
 
     def load_parsing_model(self, model_dir, language='En',
                            case_insensitive=False, nbest=50, small_corpus=True,
-                           overparsing=21, debug=0):
+                           overparsing=21, debug=0, smoothPos=0):
         assert not self._parser_model_loaded
         self._parser_model_loaded = True
         parser.loadModel(model_dir)
         parser.setOptions(language, case_insensitive, nbest, small_corpus,
-                          overparsing, debug)
+                          overparsing, debug, smoothPos)
 
     def parse(self, sentence, rerank=True, max_sentence_length=399):
         """Parse some text or tokens and return an NBestList with the

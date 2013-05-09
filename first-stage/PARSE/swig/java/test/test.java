@@ -47,7 +47,7 @@ public class test {
 
     public static void initialize(int nbest) {
         SWIGParser.loadModel("../DATA/EN");
-        SWIGParser.setOptions("En", false, nbest, true, 21, 0);
+        SWIGParser.setOptions("En", false, nbest, true, 21, 0, 0);
     }
 
     public static void testTokenizer() {

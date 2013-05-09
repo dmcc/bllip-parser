@@ -425,16 +425,20 @@ wordPlist(Wrd* word, int word_num)
     }
   }
       
+  bool smoothPos = Bchart::smoothPosAmount > 0;
   if( wint <= lastKnownWord )
     {
       int i;
-      for( i = 0 ; i <= Term::lastNTInt() ; i ++ )
+      for( i = 0 ; i <= Term::lastTagInt() ; i ++ )
 	{
 	  if(guided && !inGuide(word_num,word_num+1,i)) continue;
 	  float pwgt = pHst(wint,i);
 	  //cerr << "pwgt " << i << " " << pwgt << endl;
-	  if(pwgt == 0) continue;
+	  if(pwgt == 0 && !smoothPos) continue;
 	  float prob = psktt(word,i); 
+	  if (smoothPos && prob == 0 && Term::fromInt(i)->openClass()) {
+	    prob = smoothPosAmount;
+	  }
 	  if(prob == 0) continue;
 	  assert( prob > 0);
 	  ans.push_back((float)i);

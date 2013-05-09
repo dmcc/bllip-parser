@@ -202,13 +202,14 @@ typedef std::string ECString;
     }
 
     void setOptions(string language, bool caseInsensitive, int nBest,
-            bool smallCorpus, double overparsing, int debug) {
+            bool smallCorpus, double overparsing, int debug, float smoothPosAmount) {
         Bchart::caseInsensitive = caseInsensitive;
         Bchart::Nth = nBest;
         Bchart::smallCorpus = smallCorpus;
         Bchart::timeFactor = overparsing;
         Bchart::printDebug() = debug;
         Term::Language = language;
+        Bchart::smoothPosAmount = smoothPosAmount;
     }
 
     SentRep* tokenize(string text, int maxTokens) {

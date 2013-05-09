@@ -55,6 +55,13 @@ init( ECArgs& args )
      extPosIfstream=new ifstream(nm.c_str());
      assert(extPosIfstream);
    }
+   if(args.isset('P'))
+     {
+       float smoothPosAmount = atof(args.value('P').c_str());
+       assert(smoothPosAmount >= 0);
+       assert(smoothPosAmount <= 1);
+       Bchart::smoothPosAmount = smoothPosAmount;
+     }
    if(args.isset('T'))
      {
        int fac = atoi(args.value('T').c_str());
