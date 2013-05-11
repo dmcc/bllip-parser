@@ -193,7 +193,7 @@ ESTIMATOR=second-stage/programs/wlle/avper
 
 # ESTIMATORFLAGS are flags given to the estimator
 #
-ESTIMATORFLAGS="-n 10 -d 0 -F 1 -N 10"
+ESTIMATORFLAGS=-n 10 -d 0 -F 1 -N 10
 
 # ESTIMATORNICKNAME is used to name the feature weights file
 #
