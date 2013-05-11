@@ -11,7 +11,7 @@
 # under the License.
 
 SOURCES = avper.cc cvlm-owlqn.cc hlm.cc gavper.cc lm.cc lmdata.c oracle.cc wavper.cc wlle.cc OWLQN.cpp TerminationCriterion.cpp # cvlm.cc
-TARGETS = avper cvlm gavper oracle # lm oracle wavper cvlm-owlqn hlm
+TARGETS = avper gavper oracle # cvlm lm oracle wavper cvlm-owlqn hlm
 OBJECTS = $(patsubst %.cpp,%.o,$(patsubst %.l,%.o,$(patsubst %.c,%.o,$(SOURCES:%.cc=%.o))))
 
 all: $(TARGETS)

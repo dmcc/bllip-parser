@@ -185,20 +185,19 @@ FEATURESNICKNAME=sp
 # feature counts. This is the feature weight estimator that gives best
 # performance.  There are others in the same directory (e.g., weighted
 # perceptron).  If you decide to use a different feature weight
-# estimator you should also change ESTIMATORNICKNAME below.
+# estimator you should also change ESTIMATORNICKNAME below.  Other sets
+# of these variable values can be found in the train-eval-reranker.sh
+# script.
 #
-ESTIMATOR=second-stage/programs/wlle/cvlm
+ESTIMATOR=second-stage/programs/wlle/avper
 
 # ESTIMATORFLAGS are flags given to the estimator
 #
-# These flags are for cvlm:
-ESTIMATORFLAGS=-l 1 -c0 10 -Pyx_factor 1 -debug 10 -ns -1
-# The equivalent ESTIMATORFLAGS for cvlm-owlqn:
-# ESTIMATORFLAGS=-l 1 -c 10 -F 1 -d 10 -n -1
+ESTIMATORFLAGS="-n 10 -d 0 -F 1 -N 10"
 
 # ESTIMATORNICKNAME is used to name the feature weights file
 #
-ESTIMATORNICKNAME=cvlm-l1c10P1
+ESTIMATORNICKNAME=avper
 
 # ESTIMATORSTACKSIZE is the size (in KB) of the per-thread stacks
 # used during estimation
@@ -253,7 +252,7 @@ reranker-runtime:
 #       program, sparseval, etc., 
 #  extract-spfeatures, which produces feature-count files used to train 
 #       the reranker, 
-#  cvlm, which estimates the feature weights.
+#  cvlm/avper, which estimates the feature weights.
 #
 .PHONY: reranker
 reranker: top TRAIN
