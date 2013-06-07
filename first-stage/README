@@ -18,10 +18,10 @@
 
 1.  Basic Usage
 
-The parser (which is to be found in the sub-directory PARSE)expects
-sentences delimited by <s> ...</s>, and outputs the parsed versions in
-Penn tree-bank style.  (The <s> and </s> must be separated by spaces
-from all other text.) So if the input is
+The parser (which is to be found in the sub-directory PARSE) expects
+sentences delimited by <s> ... </s>, and outputs the parsed versions in
+Penn treebank style. The <s> and </s> must be separated by spaces
+from all other text. So if the input is
 
 <s> (``He'll work at the factory.'') </s>
 
@@ -135,7 +135,7 @@ settings found in DATA/LM/.
 Then give parseIt a -M command-line argument.  If the data is from
 speech, and thus all one case, also use the -C flag.
 
-The output in -L  mode is of the form:
+The output in -M mode is of the form:
 
 log-grammar-probability	  log-trigram-probability   log-mixed-probability
 parse
@@ -159,11 +159,14 @@ default is -T210.)
 
 8. Multi-threaded version
 
+[Update 2013] Using multiple threads is not currently recommended as
+there appear to be thread safety issues.
+
 parseIt is multi threaded.  It currently assumes two threads (for dual
 processors).  To change this, use the command line argument, -t4 to
 have it use, e,g, 4 threads.  Currently the maximum number of threads
 allowed is 4.  To change this change the following line in Features.h
-and recompile parseItT.
+and recompile parseIt.
 
 #define MAXNUMTHREADS 4
 
@@ -209,14 +212,7 @@ Note that the tokenization must match exactly between these files (tokens are sp
 
 11. Frequently confusing errors
 
-a.  Parser prints something like the following:
-
-    Can't open terms file ../DATA/ENterms.txt
-    parseIt: headFinder.C:39: void readHeadInfoEn(std::string&): Assertion `headStrm' failed.
-
-This error means that you forgot to add a / after the model directory (e.g. DATA/EN instead of DATA/EN/).
-
-b.  If parser provides no output at all
+a.  If parser provides no output at all
 
 This is most likely caused by not having spaces around the <s> and </s> brackets, i.e.
 
