@@ -110,7 +110,11 @@ SWIG_LINKER_FLAGS ?= -lstdc++ -L/usr/lib/gcc/x86_64-redhat-linux/4.4.4/
 
 # Edit these variables as needed
 SWIG_RERANKER_MODULE_NAME ?= SWIGReranker
-SWIG_JAVA_PACKAGE ?= ''
+SWIG_JAVA_PACKAGE ?= ${SWIG_RERANKER_MODULE_NAME}
+
+ifneq ($(strip $(SWIG_JAVA_PACKAGE)),)
+	SWIG_FLAGS += -package ${SWIG_JAVA_PACKAGE}
+endif
 
 SWIG_OBJS = simple-api.o heads.o read-tree.o sym.o
 
@@ -128,8 +132,7 @@ swig/java/lib/lib$(SWIG_RERANKER_MODULE_NAME).so: CXXFLAGS += -fPIC -fno-strict-
 swig/java/lib/lib$(SWIG_RERANKER_MODULE_NAME).so: $(SWIG_OBJS)
 	mkdir -p swig/build
 	mkdir -p swig/java/lib
-	swig -module $(SWIG_RERANKER_MODULE_NAME) -Wall -c++ -java -outdir swig/java/lib \
-		-package ${SWIG_JAVA_PACKAGE} \
+	swig $(SWIG_FLAGS) -module $(SWIG_RERANKER_MODULE_NAME) -Wall -c++ -java -outdir swig/java/lib \
 		-o swig/build/java_wrapper.cxx swig/wrapper.i
 	gcc -O2 $(CXXFLAGS) -c $(SWIG_JAVA_GCCFLAGS) -iquote . \
 		swig/build/java_wrapper.cxx -o swig/build/java_wrapper.o
@@ -150,7 +153,7 @@ swig/python/lib/_$(SWIG_RERANKER_MODULE_NAME).so: CXXFLAGS += -fPIC -fno-strict-
 swig/python/lib/_$(SWIG_RERANKER_MODULE_NAME).so: $(SWIG_OBJS)
 	mkdir -p swig/build
 	mkdir -p swig/python/lib
-	swig -module $(SWIG_RERANKER_MODULE_NAME) -Wall -c++ -python -classic -outdir \
+	swig $(SWIG_FLAGS) -module $(SWIG_RERANKER_MODULE_NAME) -Wall -c++ -python -classic -outdir \
 		swig/python/lib -o swig/build/python_wrapper.cxx swig/wrapper.i
 	g++ -fno-strict-aliasing $(CXXFLAGS) -Wfatal-errors \
 		-c -iquote . $(SWIG_PYTHON_GCCFLAGS) \
@@ -161,6 +164,11 @@ swig/python/lib/_$(SWIG_RERANKER_MODULE_NAME).so: $(SWIG_OBJS)
 .PHONY: swig-python-test
 swig-python-test: swig-python
 	PYTHONPATH=swig/python/lib/ python swig/python/test/test.py
+
+.PHONY: swig-python-valgrind
+swig-python-valgrind: CXXFLAGS += -g
+swig-python-valgrind: swig-python
+	PYTHONPATH=swig/python/lib/ valgrind --leak-check=full --suppressions=/usr/share/doc/python-devel-2.6.6/valgrind-python.supp python swig/python/test/test.py
 
 swig-clean:
 	rm -rf swig/build swig/python/lib swig/java/lib swig/java/test/*.class swig/python/test/*.py[co] simple-api.o

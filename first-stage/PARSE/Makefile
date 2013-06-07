@@ -94,6 +94,11 @@ oparseIt: $(OPARSE_OBJS)
 evalTree: $(EVALTREE_OBJS)
 	$(CXX) $(CFLAGS) ${EVALTREE_OBJS} -o evalTree -D_REENTRANT -D_XOPEN_SOURCE=600 -lpthread
 
+.PHONY: valgrind-parseIt
+valgrind-parseIt: CFLAGS += -g -O0
+valgrind-parseIt: parseIt
+	valgrind --leak-check=full ./parseIt ../DATA/EN/ ../../sample-text/sample-data.txt
+
 #
 # SWIG wrappers for Java and Python
 #
@@ -115,6 +120,10 @@ SWIG_OBJS = ThreadManager.o
 SWIG_PARSER_MODULE_NAME ?= SWIGParser
 # SWIG_JAVA_PACKAGE ?= your.package.name.for.the.swig.wrapper
 
+ifneq ($(strip $(SWIG_JAVA_PACKAGE)),)
+	SWIG_FLAGS += -package ${SWIG_JAVA_PACKAGE}
+endif
+
 # 
 # main SWIG targets
 #
@@ -132,6 +141,11 @@ swig-python: swig/python/lib/_$(SWIG_PARSER_MODULE_NAME).so
 swig-python-test: swig-python
 	PYTHONPATH=$(PYTHONPATH):swig/python/lib python swig/python/test/test.py
 
+.PHONY: swig-python-valgrind
+swig-python-valgrind: CFLAGS += -g -O0
+swig-python-valgrind: swig-python
+	PYTHONPATH=$(PYTHONPATH):swig/python/lib valgrind --leak-check=full --suppressions=/usr/share/doc/python-devel-2.6.6/valgrind-python.supp python swig/python/test/test.py
+
 swig-clean:
 	rm -rf swig/build swig/python/lib swig/java/lib swig/java/test/*.class swig/python/test/*.py[co]
 
@@ -141,14 +155,8 @@ swig-clean:
 swig/build/java_wrapper.cxx: swig/wrapper.i
 	mkdir -p swig/build
 	mkdir -p swig/java/lib
-ifeq ($(strip $(SWIG_JAVA_PACKAGE)),)
-	swig -module $(SWIG_PARSER_MODULE_NAME) -Wall -c++ -java -outdir swig/java/lib \
+	swig $(SWIG_FLAGS) -module $(SWIG_PARSER_MODULE_NAME) -Wall -c++ -java -outdir swig/java/lib \
 		-o swig/build/java_wrapper.cxx swig/wrapper.i
-else
-	swig -module $(SWIG_PARSER_MODULE_NAME) -Wall -c++ -java -outdir swig/java/lib \
-		-package ${SWIG_JAVA_PACKAGE} \
-		-o swig/build/java_wrapper.cxx swig/wrapper.i
-endif
 
 swig/build/java_wrapper.o: swig/build/java_wrapper.cxx
 	$(CC) -O3 $(CFLAGS) -c $(SWIG_JAVA_GCCFLAGS) -I. \
@@ -165,7 +173,7 @@ swig/java/lib/lib$(SWIG_PARSER_MODULE_NAME).so: swig/build/java_wrapper.o $(COMM
 swig/build/python_wrapper.cxx: swig/wrapper.i
 	mkdir -p swig/build
 	mkdir -p swig/python/lib
-	swig -module $(SWIG_PARSER_MODULE_NAME) -Wall -c++ -python -classic \
+	swig $(SWIG_FLAGS) -module $(SWIG_PARSER_MODULE_NAME) -Wall -c++ -python -classic \
 		-outdir swig/python/lib -o swig/build/python_wrapper.cxx swig/wrapper.i
 
 swig/build/python_wrapper.o: swig/build/python_wrapper.cxx
@@ -173,6 +181,6 @@ swig/build/python_wrapper.o: swig/build/python_wrapper.cxx
 		-I. swig/build/python_wrapper.cxx -o swig/build/python_wrapper.o
 
 swig/python/lib/_$(SWIG_PARSER_MODULE_NAME).so: swig/build/python_wrapper.o $(COMMON_OBJS) $(SWIG_OBJS)
-	$(CC) $(SWIG_LINKER_FLAGS) -shared \
+	$(CC) $(CFLAGS) $(SWIG_LINKER_FLAGS) -shared \
 		-o swig/python/lib/_$(SWIG_PARSER_MODULE_NAME).so \
 		$(COMMON_OBJS) $(SWIG_OBJS) swig/build/python_wrapper.o

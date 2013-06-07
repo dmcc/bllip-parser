@@ -552,12 +552,12 @@ $(EVALDIR)/dev-parsediffs.gz: $(WEIGHTSFILEGZ) $(FEATDIR)/test1.gz $(NBESTDIR)/s
 # These paths are likely not very portable and may need to be edited
 
 # this should be the path to jni.h
-SWIG_JAVA_GCCFLAGS=-I/usr/lib/jvm/java-1.6.0-openjdk-1.6.0.0.x86_64/include/ \
+SWIG_JAVA_GCCFLAGS ?= -I/usr/lib/jvm/java-1.6.0-openjdk-1.6.0.0.x86_64/include/ \
 	-I/usr/lib/jvm/java-1.6.0-openjdk-1.6.0.0.x86_64/include/linux/
 # this should be the path to Python.h
-SWIG_PYTHON_GCCFLAGS=-I/usr/include/python2.6/
+SWIG_PYTHON_GCCFLAGS ?= -I/usr/include/python2.6/
 # -L should have the path to libstdc++.so
-SWIG_LINKER_FLAGS=-lstdc++ -L/usr/lib/gcc/x86_64-redhat-linux/4.4.4/
+SWIG_LINKER_FLAGS ?= -lstdc++ -L/usr/lib/gcc/x86_64-redhat-linux/4.4.4/
 export SWIG_JAVA_GCCFLAGS
 export SWIG_PYTHON_GCCFLAGS
 export SWIG_LINKER_FLAGS
