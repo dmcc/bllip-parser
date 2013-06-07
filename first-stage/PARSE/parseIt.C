@@ -325,7 +325,7 @@ static bool decodeParses(int len, int locCount, SentRep* srp, MeChart* chart, pr
       double ptri = pow(2.0,ltri);
       double pcomb = (0.667 * pgram)+(0.333 * ptri);
       double lmix = log2(pcomb);
-      if(locCount%10==9)cout << lgram << "\t" << ltri << "\t" << lmix << "\n";
+      cout << lgram << "\t" << ltri << "\t" << lmix << "\n";
     }
   int numVersions = 0;
   Link diffs(0);
