@@ -7,11 +7,11 @@ probabilities).  While many of the source files have the same names as
 those of the parser, often they are slightly different and thus this
 directory must be kept separate.
 
-The shell script "allScript" runs the various programs needed to train
+The shell script "trainParser" runs the various programs needed to train
 the parser/language model. Run it with no arguments to get a usage
 statement. For the English parser, usage is:
 
-  allScript -data-directory- -training-file- -development-file-
+  trainParser -data-directory- -training-file- -development-file-
 
 The train and dev corpus should be in Penn Treebank format (similar to
 parser output). Training data is not provided with the parser.
@@ -26,7 +26,7 @@ appropriate data directory that is distributed with the parser:
 * DATA/LM: English language model
 * DATA/CH: Chinese parser (trained on LDC Chinese Treebank)
 
-and point allScript at your copied directory.
+and point trainParser at your copied directory.
 
 Some additional notes on training:
 

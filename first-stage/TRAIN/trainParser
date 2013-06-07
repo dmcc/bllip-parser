@@ -54,7 +54,7 @@ elif [ $1 = -En ]; then LANG=English; shift
 else                    LANG=English
 fi
 
-# traditional allScript training arguments
+# traditional trainParser training arguments
 if [ $# -ne 3 ]; then usage; fi
 DATA=`echo $1 | sed -e 's|/$||g'` # remove final "/" if present
 TRAIN="$2 ${DATA}/bugFix.txt"

@@ -131,7 +131,7 @@ NBESTPARSER=$(NBESTPARSERBASEDIR)/PARSE/parseIt
 # the n-best parser.  If you change this, please change
 # NBESTPARSERNICKNAME below as well.
 #
-NBESTTRAINER=$(NBESTPARSERBASEDIR)/TRAIN/allScript
+NBESTTRAINER=$(NBESTPARSERBASEDIR)/TRAIN/trainParser
 
 # NBESTPARSERNICKNAME is a nickname for the n-best parser.  If you 
 # experiment with several n-best parsers, give each one a different
@@ -375,7 +375,7 @@ $(TMP)/fold%/dev: second-stage/programs/prepare-data/ptb
 # $(TMP)/fold%/DATA: $(TMP)/%/train $(TMP)/%/dev
 # 	mkdir -p $@
 # 	LC_COLLATE=C; cp $(NBESTPARSERBASEDIR)/DATA/EN/[a-z]* $@
-# 	$(NBESTPARSERBASEDIR)/TRAIN/allScript $@ $(@D)/train $(@D)/dev
+# 	$(NBESTPARSERBASEDIR)/TRAIN/trainParser $@ $(@D)/train $(@D)/dev
 
 .INTERMEDIATE: $(TMP)/fold%/yield
 $(TMP)/fold%/yield: second-stage/programs/prepare-data/ptb
