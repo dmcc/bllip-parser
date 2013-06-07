@@ -16,9 +16,9 @@
 
 class RerankerError {
     public:
-        const char* description;
+        std::string description;
 
-        RerankerError(const char* msg);
+        RerankerError(const std::string msg);
 };
 
 typedef std::vector<Float> Weights;
@@ -38,4 +38,4 @@ class RerankerModel {
         Weights* scoreNBestList(const sp_sentence_type& nbest_list) const;
 };
 
-sp_sentence_type* readNBestList(const char* nbest_list, bool lowercase);
+sp_sentence_type* readNBestList(const std::string nbest_list, bool lowercase);

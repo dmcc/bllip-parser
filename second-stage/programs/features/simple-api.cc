@@ -32,7 +32,7 @@ bool absolute_counts = true;
 bool collect_correct = false;
 bool collect_incorrect = false;
 
-RerankerError::RerankerError(const char* msg) {
+RerankerError::RerankerError(const std::string msg) {
     this->description = msg;
 }
 
@@ -89,7 +89,7 @@ RerankerModel::scoreNBestList(const sp_sentence_type& nbest_list) const {
     return parse_scores;
 }
 
-sp_sentence_type* readNBestList(const char* nbest_list, bool lowercase) {
+sp_sentence_type* readNBestList(const std::string nbest_list, bool lowercase) {
     std::stringstream text(nbest_list);
     sp_sentence_type* s = new sp_sentence_type();
     s->read(text, lowercase);

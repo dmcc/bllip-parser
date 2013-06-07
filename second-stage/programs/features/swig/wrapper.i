@@ -37,15 +37,18 @@
     try {
         $action
     } catch (RerankerError re) {
-        SWIG_exception(SWIG_RuntimeError, re.description);
+        SWIG_exception(SWIG_RuntimeError, re.description.c_str());
     }
 }
+
+%newobject readNBestList;
+%newobject scoreNBestList;
 
 %inline {
     class RerankerError {
         public:
-            const char* description;
-            RerankerError(const char* msg);
+            const std::string description;
+            RerankerError(const std::string msg);
     };
 
     typedef unsigned int size_type;
@@ -57,7 +60,7 @@
     struct sp_sentence_type {
         size_t nparses() const;
     };
-    sp_sentence_type* readNBestList(const char* nbest_list, bool lowercase);
+    sp_sentence_type* readNBestList(const std::string nbest_list, bool lowercase);
 
     class RerankerModel {
         public:

@@ -126,6 +126,7 @@ typedef std::string ECString;
 %newobject parse;
 %newobject tokenize;
 %newobject inputTreeFromString;
+%newobject asNBestList;
 
 %inline{
     typedef pair<double,InputTree*> ScoredTree;
