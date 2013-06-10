@@ -111,9 +111,10 @@ SWIG_LINKER_FLAGS ?= -lstdc++ -L/usr/lib/gcc/x86_64-redhat-linux/4.4.4/
 # Edit these variables as needed
 SWIG_RERANKER_MODULE_NAME ?= SWIGReranker
 SWIG_JAVA_PACKAGE ?= ${SWIG_RERANKER_MODULE_NAME}
+SWIG_JAVA_FLAGS = ${SWIG_FLAGS}
 
 ifneq ($(strip $(SWIG_JAVA_PACKAGE)),)
-	SWIG_FLAGS += -package ${SWIG_JAVA_PACKAGE}
+	SWIG_JAVA_FLAGS += -package ${SWIG_JAVA_PACKAGE}
 endif
 
 SWIG_OBJS = simple-api.o heads.o read-tree.o sym.o
@@ -132,7 +133,7 @@ swig/java/lib/lib$(SWIG_RERANKER_MODULE_NAME).so: CXXFLAGS += -fPIC -fno-strict-
 swig/java/lib/lib$(SWIG_RERANKER_MODULE_NAME).so: $(SWIG_OBJS)
 	mkdir -p swig/build
 	mkdir -p swig/java/lib
-	swig $(SWIG_FLAGS) -module $(SWIG_RERANKER_MODULE_NAME) -Wall -c++ -java -outdir swig/java/lib \
+	swig $(SWIG_JAVA_FLAGS) -module $(SWIG_RERANKER_MODULE_NAME) -Wall -c++ -java -outdir swig/java/lib \
 		-o swig/build/java_wrapper.cxx swig/wrapper.i
 	gcc -O2 $(CXXFLAGS) -c $(SWIG_JAVA_GCCFLAGS) -iquote . \
 		swig/build/java_wrapper.cxx -o swig/build/java_wrapper.o

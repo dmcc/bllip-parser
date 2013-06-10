@@ -120,8 +120,9 @@ SWIG_OBJS = ThreadManager.o
 SWIG_PARSER_MODULE_NAME ?= SWIGParser
 # SWIG_JAVA_PACKAGE ?= your.package.name.for.the.swig.wrapper
 
+SWIG_JAVA_FLAGS = ${SWIG_FLAGS}
 ifneq ($(strip $(SWIG_JAVA_PACKAGE)),)
-	SWIG_FLAGS += -package ${SWIG_JAVA_PACKAGE}
+	SWIG_JAVA_FLAGS += -package ${SWIG_JAVA_PACKAGE}
 endif
 
 # 
@@ -155,7 +156,7 @@ swig-clean:
 swig/build/java_wrapper.cxx: swig/wrapper.i
 	mkdir -p swig/build
 	mkdir -p swig/java/lib
-	swig $(SWIG_FLAGS) -module $(SWIG_PARSER_MODULE_NAME) -Wall -c++ -java -outdir swig/java/lib \
+	swig $(SWIG_JAVA_FLAGS) -module $(SWIG_PARSER_MODULE_NAME) -Wall -c++ -java -outdir swig/java/lib \
 		-o swig/build/java_wrapper.cxx swig/wrapper.i
 
 swig/build/java_wrapper.o: swig/build/java_wrapper.cxx
