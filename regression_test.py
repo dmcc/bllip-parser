@@ -1,0 +1,389 @@
+#!/usr/bin/env python
+import os, subprocess, tempfile, datetime, time, hashlib
+
+# TODO actual evaluation with sparseval?
+#      verify trained parser model
+#      extended test (download pre-segmented Gutenberg?)
+#      thread pool for parallel (but not multithreaded!) parsing
+#      dump hg/git state to regression log
+
+# you will need to set the environment variable $WSJ to your WSJ treebank
+# root we expect to find files like '22.mrg' inside this (which should
+# contain the *.mrg files in the 22/ subdirectory)
+wsj_dir = os.getenv('WSJ')
+
+input_converter = './second-stage/programs/prepare-data/ptb'
+
+parser_bin = './first-stage/PARSE/parseIt'
+parser_model = './first-stage/DATA/EN/'
+parser_trainer_script = './first-stage/TRAIN/trainParser'
+
+reranker_bin = './second-stage/programs/features/best-parses'
+reranker_model_dir = './second-stage/models/ec50spfinal'
+
+good_md5sums = { # TODO to be filled in
+}
+
+def timed(function):
+    """Decorator which times how long a function takes to run."""
+    def wrapped(*args, **kwargs):
+        start = time.time()
+        result = function(*args, **kwargs)
+        duration = time.time() - start
+        print "Duration:", format_time(duration)
+        return result
+    return wrapped
+
+class RegressionSuite:
+    def __init__(self, options, md5sums):
+        self.working_dir = options.working_dir
+        if not self.working_dir:
+            self.working_dir = self.unique_working_directory()
+        try:
+            os.makedirs(self.working_dir)
+        except OSError:
+            pass
+        if not self.working_dir.endswith('/'):
+            self.working_dir += '/'
+        print "Log directory:", self.working_dir
+
+        self.wsj_dir = options.wsj_dir or wsj_dir
+        if self.wsj_dir and not self.wsj_dir.endswith('/'):
+            self.wsj_dir += '/'
+
+        self.already_processed_wsj_input = set()
+        self.log_file = file(self.working_dir + 'regression.log', 'a')
+        self.md5sums = md5sums
+        self.options = options
+
+    def main(self):
+        self.setup()
+
+        selected_tests = []
+        for key, value in vars(self.options).items():
+            method_name = 'run_%s_tests' % key
+            if value and hasattr(self, method_name):
+                selected_tests.append(getattr(self, method_name))
+
+        if selected_tests:
+            for test in selected_tests:
+                test()
+        else:
+            self.default_test_suite()
+
+        if not self.options.no_md5sums:
+            import pprint
+            print
+            print "md5sums:"
+            pprint.pprint(self.md5sums)
+
+    #
+    # test suites
+    #
+
+    @timed
+    def run_fast_tests(self):
+        # these are here so we can test (at least minimally) without the -K flag
+        self.log('Running fast end-to-end tests', header=True)
+        self.run_parser('sample-text/sample-data.txt', 'sample-data', parser_flags='-t1')
+        self.run_parser('sample-text/steedman.txt', 'steedman', parser_flags='-t1')
+        self.run_parser_and_reranker('sample-text/sample-data.txt', 'sample-data',
+            parser_flags='-t1 -N50')
+        self.run_parser_and_reranker('sample-text/steedman.txt', 'steedman',
+            parser_flags='-t1 -N50')
+
+        self.run_parser('sample-text/sample-data.txt', 'sample-data', parser_flags='-t1 -l3')
+        self.run_parser('sample-text/steedman.txt', 'steedman', parser_flags='-t1 -l3')
+
+    @timed
+    def run_failure_tests(self):
+        self.log('Running tests on sentences known to fail', header=True)
+        self.run_parser('sample-text/fails.sgml', 'fails', parser_flags='-t1')
+        self.run_parser('sample-text/fails.sgml', 'fails', parser_flags='-t1 -N2')
+        self.run_parser('sample-text/pos_tag_failures.sgml', 'pos_tag_failures',
+            parser_flags='-t1 -Esample-text/pos_tag_failures.tags')
+
+    @timed
+    def run_tokenization_tests(self):
+        self.log('Running parser tokenization tests', header=True)
+        self.run_parser('sample-text/tokenization_tests.sgml', 'tokenization_tests', parser_flags='-t1')
+
+    @timed
+    def run_tagging_tests(self):
+        self.log('Running parser tagging tests', header=True)
+        self.run_parser('sample-text/pos_tag_examples.sgml', 'pos_tag_examples',
+            parser_flags='-t1 -Esample-text/pos_tag_examples.tags')
+
+    @timed
+    def run_normal_tests(self):
+        self.log('Running normal, longer end-to-end tests on two WSJ sections', header=True)
+        self.run_parser_on_sections(parser_flags='-K -t1')
+        self.run_parser_on_sections(parser_flags='-K -t1 -s')
+        self.run_parser_on_sections(parser_flags='-K -t1 -l399')
+        self.run_parser_and_reranker_on_sections(parser_flags='-K -t1 -N50')
+
+    @timed
+    def run_length_tests(self):
+        self.log('Running length tests on two WSJ sections', header=True)
+        self.run_parser_and_reranker_on_sections(parser_flags='-K -t1 -l5')
+
+    @timed
+    def run_retraining_tests(self):
+        self.log('Retraining first-stage parser', header=True)
+        retrained_parser_model = self.working_dir + 'parser_model/'
+        self.train_parser(retrained_parser_model)
+
+        self.log('Testing retrained first-stage parser', header=True)
+        self.run_parser('sample-text/sample-data.txt', 'retrained-sample-data', 
+            parser_flags='-t1', parser_model=retrained_parser_model)
+        self.run_parser('sample-text/steedman.txt', 'retrained-steedman', 
+            parser_flags='-t1', parser_model=retrained_parser_model)
+
+        self.run_parser_on_sections(parser_flags='-K -t1 -N50', 
+            parser_model=retrained_parser_model, desc_prefix='retrained-')
+
+    def default_test_suite(self):
+        # run faster, simpler tests first to catch any obvious issues
+        # (first three tests also work without a WSJ distribution)
+        self.run_fast_tests()
+        self.run_failure_tests()
+        self.run_tokenization_tests()
+        self.run_tagging_tests()
+        self.run_normal_tests()
+        self.run_retraining_tests()
+
+    #
+    # utility methods
+    #
+
+    def setup(self):
+        self.log('Building reranking parser', header=True)
+        self.run('make')
+
+    def log(self, message, header=False):
+        if header:
+            print
+            print message
+            self.log_file.write('\n%s\n' % message)
+        else:
+            line = time.asctime() + ': %s' % message
+            print line
+            self.log_file.write(line + '\n')
+            self.log_file.flush()
+
+    def run(self, command, input_filename=None, output_filename=None):
+        """Workhorse function which actually runs the commands."""
+
+        if self.options.check_only:
+            self.log('Command %r skipped (due to --check-only)' % command)
+            if output_filename:
+                self.verify_output(output_filename)
+            return
+
+        stdin = None
+        stdout = self.log_file
+        input_and_output = []
+        if input_filename:
+            self.assert_file_exists(input_filename)
+            stdin = file(input_filename, 'r')
+            input_and_output.append('< ' + input_filename)
+        if output_filename:
+            stdout = file(output_filename, 'w')
+            input_and_output.append('> ' + output_filename)
+
+        command_desc = command
+        if input_and_output:
+            command_desc += ' ' +  ' '.join(input_and_output)
+
+        self.log('Command %r started' % command_desc)
+        start_time = time.time()
+        process = subprocess.Popen(command, close_fds=True,
+            shell=True, stdin=stdin, stdout=stdout, stderr=self.log_file)
+        result = process.communicate()
+        duration = time.time() - start_time
+        return_code = process.returncode
+        exit_code_desc = ''
+        if return_code:
+            exit_code_desc = 'exit code %r, ' % return_code
+        self.log('Command %r finished (%stook %s)' % \
+            (command_desc, exit_code_desc, format_time(duration)))
+        if return_code != 0:
+            raise ValueError("Bad exit code for %r: %s" % (command, return_code))
+
+        if output_filename:
+            stdout.flush()
+            self.verify_output(output_filename)
+
+    def process_wsj_for_input(self, sections=(22, 24)):
+        if not set(sections).difference(self.already_processed_wsj_input):
+            return
+
+        section_desc = ', '.join(map(str, sections))
+        self.log('Processing WSJ section(s) %s for input' % section_desc,
+            header=True)
+        for section in sections:
+            if self.assert_dir_exists(self.wsj_dir):
+                wsj_section_filename = self.wsj_dir + '%02d.mrg' % section
+                self.assert_file_exists(wsj_section_filename)
+                self.run('%s -c %s' % (input_converter, wsj_section_filename),
+                    output_filename=self.working_dir + '%02d.sgml' % section)
+            self.already_processed_wsj_input.add(section)
+
+    def run_parser(self, input_filename, input_desc, parser_flags, parser_model=parser_model):
+        self.assert_file_exists(input_filename)
+        self.assert_dir_exists(parser_model)
+
+        output_filename = self.working_dir + \
+            '%s%s.parsed' % (input_desc, parser_flags.replace(' ', '').replace('/', '-'))
+        self.run('%s %s %s' % (parser_bin, parser_flags, parser_model),
+            output_filename=output_filename,
+            input_filename=input_filename)
+        return output_filename
+
+    def run_parser_on_sections(self, parser_flags, sections=(22, 24), parser_model=parser_model,
+            desc_prefix=''):
+        self.process_wsj_for_input(sections)
+
+        output_filenames = []
+        for section in sections:
+            output_filename = self.run_parser(self.working_dir +'%s.sgml' % section,
+                desc_prefix + str(section), parser_flags, parser_model=parser_model)
+            output_filenames.append(output_filename)
+        return output_filenames
+
+    def run_parser_and_reranker_on_sections(self, parser_flags, sections=(22, 24),
+            parser_model=parser_model, desc_prefix=''):
+        for section in sections:
+            parsed = self.run_parser_on_sections(parser_flags, sections=[section],
+                parser_model=parser_model, desc_prefix=desc_prefix)
+            self.run_reranker(parsed[0])
+
+    def run_reranker(self, parsed_filename):
+        self.assert_file_exists(parsed_filename)
+
+        features_filename = '%s/features.gz' % reranker_model_dir
+        weights_filename = '%s/cvlm-l1c10P1-weights.gz' % reranker_model_dir
+        self.assert_file_exists(features_filename)
+        self.assert_file_exists(weights_filename)
+
+        output_filename = parsed_filename.replace('parsed', 'reranked')
+        self.run('%s -l %s %s' % (reranker_bin, features_filename, weights_filename),
+            input_filename=parsed_filename,
+            output_filename=output_filename)
+
+    def run_parser_and_reranker(self, input_filename, input_desc, parser_flags):
+        parsed_filename = self.run_parser(input_filename, input_desc, parser_flags)
+        self.run_reranker(parsed_filename)
+
+    def train_parser(self, new_model_dir):
+        self.run('make TRAIN')
+        self.run('mkdir -p ' + new_model_dir)
+        self.assert_dir_exists(parser_model)
+        # copy required files to new parser model directory
+        self.run('cp -a %sheadInfo.txt %s' % (parser_model, new_model_dir))
+        self.run('cp -a %sterms.txt %s' % (parser_model, new_model_dir))
+        self.run('cp -a %sfeatInfo.* %s' % (parser_model, new_model_dir))
+        self.run('cp -a %sbugFix.txt %s' % (parser_model, new_model_dir))
+
+        train_filenames = [self.wsj_dir + '%s.mrg' % str(section).zfill(2)
+            for section in range(2, 22)]
+        for train_filename in train_filenames:
+            self.assert_file_exists(train_filename)
+        train_trees = self.working_dir + 'train.mrg'
+        self.run('cat %s' % ' '.join(train_filenames),
+            output_filename=train_trees)
+        dev_trees = self.wsj_dir + '24.mrg'
+        self.run('%s -parser -En %s %s %s' % (parser_trainer_script, 
+            new_model_dir, train_trees, dev_trees))
+
+    def verify_output(self, output_filename):
+        if not self.assert_file_exists(output_filename):
+            return
+            
+        hasher = hashlib.md5()
+        hasher.update(file(output_filename, 'r').read())
+        md5sum = hasher.hexdigest()
+        key = output_filename.replace(self.working_dir, '')
+
+        match_desc = ''
+        if key in self.md5sums:
+            expected_md5sum = self.md5sums[key]
+            if expected_md5sum != md5sum:
+                self.log("FAIL: Output in %r doesn't have expected md5sum (got %s instead of %s)." % \
+                    (output_filename, md5sum, expected_md5sum))
+                return
+            else:
+                match = ' (PASS)'
+        else:
+            self.md5sums[key] = md5sum
+
+        self.log("Output in %r has md5sum (%s)%s" % (output_filename,
+            md5sum, match_desc))
+    def assert_dir_exists(self, dirname):
+        if os.path.isdir(dirname):
+            return True
+        else:
+            self.log("FAIL: Directory %r does not exist." % dirname)
+            return False
+    def assert_file_exists(self, filename):
+        if os.path.isfile(filename):
+            return True
+        else:
+            self.log("FAIL: File %r does not exist." % filename)
+            return False
+    def unique_working_directory(self):
+        while 1:
+            now = datetime.datetime.now()
+            working_dir = now.strftime('regression-test-%Y.%m.%d-%H.%M.%S')
+            if not os.path.exists(working_dir):
+                os.mkdir
+                return working_dir
+            else:
+                # wait a second and we'll have a different path
+                time.sleep(1)
+                
+def format_time(seconds):
+    """Simple time delta pretty-fier"""
+    hours, remainder = divmod(seconds, 60 * 60)
+    minutes, remainder = divmod(remainder, 60)
+    description = ''
+    if hours:
+        description += '%dh' % hours
+    if minutes:
+        description += '%dm' % minutes
+    if remainder:
+        if seconds > 1: # limit precision
+            description += '%ss' % int(remainder)
+        else:
+            description += '%.1fs' % remainder
+    return description
+
+if __name__ == "__main__":
+    from optparse import OptionParser, OptionGroup, SUPPRESS_HELP
+    optparser = OptionParser(usage="""usage: %prog [options]
+
+Runs a regression suite for the BLLIP Parser. By default, the full suite (-fFnrtT)
+is run.  If any specific tests are selected, it will only run those tests.""")
+    optparser.add_option('-d', '--working-dir', metavar='DIR', 
+        help='Use a specific directory for output (defaults to a temporary directory in the current directory)')
+    optparser.add_option('-W', '--wsj-dir', metavar='DIR', 
+        help='Path to WSJ PTB3 (needed for longer and retraining tests). This option can also be set with the $WSJ environment variable.')
+    optparser.add_option('-M', '--no-md5sums', action='store_true',
+        help="Don't dump md5sums after running tests (primarily for debugging)")
+    optparser.add_option('-c', '--check-only', action='store_true',
+        help="Check md5sums of outputs but don't run any new commands.")
+
+    tests = OptionGroup(optparser, 'Tests')
+    tests.add_option('-f', '--fast', action='store_true', help='Run simple, fast tests.')
+    tests.add_option('-F', '--failure', action='store_true', help='Run tests on sentences known to fail.')
+    tests.add_option('-n', '--normal', action='store_true', help='Run normal parser tests.')
+    tests.add_option('-r', '--retraining', action='store_true', help='Run parser retraining tests.')
+    tests.add_option('-t', '--tokenization', action='store_true', help='Run parser tokenization tests.')
+    tests.add_option('-T', '--tagging', action='store_true', help='Run external POS tag constraint tests in parser.')
+    tests.add_option('-l', '--length', action='store_true',
+        help='Run length tests (not recommended in versions between August 2006 and May 2013 due to memory leak).')
+    optparser.add_option_group(tests)
+    options, args = optparser.parse_args()
+
+    suite = RegressionSuite(options, good_md5sums)
+    suite.main()

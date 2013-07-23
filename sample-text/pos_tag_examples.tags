@@ -1,0 +1,36 @@
+He
+is
+going
+to
+fish
+for
+fish
+.
+---
+He
+is
+going
+to
+fish VB
+for
+fish
+.
+---
+He
+is
+going
+to
+fish NN
+for
+fish
+.
+---
+He     PRP
+is     AUX VB VBZ VBG
+going  VBG
+to     IN TO
+fish   NN VB VBZ VBG VBD
+for    TO IN DT JJ
+fish   NN VB VBZ VBG VBD
+.      .
+---

@@ -46,3 +46,4 @@ glob:second-stage/programs/features/swig/*/lib/*
 glob:first-stage/PARSE/swig/*/build/*
 glob:second-stage/programs/features/swig/*/build/*
 glob:SParseval/*
+glob:regression-test-*
