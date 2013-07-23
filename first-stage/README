@@ -212,7 +212,7 @@ Note that the tokenization must match exactly between these files (tokens are sp
 
 11. Frequently confusing errors
 
-a.  If parser provides no output at all
+a.  If parser provides no output at all:
 
 This is most likely caused by not having spaces around the <s> and </s> brackets, i.e.
 
@@ -221,3 +221,10 @@ This is most likely caused by not having spaces around the <s> and </s> brackets
 instead of
 
     <s> This is a test sentence. </s>
+
+b.  When retraining: "Couldn't find term: _____
+    pSgT: InputTree.C:206: InputTree* InputTree::newParse(std::istream&, int&, InputTree*): Assertion `Term::get(trm)' failed."
+
+    This means the training data contains an unknown term (phrasal or
+    part of speech type). You'll need to add the appropriate entry to
+    terms.txt in the model you're training.
