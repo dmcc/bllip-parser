@@ -210,7 +210,6 @@ mainLoop(void* arg)
 	  msg += intToString(params.maxSentLen);
 	  WARN( msg.c_str() );
 	  printSkipped(srp,NULL,printStack,printS);
-	  delete srp;
 	  continue;
 	}
 
@@ -244,23 +243,17 @@ mainLoop(void* arg)
               if (!topS) {
                   WARN("Reparsing without POS constraints failed too: !topS");
                   printSkipped(srp, chart, printStack, printS);
-                  delete chart;
-                  delete srp;
                   continue;
               }
           } else {
               WARN( "Parse failed: !topS" );
               printSkipped(srp,chart,printStack,printS);
-              delete chart;
-              delete srp;
               continue;
           }
 	}
 
       bool failed = decodeParses(len, locCount, srp, chart, printS, printStack);
       if (failed) {
-        delete chart;
-        delete srp;
         continue;
       }
 
@@ -275,15 +268,11 @@ mainLoop(void* arg)
               if (failed || printS.numDiff == 0) {
                 WARN("Parse failed from 0, inf or nan probabililty -- failed even without POS constraints");
                 printSkipped(srp,chart,printStack,printS);
-                delete chart;
-                delete srp;
                 continue;
               }
           } else {
               WARN("Parse failed from 0, inf or nan probabililty");
               printSkipped(srp,chart,printStack,printS);
-              delete chart;
-              delete srp;
               continue;
           }
 	}
@@ -312,7 +301,6 @@ static bool decodeParses(int len, int locCount, SentRep* srp, MeChart* chart, pr
     {
       WARN( "Parse failed: chart->findMapParse().empty()" );
       printSkipped(srp,chart,printStack,printS);
-      delete chart;
       return true;
     }
   if(Feature::isLM)
@@ -418,6 +406,7 @@ static void makeFlat(SentRep *srp, MeChart *chart, InputTree*& t)
   st->subTrees()=its;
   t=s1;
   delete chart;
+  delete srp;
 }
 
 //------------------------------
