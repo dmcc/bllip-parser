@@ -61,7 +61,7 @@ class Sentence:
 
 class NBestList:
     def __init__(self, sentrep, parses):
-        # we keep this around since it's our keep to converting our input
+        # we keep this around since it's our key to converting our input
         # to the reranker's format (see __str__())
         self._parses = parses
         self._sentrep = sentrep
@@ -78,21 +78,51 @@ class NBestList:
     def sort_by_reranker_scores(self):
         self.parses.sort(key=lambda parse: -parse.reranker_score)
     def get_parser_best(self):
-        return min(self, key=lambda parse: parse.parser_rank)
+        if len(self.parses):
+            return min(self, key=lambda parse: parse.parser_rank)
+        else:
+            return None
     def get_reranker_best(self):
         return min(self, key=lambda parse: parse.reranker_rank)
     def get_tokens(self):
         return self._sentrep.get_tokens()
+    def rerank(self, reranker, lowercase=True):
+        """reranker can be a RerankingParser or RerankerModel."""
+        assert reranker
+        if not self.parses:
+            self._reranked = True
+            return
+        if isinstance(reranker, RerankingParser):
+            reranker = reranker.reranker_model
+        reranker_input = self.as_reranker_input()
+        scores = reranker.scoreNBestList(reranker_input)
+        # this could be more efficient if needed
+        for (score, nbest_list_item) in zip(scores, self.parses):
+            nbest_list_item.reranker_score = score
+        self.sort_by_reranker_scores()
+        for index, nbest_list_item in enumerate(self.parses):
+            nbest_list_item.reranker_rank = index
+        self._reranked = True
 
     def __str__(self):
-        return parser.asNBestList(self._parses)
+        if self._reranked:
+            from cStringIO import StringIO
+            combined = StringIO()
+            combined .write('%d dummy\n' % len(self.parses))
+            for parse in self.parses:
+                combined.write('%s %s\n%s\n' % \
+                    (parse.reranker_score, parse.parser_score, parse.ptb_parse))
+            combined.seek(0)
+            return combined.read()
+        else:
+            return parser.asNBestList(self._parses)
     def as_reranker_input(self, lowercase=True):
         return reranker.readNBestList(str(self), lowercase)
 
 class RerankingParser:
     def __init__(self):
         self._parser_model_loaded = False
-        self._reranker_model = None
+        self.reranker_model = None
         self._parser_thread_slot = parser.ThreadSlot()
 
     def load_parsing_model(self, model_dir, language='En',
@@ -112,10 +142,13 @@ class RerankingParser:
         assert self._parser_model_loaded
 
         sentence = Sentence(sentence, max_sentence_length)
-        parses = parser.parse(sentence.sentrep, self._parser_thread_slot)
+        try:
+            parses = parser.parse(sentence.sentrep, self._parser_thread_slot)
+        except RuntimeError:
+            parses = []
         nbest_list = NBestList(sentence, parses)
         if rerank:
-            self.rerank(nbest_list)
+            nbest_list.rerank(self)
         return nbest_list
 
     def parse_tagged(self, tokens, possible_tags, rerank=True):
@@ -137,25 +170,14 @@ class RerankingParser:
         parses = parser.parse(sentence.sentrep, ext_pos, self._parser_thread_slot)
         nbest_list = NBestList(sentence, parses)
         if rerank:
-            self.rerank(nbest_list)
+            nbest_list.rerank(self)
         return nbest_list
 
     def load_reranker_model(self, features_filename, weights_filename,
                             feature_class=None):
-        self._reranker_model = reranker.RerankerModel(feature_class,
-                                                      features_filename,
-                                                      weights_filename)
-
-    def rerank(self, nbest_list, lowercase=True):
-        assert self._reranker_model
-        reranker_input = nbest_list.as_reranker_input()
-        scores = self._reranker_model.scoreNBestList(reranker_input)
-        # this could be more efficient if needed
-        for (score, nbest_list_item) in zip(scores, nbest_list):
-            nbest_list_item.reranker_score = score
-        nbest_list.sort_by_reranker_scores()
-        for index, nbest_list_item in enumerate(nbest_list):
-            nbest_list_item.reranker_rank = index
+        self.reranker_model = reranker.RerankerModel(feature_class,
+                                                     features_filename,
+                                                     weights_filename)
 
 def load_included_model():
     import os
@@ -225,17 +247,15 @@ if __name__ == "__main__":
         sentence = "This is the reranking parser .".split()
         nbest_list = rrp.parse(sentence)
         print nbest_list[0]
-        rrp.rerank(nbest_list)
-        nbest_list.sort_by_reranker_scores()
+        nbest_list.rerank(rrp)
         print nbest_list[0]
 
     with timing("parsing"):
         sentence = "This is a much much longer sentence which we will parse using the reranking parser .".split()
         nbest_list = rrp.parse(sentence)
         print nbest_list[0]
-        rrp.rerank(nbest_list)
-        nbest_list.sort_by_reranker_scores()
+        nbest_list.rerank(rrp)
         print nbest_list[0]
 
-    # for scored_parse in nbest_list:
-        # print scored_parse, scored_parse.parser_rank
+    for scored_parse in nbest_list:
+        print scored_parse, scored_parse.parser_rank
