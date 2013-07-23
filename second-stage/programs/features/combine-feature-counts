@@ -3,8 +3,10 @@
 and renumbering the features.  This can be used on the output of
 extract-spfeatures-counts.  It should not need to be used on the output
 of extract-spfeatures."""
-import sys
-import gzip, bz2
+import sys, getopt, gzip, bz2
+opts, args = getopt.gnu_getopt(sys.argv[1:], 't')
+threshold = int(dict(opts).get('t', 5))
+print >>sys.stderr, "Threshold:", threshold
 
 def opener(filename):
     """Open files based on their extension."""
@@ -16,8 +18,7 @@ def opener(filename):
         return file(filename)
 
 name_to_freq = {} # { feature name : freq }
-threshold = 5
-for filename in sys.argv[1:]:
+for filename in args:
     print >>sys.stderr, "Reading", filename
     for line in opener(filename):
         freq, name = line.split('\t', 1)
@@ -31,7 +32,12 @@ print >>sys.stderr, len(name_to_freq), "unpruned features"
 feature_names = [name for name, freq in name_to_freq.iteritems()
     if freq >= threshold]
 print >>sys.stderr, len(feature_names), "pruned features"
-feature_names.sort()
+
+def sorter(key):
+    # put NLogP first
+    return (key != 'NLogP 0', key)
+
+feature_names.sort(key=sorter)
 print >>sys.stderr, "Writing sorted features out..."
 
 i = 0
