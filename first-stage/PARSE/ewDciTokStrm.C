@@ -250,16 +250,6 @@ splitAtPunc( ECString seq )      // savedWrd_ to hold everything that's left.
 		    return seq.substr( 0,puncIndex );
 		}
 
-	    if( puncIndex < length
-		&& ( parenFlag == 0 || parenFlag > 3 )
-		&& ( seq[puncIndex] == '"' || seq[puncIndex] == '\''
-					   || seq[puncIndex] == ')' ))
-	    {
-	        savedWrd_ = ".";
-		savedWrd_ += seq.substr(puncIndex,length-puncIndex);// add dot before
-		return seq.substr( 0,puncIndex );             //  quote or
-	    }                                                //  close-paren
-
 	    if( puncIndex == length )
 	    {				     // If != length, there were unex-
 		savedWrd_ = nextWrd_;	     //  pected trailing characters,
@@ -299,10 +289,6 @@ splitAtPunc( ECString seq )      // savedWrd_ to hold everything that's left.
 		        ECString retv =  seq.substr( 0,1 );
 			retv += "ill";
                 	return retv;
-		    }
-		    if( seq.substr( 0,5 ) == "ain't" || seq.substr( 0,5 ) == "Ain't" )
-		    {	savedWrd_ = seq.substr( 2,length-2 );
-                	return "IS";       // caps as warning: "am"|"are"|"is"
 		    }
 		}
                                                                  // page SIX
