@@ -1,5 +1,4 @@
 TRAIN/README
-09/28/05
 
 The TRAIN directory includes the programs needed to train the parser
 (by reading in in treebank data and collecting the needed
@@ -11,12 +10,14 @@ The shell script "trainParser" runs the various programs needed to train
 the parser/language model. Run it with no arguments to get a usage
 statement. For the English parser, usage is:
 
-  trainParser -data-directory- -training-file- -development-file-
+  trainParser -parser [data directory] [training corpus] [development corpus]
+
+For the English language model, use -lm instead of -parser.
 
 The train and dev corpus should be in Penn Treebank format (similar to
 parser output). Training data is not provided with the parser.
 
-Files created during training will be written to "-data-directory-".
+Files created during training will be written to "data directory".
 Importantly, the training code (and parser) also expect certain static
 files to be here that are NOT created during training. As such, the
 easiest way to setup everything correctly is to make a copy of the 
