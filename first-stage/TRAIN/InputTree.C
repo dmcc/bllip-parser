@@ -113,7 +113,7 @@ readParse(istream& is)
 	}
       else
 	{
-	  cerr << temp << " is not legal topmost type" << endl;
+	  cerr << temp << " is not a legal topmost type (skipping sentence)" << endl;
 	  flushConstit(is);
 	  return;
 	}
@@ -255,7 +255,12 @@ newParse(istream& is, int& strt, InputTree* par)
     {
       //ans->term() = auxify(wrd,trm);
       ans->headTree() = ans;
-      assert( (Term::get(ans->term()))->terminal_p() );
+      if (!(Term::get(ans->term()))->terminal_p()) {
+          cerr << "Word: " << wrd << endl;
+          cerr << "Term: " << trm << endl;
+          cerr << "Corpus error: The term a phrasal term but it's being used as a part of speech tag." << endl;
+          assert( (Term::get(ans->term()))->terminal_p() );
+      }
     }
   else
     {
