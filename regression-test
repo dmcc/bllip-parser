@@ -12,11 +12,17 @@
 # under the License.
 import os, subprocess, tempfile, datetime, time, hashlib
 
-# Basic usage:
-# To run:
-# shell> python regression_test.py
-# See also:
-# shell> python regression_test.py --help
+"""
+BLLIP Parser regression suite for command-line components.
+
+Tests basic functionality and records the results to logs in a log
+directory.
+
+To run:
+shell> ./regression-test
+More information:
+shell> ./regression_test --help
+"""
 
 # TODO actual evaluation with sparseval?
 #      verify trained parser model
@@ -151,12 +157,12 @@ class RegressionSuite:
         self.train_parser(retrained_parser_model)
 
         self.log('Testing retrained first-stage parser', header=True)
-        self.run_parser('sample-text/sample-data.txt', 'retrained-sample-data', 
+        self.run_parser('sample-text/sample-data.txt', 'retrained-sample-data',
             parser_flags='-t1', parser_model=retrained_parser_model)
-        self.run_parser('sample-text/steedman.txt', 'retrained-steedman', 
+        self.run_parser('sample-text/steedman.txt', 'retrained-steedman',
             parser_flags='-t1', parser_model=retrained_parser_model)
 
-        self.run_parser_on_sections(parser_flags='-K -t1 -N50', 
+        self.run_parser_on_sections(parser_flags='-K -t1 -N50',
             parser_model=retrained_parser_model, desc_prefix='retrained-')
 
     def default_test_suite(self):
@@ -235,6 +241,12 @@ class RegressionSuite:
         if not set(sections).difference(self.already_processed_wsj_input):
             return
 
+        if not self.wsj_dir:
+            print
+            print "Error: WSJ directory not set. It must be set via the $WSJ environment"
+            print "variable or the -W argument."
+            raise SystemExit
+
         section_desc = ', '.join(map(str, sections))
         self.log('Processing WSJ section(s) %s for input' % section_desc,
             header=True)
@@ -310,13 +322,13 @@ class RegressionSuite:
         self.run('cat %s' % ' '.join(train_filenames),
             output_filename=train_trees)
         dev_trees = self.wsj_dir + '24.mrg'
-        self.run('%s -parser -En %s %s %s' % (parser_trainer_script, 
+        self.run('%s -parser -En %s %s %s' % (parser_trainer_script,
             new_model_dir, train_trees, dev_trees))
 
     def verify_output(self, output_filename):
         if not self.assert_file_exists(output_filename):
             return
-            
+
         hasher = hashlib.md5()
         hasher.update(file(output_filename, 'r').read())
         md5sum = hasher.hexdigest()
@@ -334,16 +346,15 @@ class RegressionSuite:
         else:
             self.md5sums[key] = md5sum
 
-        self.log("Output in %r has md5sum (%s)%s" % (output_filename,
-            md5sum, match_desc))
+        self.log("Output in %r has md5sum %s%s" % (output_filename, md5sum, match_desc))
     def assert_dir_exists(self, dirname):
-        if os.path.isdir(dirname):
+        if dirname and os.path.isdir(dirname):
             return True
         else:
             self.log("FAIL: Directory %r does not exist." % dirname)
             return False
     def assert_file_exists(self, filename):
-        if os.path.isfile(filename):
+        if filename and os.path.isfile(filename):
             return True
         else:
             self.log("FAIL: File %r does not exist." % filename)
@@ -358,7 +369,7 @@ class RegressionSuite:
             else:
                 # wait a second and we'll have a different path
                 time.sleep(1)
-                
+
 def format_time(seconds):
     """Simple time delta pretty-fier"""
     hours, remainder = divmod(seconds, 60 * 60)
@@ -381,9 +392,9 @@ if __name__ == "__main__":
 
 Runs a regression suite for the BLLIP Parser. By default, the full suite (-fFnrtT)
 is run.  If any specific tests are selected, it will only run those tests.""")
-    optparser.add_option('-d', '--working-dir', metavar='DIR', 
+    optparser.add_option('-d', '--working-dir', metavar='DIR',
         help='Use a specific directory for output (defaults to a temporary directory in the current directory)')
-    optparser.add_option('-W', '--wsj-dir', metavar='DIR', 
+    optparser.add_option('-W', '--wsj-dir', metavar='DIR',
         help='Path to WSJ PTB3 (needed for longer and retraining tests). This option can also be set with the $WSJ environment variable.')
     optparser.add_option('-M', '--no-md5sums', action='store_true',
         help="Don't dump md5sums after running tests (primarily for debugging)")
