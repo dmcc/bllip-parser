@@ -18,7 +18,7 @@
 const char usage[] =
 "Usage:\n"
 "\n"
-"parallel-extract-spfeatures [-a] [-c] [-d <debug>] [-f <f>] [-i] [-l] [-s <s>] \n"
+"parallel-extract-spfeatures [-a] [-c] [-d <debug>] [-f <f>] [-i] [-l] \n"
 "  train.nbest.cmd train.gold.cmd train.gz\n"
 " (dev.nbest.cmd dev.gold.cmd dev.gz)*\n"
 "\n"
@@ -29,7 +29,6 @@ const char usage[] =
 " -f <f> uses feature classes <f>,\n"
 " -i collect features from incorrect examples,\n"
 " -l maps all words to lower case as trees are read,\n"
-" -s <s> is the number of sentences a feature must appear in not to be pruned,\n"
 "\n"
 " train.nbest.cmd produces the n-best parses for training the reranker,\n"
 " train.gold.cmd is a command which produces the corresponding gold parses,\n"
@@ -67,7 +66,7 @@ int main(int argc, char **argv) {
   const char* fcname = NULL;
 
   int c;
-  while ((c = getopt(argc, argv, "acd:f:ils:")) != -1 )
+  while ((c = getopt(argc, argv, "acd:f:il")) != -1 )
     switch (c) {
     case 'a':
       absolute_counts = true;
@@ -117,16 +116,19 @@ int main(int argc, char **argv) {
   FeatureClassPtrs fcps(fcname);
 
   // read in features from stdin
-  fcps.read_feature_ids(std::cin);
+  int num_features = fcps.read_feature_ids(std::cin);
+  std::cerr << "# number of features: " << num_features << std::endl;
 
   // process all arguments
   for (int i = optind; i+1 < argc; i += 3) {
-    std::cerr << "# reading from \"" << argv[i] 
-	      << "\" and \"" << argv[i+1]
-	      << "\", writing to " << argv[i+2] << ',' << std::flush;
+    std::cerr << "# reading from test \"" << argv[i] 
+	      << "\"" << std::endl;
+    std::cerr << "# reading from gold \"" << argv[i + 1]
+	      << "\"" << std::endl;
+    std::cerr << "# writing to \"" << argv[i+2] << "\"" << std::endl;
 
     fcps.write_features(argv[i], argv[i+1], argv[i+2]);
-    std::cerr << " usage " << resource_usage() << std::endl;
+    std::cerr << "# usage " << resource_usage() << std::endl;
   }
 
 } // main()

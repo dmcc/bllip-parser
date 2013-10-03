@@ -10,13 +10,14 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
 # License for the specific language governing permissions and limitations
 # under the License.
+
 """Combine multiple feature count files into one, sorting, pruning
 and renumbering the features.  This can be used on the output of
 extract-spfeatures-counts.  It should not need to be used on the output
 of extract-spfeatures."""
 import sys, getopt, gzip, bz2
-opts, args = getopt.gnu_getopt(sys.argv[1:], 't')
-threshold = int(dict(opts).get('t', 5))
+opts, args = getopt.gnu_getopt(sys.argv[1:], 't:')
+threshold = int(dict(opts).get('-t', 5))
 print >>sys.stderr, "Threshold:", threshold
 
 def opener(filename):
@@ -51,7 +52,5 @@ def sorter(key):
 feature_names.sort(key=sorter)
 print >>sys.stderr, "Writing sorted features out..."
 
-i = 0
-for name in feature_names:
+for i, name in enumerate(feature_names):
     print '%s\t%s' % (i, name)
-    i += 1
