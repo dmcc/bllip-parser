@@ -1,6 +1,6 @@
 language: cpp
 compiler: gcc
-install: sudo apt-get install libboost-all-dev
+install: sudo apt-get install libboost-dev
 script:
   - make
   - make reranker
