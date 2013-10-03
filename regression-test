@@ -390,8 +390,9 @@ if __name__ == "__main__":
     from optparse import OptionParser, OptionGroup, SUPPRESS_HELP
     optparser = OptionParser(usage="""usage: %prog [options]
 
-Runs a regression suite for the BLLIP Parser. By default, the full suite (-fFnrtT)
-is run.  If any specific tests are selected, it will only run those tests.""")
+Runs a regression suite for the BLLIP Parser. By default, the full suite
+(-fFnrtT) is run.  If any specific tests are selected, it will only run
+those tests.""")
     optparser.add_option('-d', '--working-dir', metavar='DIR',
         help='Use a specific directory for output (defaults to a temporary directory in the current directory)')
     optparser.add_option('-W', '--wsj-dir', metavar='DIR',
@@ -409,7 +410,7 @@ is run.  If any specific tests are selected, it will only run those tests.""")
     tests.add_option('-t', '--tokenization', action='store_true', help='Run parser tokenization tests.')
     tests.add_option('-T', '--tagging', action='store_true', help='Run external POS tag constraint tests in parser.')
     tests.add_option('-l', '--length', action='store_true',
-        help='Run length tests (not recommended in versions between August 2006 and May 2013 due to memory leak).')
+        help='Run length tests (not recommended in versions between August 2006 and May 2013 due to memory leaks in those versions).')
     optparser.add_option_group(tests)
     options, args = optparser.parse_args()
 
