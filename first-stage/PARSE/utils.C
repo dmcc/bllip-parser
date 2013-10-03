@@ -52,36 +52,20 @@ error(const char *s)
   ERROR( s ); 
 }
 
-char*
-langAwareToLower(const char* str, char* temp)
+ECString
+langAwareToLower(ECString str)
 {
-  /* Arabic doesn't get lowercased, all other languages do (for now) */
-  if (Term::Language == "Ar") {
-    strcpy(temp, str);
-    return temp;
-  }
-  else
-    return toLower(str, temp);
-}
-
-char*
-toLower(const char* str, char* temp)
-{
-  int l = strlen(str);
-  assert(l < 1024);
-  for(int i = 0 ; i <= l ; i++)
-    {
-      char n = str[i];
-      int ni = (int)n;
-      if(ni >= 65 && ni <= 90)
-	{
-	  temp[i] = (char)(ni+32);
-	}
-      else temp[i] = n;
+    /* Arabic doesn't get lowercased, all other languages do (for now) */
+    if (Term::Language == "Ar") {
+        return str;
     }
-  return temp;
+    else {
+        string lowercased(str);
+        std::transform(lowercased.begin(), lowercased.end(),
+            lowercased.begin(), ::tolower);
+        return lowercased;
+    }
 }
-
 
 ECString
 intToString(int i)

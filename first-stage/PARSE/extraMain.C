@@ -42,6 +42,9 @@ generalInit(ECString path)
       setrlimit( RLIMIT_STACK, &stack_limits );
     }
 
+  // load locale settings from the environment
+  setlocale(LC_ALL, "");
+
   if (!endsWith(path, "/")) {
     path += "/";
   }

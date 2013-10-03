@@ -19,6 +19,7 @@
 
 #include "ECString.h"
 #include <vector>
+#include <clocale>
 
 #define WARN( msg ) warn( __FILE__, __LINE__, msg )
 #define ERROR( msg ) error( __FILE__, __LINE__, msg )
@@ -27,8 +28,7 @@ void warn( const char *filename, int filelinenum, const char *msg );
 void error( const char *filename, int filelinenum, const char *msg );
 void error(const char *s); // backwards compatibility
 
-char* langAwareToLower(const char* str, char* temp);
-char* toLower(const char* str, char* temp);
+ECString langAwareToLower(ECString str);
 ECString intToString(int i);
 
 typedef vector<ECString> ECStrings;
