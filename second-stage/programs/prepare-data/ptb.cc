@@ -46,6 +46,7 @@ const char info[] =
 #include "lexical_cast.h"
 #include "sym.h"
 #include "tree.h"
+#include "popen.h"
 
 typedef std::vector<symbol> symbols;
 
@@ -108,7 +109,7 @@ int main(int argc, char** argv) {
   {
     // count sentences
     for (int index = optind; index < argc; ++index) {
-      std::ifstream is(argv[index]);
+      izstream is(argv[index]);
       tree* tp;
       while (is >> tp) {
 	++nsentences;
@@ -140,7 +141,7 @@ int main(int argc, char** argv) {
 
   for (int index = optind; index < argc; index++) {
     int idno = 0;
-    std::ifstream is(argv[index]);
+    izstream is(argv[index]);
     std::string id(argv[index]);
     std::string::size_type pos = id.rfind("/");
     if (pos != std::string::npos && pos+1 < id.size())
