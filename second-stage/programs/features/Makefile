@@ -87,7 +87,7 @@ read-tree.cc: read-tree.l
 
 .PHONY: 
 clean:
-	rm -fr *.o *.d *~ core read-tree.cc
+	rm -fr *.o *.d *~ core read-tree.cc reranker_wrapper.C
 
 .PHONY: real-clean
 real-clean: clean
@@ -96,6 +96,12 @@ real-clean: clean
 #
 # SWIG wrappers for Java and Python
 #
+
+# NOTE: There is now a much more friendly way to install the Python
+# bindings with distutils.
+# Either run "sudo python setup.py install" from the root of the reranking
+# parser distribution or type "sudo pip install bllipparser" if you have
+# pip installed.
 
 # These paths are likely not very portable and may need to be edited
 # (they also can be overridden by the root ../../Makefile)

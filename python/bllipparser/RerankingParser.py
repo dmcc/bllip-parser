@@ -10,25 +10,17 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import sys
+"""Higher-level python frontend to the BLLIP reranking parser. Wraps the
+lower-level (SWIG-generated) CharniakParser and JohnsonReranker modules
+so you don't need to interact with them directly."""
 
-# this makes this work without modifications to PYTHONPATH in the swig/
-# or the base directory
-sys.path.extend(['../first-stage/PARSE/swig/python/lib',
-                 '../second-stage/programs/features/swig/python/lib',
-                 'first-stage/PARSE/swig/python/lib',
-                 'second-stage/programs/features/swig/python/lib'])
-
-try:
-    import SWIGParser as parser
-    import SWIGReranker as reranker
-except ImportError:
-    print "Couldn't find SWIG bindings for parser or reranker."
-    print "Please run 'make swig-python' first."
-    print
-    raise
+import os.path
+import CharniakParser as parser
+import JohnsonReranker as reranker
 
 class ScoredParse:
+    """Represents a single parse and its associated parser probability
+    and reranker score."""
     def __init__(self, ptb_parse, parser_score=None, reranker_score=None,
                  parser_rank=None, reranker_rank=None):
         self.ptb_parse = ptb_parse
@@ -40,11 +32,13 @@ class ScoredParse:
         return "%s %s %s" % \
             (self.parser_score, self.reranker_score, self.ptb_parse)
     def __repr__(self):
-        return "%s(%r, %r, %r)" % (self.__class__.__name__,
-                                   str(self.ptb_parse), self.parser_score,
-                                   self.reranker_score)
+        return "%s(%r, parser_score=%r, reranker_score=%r)" % \
+            (self.__class__.__name__, str(self.ptb_parse), 
+             self.parser_score, self.reranker_score)
 
 class Sentence:
+    """Represents a single sentence as input to the parser. You should
+    not typically need to construct this object directly."""
     def __init__(self, text_or_tokens, max_sentence_length=399):
         if isinstance(text_or_tokens, Sentence):
             self.sentrep = text_or_tokens.sentrep
@@ -60,6 +54,7 @@ class Sentence:
         return tokens
 
 class NBestList:
+    """Represents an n-best list of parses of the same sentence."""
     def __init__(self, sentrep, parses):
         # we keep this around since it's our key to converting our input
         # to the reranker's format (see __str__())
@@ -77,17 +72,23 @@ class NBestList:
 
     def sort_by_reranker_scores(self):
         self.parses.sort(key=lambda parse: -parse.reranker_score)
+    def sort_by_parser_scores(self):
+        self.parses.sort(key=lambda parse: -parse.parser_score)
     def get_parser_best(self):
+        """Get the best parse in this n-best list according to the parser."""
         if len(self.parses):
             return min(self, key=lambda parse: parse.parser_rank)
         else:
             return None
     def get_reranker_best(self):
+        """Get the best parse in this n-best list according to the reranker."""
         return min(self, key=lambda parse: parse.reranker_rank)
     def get_tokens(self):
+        """Get the tokens of this sentence as a sequence of strings."""
         return self._sentrep.get_tokens()
     def rerank(self, reranker, lowercase=True):
-        """reranker can be a RerankingParser or RerankerModel."""
+        """Rerank this n-best list according to a reranker model. reranker
+        can be a RerankingParser or RerankerModel."""
         assert reranker
         if not self.parses:
             self._reranked = True
@@ -105,6 +106,8 @@ class NBestList:
         self._reranked = True
 
     def __str__(self):
+        """Represent the n-best list in a similar output format to the
+        command-line parser and reranker."""
         if self._reranked:
             from cStringIO import StringIO
             combined = StringIO()
@@ -117,29 +120,71 @@ class NBestList:
         else:
             return parser.asNBestList(self._parses)
     def as_reranker_input(self, lowercase=True):
+        """Convert the n-best list to an internal structure used as input
+        to the reranker.  You shouldn't typically need to call this."""
         return reranker.readNBestList(str(self), lowercase)
 
 class RerankingParser:
+    """Wraps the Charniak parser and Johnson reranker into a single
+    object. In general, the RerankingParser is not thread safe."""
     def __init__(self):
+        """Create an empty reranking parser. You'll need to call
+        load_parsing_model() at minimum and load_reranker_model() if
+        you're using the reranker. See also the load_unified_model_dir()
+        classmethod which will take care of calling both of these
+        for you."""
         self._parser_model_loaded = False
+        self.parser_model_dir = None
         self.reranker_model = None
         self._parser_thread_slot = parser.ThreadSlot()
+        self.unified_model_dir = None
+
+    def __repr__(self):
+        if self.unified_model_dir:
+            return "%s(unified_model_dir=%r)" % \
+                (self.__class__.__name__, self.unified_model_dir)
+        else:
+            return "%s(parser_model_dir=%r, reranker_model=%r)" % \
+                (self.__class__.__name__, self.parser_model_dir,
+                 self.reranker_model)
 
     def load_parsing_model(self, model_dir, language='En',
                            case_insensitive=False, nbest=50, small_corpus=True,
                            overparsing=21, debug=0, smoothPos=0):
-        assert not self._parser_model_loaded
+        """Load the parsing model from model_dir and set parsing
+        options. In general, the default options should suffice. Note
+        that the parser does not allow loading multiple models within
+        the same process."""
+        if self._parser_model_loaded:
+            raise ValueError('Parser is already loaded and can only be loaded once.')
+        if not os.path.exists(model_dir):
+            raise ValueError('Parser model directory %r does not exist.' % model_dir)
         self._parser_model_loaded = True
         parser.loadModel(model_dir)
+        self.parser_model_dir = model_dir
         parser.setOptions(language, case_insensitive, nbest, small_corpus,
                           overparsing, debug, smoothPos)
+
+    def load_reranker_model(self, features_filename, weights_filename,
+                            feature_class=None):
+        """Load the reranker model from its feature and weights files. A feature
+        class may optionally be specified."""
+        if not os.path.exists(features_filename):
+            raise ValueError('Reranker features filename %r does not exist.' % \
+                features_filename)
+        if not os.path.exists(weights_filename):
+            raise ValueError('Reranker weights filename %r does not exist.' % \
+                weights_filename)
+        self.reranker_model = reranker.RerankerModel(feature_class,
+                                                     features_filename,
+                                                     weights_filename)
 
     def parse(self, sentence, rerank=True, max_sentence_length=399):
         """Parse some text or tokens and return an NBestList with the
         results.  sentence can be a string or a sequence.  If it is a
         string, it will be tokenized.  If rerank is True, we will rerank
         the n-best list."""
-        assert self._parser_model_loaded
+        self.check_loaded_models(rerank)
 
         sentence = Sentence(sentence, max_sentence_length)
         try:
@@ -157,7 +202,7 @@ class RerankingParser:
         to possible POS tags.  Tokens without an entry in possible_tags
         will be unconstrained by POS.  If rerank is True, we will
         rerank the n-best list."""
-        assert self._parser_model_loaded
+        self.check_loaded_models(rerank)
 
         ext_pos = parser.ExtPos()
         for index in range(len(tokens)):
@@ -167,95 +212,50 @@ class RerankingParser:
             ext_pos.addTagConstraints(parser.VectorString(tags))
 
         sentence = Sentence(tokens)
-        parses = parser.parse(sentence.sentrep, ext_pos, self._parser_thread_slot)
+        parses = parser.parse(sentence.sentrep, ext_pos,
+            self._parser_thread_slot)
         nbest_list = NBestList(sentence, parses)
         if rerank:
             nbest_list.rerank(self)
         return nbest_list
 
-    def load_reranker_model(self, features_filename, weights_filename,
-                            feature_class=None):
-        self.reranker_model = reranker.RerankerModel(feature_class,
-                                                     features_filename,
-                                                     weights_filename)
+    def check_loaded_models(self, rerank):
+        if not self._parser_model_loaded:
+            raise ValueError("Parser model has not been loaded.")
+        if rerank and not self.reranker_model:
+            raise ValueError("Reranker model has not been loaded.")
 
-def load_included_model():
-    import os
-    rrp = RerankingParser()
-    if os.path.isdir('../first-stage/DATA/EN'):
-        rrp.load_parsing_model('../first-stage/DATA/EN')
-    else:
-        rrp.load_parsing_model('first-stage/DATA/EN')
+    @classmethod
+    def load_unified_model_dir(this_class, model_dir, parsing_options=None,
+        reranker_options=None):
+        """Create a RerankingParser from a unified parsing model on disk.
+        A unified parsing model should have the following filesystem structure:
+        
+        parser/
+            Charniak parser model: should contain pSgT.txt, *.g files,
+            and various others
+        reranker/
+            features.gz -- features for reranker
+            weights.gz -- corresponding weights of those features
+        """
+        parsing_options = parsing_options or {}
+        reranker_options = reranker_options or {}
+        rrp = this_class()
+        rrp.load_parsing_model(model_dir + '/parser/', **parsing_options)
 
-    reranker_model_dir = '../second-stage/models/ec50spfinal/'
-    if not os.path.isdir(reranker_model_dir):
-        reranker_model_dir = 'second-stage/models/ec50spfinal/'
+        reranker_model_dir = model_dir + '/reranker/'
+        features_filename = reranker_model_dir + 'features.gz'
+        weights_filename = reranker_model_dir + 'weights.gz'
 
-    features_filename = reranker_model_dir + 'features.gz'
-    weights_filename = reranker_model_dir + 'cvlm-l1c10P1-weights.gz'
+        rrp.load_reranker_model(features_filename, weights_filename,
+            **reranker_options)
+        rrp.unified_model_dir = model_dir
+        return rrp
 
-    rrp.load_reranker_model(features_filename, weights_filename)
-
-    return rrp
-
-def load_unified_model_dir(model_dir):
-    rrp = RerankingParser()
-    rrp.load_parsing_model(model_dir + '/parser/')
-
-    reranker_model_dir = model_dir + '/reranker/'
-    features_filename = reranker_model_dir + 'features.gz'
-    weights_filename = reranker_model_dir + 'weights.gz'
-
-    rrp.load_reranker_model(features_filename, weights_filename)
-    return rrp
-
-if __name__ == "__main__":
-    from time import time
-    class timing:
-        depth = 0
-        depth_changes = 0
-        def __init__(self, description):
-            self.description = description
-        def __enter__(self):
-            self.start = time()
-
-            indent = '  ' * self.__class__.depth
-            print '%s%s {' % (indent, self.description)
-
-            self.__class__.depth += 1
-            self.__class__.depth_changes += 1
-        def __exit__(self, exc_type, exc_value, traceback):
-            elapsed = time() - self.start
-            self.__class__.depth -= 1
-            indent = '  ' * self.__class__.depth
-            print '%s} [%.1fs]' % (indent, elapsed)
-
-    rrp = RerankingParser()
-
-    with timing("loading"):
-        with timing("loading parsing model"):
-            rrp.load_parsing_model('../first-stage/DATA/EN')
-
-        with timing("loading reranking model"):
-            reranker_model_dir = '../second-stage/models/ec50spfinal/'
-            features_filename = reranker_model_dir + 'features.gz'
-            weights_filename = reranker_model_dir + 'cvlm-l1c10P1-weights.gz'
-
-            rrp.load_reranker_model(features_filename, weights_filename)
-
-    with timing("parsing"):
-        sentence = "This is the reranking parser .".split()
-        nbest_list = rrp.parse(sentence)
-        print nbest_list[0]
-        nbest_list.rerank(rrp)
-        print nbest_list[0]
-
-    with timing("parsing"):
-        sentence = "This is a much much longer sentence which we will parse using the reranking parser .".split()
-        nbest_list = rrp.parse(sentence)
-        print nbest_list[0]
-        nbest_list.rerank(rrp)
-        print nbest_list[0]
-
-    for scored_parse in nbest_list:
-        print scored_parse, scored_parse.parser_rank
+def tokenize(text, max_sentence_length=399):
+    """Helper method to tokenize a string. Note that most methods accept
+    untokenized text so you shouldn't need to run this if you intend
+    to parse this text. Returns a list of string tokens. If the text is
+    longer than max_sentence_length tokens, it will be truncated."""
+    sentence = Sentence(text)
+    return sentence.get_tokens()

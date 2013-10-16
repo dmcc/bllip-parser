@@ -15,7 +15,7 @@ default: parseIt
 all: parseIt parseAndEval evalTree
 
 clean:
-	rm -f *.o oparseIt parseIt parseAndEval evalTree *~ threads TAGS tags
+	rm -f *.o oparseIt parseIt parseAndEval evalTree *~ threads TAGS tags parser_wrapper.C
 
 .PHONY: real-clean
 real-clean: clean swig-clean
@@ -102,6 +102,12 @@ valgrind-parseIt: parseIt
 #
 # SWIG wrappers for Java and Python
 #
+
+# NOTE: There is now a much more friendly way to install the Python
+# bindings with distutils.
+# Either run "sudo python setup.py install" from the root of the reranking
+# parser distribution or type "sudo pip install bllipparser" if you have
+# pip installed.
 
 # These paths are likely not very portable and may need to be edited
 # (they also can be overridden by the root ../../Makefile or environment

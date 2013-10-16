@@ -20,17 +20,14 @@ try:
 except ImportError:
     have_tree_drawing = False
 
-import RerankingParser
+from bllipparser.RerankingParser import RerankingParser
 
 class ParsingShell(Cmd):
-    def __init__(self, model=None):
+    def __init__(self, model):
         Cmd.__init__(self)
         self.prompt = 'rrp> '
         print "Loading models..."
-        if model:
-            self.rrp = RerankingParser.load_unified_model_dir(model)
-        else:
-            self.rrp = RerankingParser.load_included_model()
+        self.rrp = RerankingParser.load_unified_model_dir(model)
         self.last_nbest_list = []
 
     def do_visual(self, text):

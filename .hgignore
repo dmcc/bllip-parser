@@ -47,3 +47,10 @@ glob:first-stage/PARSE/swig/*/build/*
 glob:second-stage/programs/features/swig/*/build/*
 glob:SParseval/*
 glob:regression-test-*
+glob:build*
+glob:dist*
+glob:first-stage/PARSE/parser_wrapper.C
+glob:second-stage/programs/features/reranker_wrapper.C
+glob:python/bllipparser/CharniakParser.py
+glob:python/bllipparser/JohnsonReranker.py
+glob:MANIFEST

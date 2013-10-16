@@ -279,7 +279,7 @@ clean:
 	$(MAKE) -C $(NBESTPARSERBASEDIR)/TRAIN clean
 	$(MAKE) -C $(NBESTPARSERBASEDIR)/PARSE clean
 	$(MAKE) -C second-stage clean
-	rm -f swig/*.py[co]
+	rm -f python/bllipparser/CharniakParser.py* python/bllipparser/JohnsonReranker.py*
 
 # nbesttrain-clean removes temporary files used in constructing the 20
 # folds of n-best training data.
@@ -543,29 +543,21 @@ $(EVALDIR)/dev-parsediffs.gz: $(WEIGHTSFILEGZ) $(FEATDIR)/test1.gz $(NBESTDIR)/s
 	 | second-stage/programs/eval-weights/pretty-print -d \
 	 | gzip > $(EVALDIR)/dev-parsediffs.gz
 
-########################################################################
-#                                                                      #
-# swig-{java,python} builds SWIG wrapper extensions for {Java,Python}  #
-#                                                                      #
-########################################################################
+######################################################
+#                                                    #
+# swig-java builds SWIG wrapper extensions for Java  #
+#                                                    #
+######################################################
 
 # These paths are likely not very portable and may need to be edited
 
 # this should be the path to jni.h
 SWIG_JAVA_GCCFLAGS ?= -I/usr/lib/jvm/java-1.6.0-openjdk-1.6.0.0.x86_64/include/ \
 	-I/usr/lib/jvm/java-1.6.0-openjdk-1.6.0.0.x86_64/include/linux/
-# this should be the path to Python.h
-SWIG_PYTHON_GCCFLAGS ?= -I/usr/include/python2.6/
 # -L should have the path to libstdc++.so
 SWIG_LINKER_FLAGS ?= -lstdc++ -L/usr/lib/gcc/x86_64-redhat-linux/4.4.4/
 export SWIG_JAVA_GCCFLAGS
-export SWIG_PYTHON_GCCFLAGS
 export SWIG_LINKER_FLAGS
-
-swig-python: CXXFLAGS += -fPIC -fno-strict-aliasing -Wno-deprecated
-swig-python: PARSE reranker-runtime
-	$(MAKE) -C $(NBESTPARSERBASEDIR)/PARSE swig-python
-	$(MAKE) -C second-stage/programs/features swig-python
 
 swig-java: CXXFLAGS += -fPIC -fno-strict-aliasing -Wno-deprecated
 swig-java: PARSE reranker-runtime
