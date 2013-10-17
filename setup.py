@@ -70,8 +70,9 @@ reranker_module = Extension('bllipparser._JohnsonReranker',
     extra_compile_args=['-iquote', reranker_base, '-O0'])
 
 setup(name='bllipparser',
-    version='2013.10.16',
+    version='2013.10.16-1',
     description='Python bindings for the BLLIP natural language parser',
+    long_description='See http://pypi.python.org/pypi/bllipparser/',
     author='David McClosky',
     author_email='notsoweird+pybllipparser@gmail.com',
     classifiers=[

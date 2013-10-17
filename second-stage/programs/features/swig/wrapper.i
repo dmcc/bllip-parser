@@ -45,6 +45,8 @@
 %newobject scoreNBestList;
 
 %inline {
+    #include <cstddef>
+
     class RerankerError {
         public:
             const std::string description;

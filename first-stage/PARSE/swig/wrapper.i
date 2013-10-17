@@ -39,6 +39,7 @@ using namespace std;
 typedef std::string ECString;
 
 %{
+    #include <cstddef>
     #include <fstream>
     #include <math.h>
     #include <unistd.h>
