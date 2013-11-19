@@ -8,16 +8,6 @@ release date of the software that you are using (this is part of the
 name of the tar file you have downloaded), as this will enable others
 to compare their results to yours.
 
-MULTI-THREADED PARSING
-======================
-
-NEW!!!  The first stage parser, which uses about 95% of the time, is
-now multi-treaded. The default is two threads.  Currently the maximum
-is four.  To change the number (or maximum) see the README file for
-the first-stage parser.  For the time being a non-threaded version is
-available in case there are problems with threads.  Send email to ec
-if you have problems. See below for details.
-
 COMPILING THE PARSER
 ====================
 
@@ -202,53 +192,27 @@ reranking parser, run:
 
 > make real-clean
 
+MULTI-THREADED PARSING
+======================
 
-NON-THREADED PARSER
-===================
-To use the non-threaded parser instead change the following line
-in the Makefile
+The first stage parser, which uses about 95% of the time, is multitreaded.
+However, multithreading support does NOT appear to be stable at this
+time and its use is discouraged.  The default is to only use one thread
+which does not cause problems.  If you're willing to try your luck with
+multithreading, currently the maximum is 64 threads.  To change the
+number (or maximum) see the README file for the first-stage parser.
+For the time being a non-threaded version (oparseIt) is available in
+case there are problems with threads.
+
+To use the non-threaded parser instead change the following line in
+the Makefile:
 
 NBESTPARSER=first-stage/PARSE/parseIt
 
-It should now read:
+to
+
 NBESTPARSER=first-stage/PARSE/oparseIt
 
 That is, it is identical except for the "o" in oparseIt
 
 Then run oparse.sh, rather than parse.sh.  
-
-
-INSTALLING PETSC AND TAO
-========================
-
-If you're using cvlm as your estimator, you'll need to have PETSc and
-Tao installed in order to retrain the reranker.  Otherwise, you can
-safely ignore this section.
-
-These installation instructions work for gcc version 4.2.1 (you also
-need g++ and gfortran).
-
-1. Unpack PETSc and TAO somewhere, and make shell variables point
-to those directories (put the shell variable definitions in your
-.bash_profile or equivalent)
-
-export PETSC_DIR=/usr/local/share/petsc
-export TAO_DIR=/usr/local/share/tao
-export PETSC_ARCH="linux"
-export BOPT=O_c++
-
-cd /usr/local/share
-ln -s petsc-2.3.3-p6 petsc
-ln -s tao-1.9 tao
-
-2. Configure and build PETSc
-
-cd petsc
-FLAGS="-march=native -mfpmath=sse -msse2 -mmmx -O3 -ffast-math"
-./config/configure.py --with-cc=gcc --with-fc=gfortran --with-cxx=g++ --download-f-blas-lapack=1 --with-mpi=0 --with-clanguage=C++ --with-shared=1 --with-dynamic=1 --with-debugging=0 --with-x=0 --with-x11=0 COPTFLAGS=$FLAGS FOPTFLAGS=$FLAGS CXXOPTFLAGS=$FLAGS
-make all
-
-3. Configure and build TAO
-
-cd ../tao
-make all

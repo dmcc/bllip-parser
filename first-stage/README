@@ -162,13 +162,12 @@ default is -T210.)
 [Update 2013] Using multiple threads is not currently recommended as
 there appear to be thread safety issues.
 
-parseIt is multi threaded.  It currently assumes two threads (for dual
-processors).  To change this, use the command line argument, -t4 to
-have it use, e,g, 4 threads.  Currently the maximum number of threads
-allowed is 4.  To change this change the following line in Features.h
-and recompile parseIt.
+parseIt is multithreaded.  It currently defaults to using a single thread.
+To change this, use the command line argument, -t4 to have it use, e,g,
+4 threads.  To change the maximum number of threads, change the following
+line in Features.h and recompile parseIt.
 
-#define MAXNUMTHREADS 4
+#define MAXNUMTHREADS [maximum number of threads]
 
 9. evalTree
 

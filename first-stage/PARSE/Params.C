@@ -43,7 +43,6 @@ init( ECArgs& args )
    if(args.isset('N'))
      {
        Bchart::Nth = atoi(args.value('N').c_str());
-       //cerr << "Set Nth to " << Bchart::Nth << endl;
      }
    if(args.isset('s')) Bchart::smallCorpus = true;
    if(args.isset('S')) Bchart::silent = true;
@@ -55,9 +54,9 @@ init( ECArgs& args )
      extPosIfstream=new ifstream(nm.c_str());
      assert(extPosIfstream);
    }
-   if(args.isset('P'))
+   if(args.isset('p'))
      {
-       float smoothPosAmount = atof(args.value('P').c_str());
+       float smoothPosAmount = atof(args.value('p').c_str());
        assert(smoothPosAmount >= 0);
        assert(smoothPosAmount <= 1);
        Bchart::smoothPosAmount = smoothPosAmount;

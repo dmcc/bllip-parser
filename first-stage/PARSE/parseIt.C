@@ -100,9 +100,9 @@ static void usage(const char *program)
 
   cerr << "\nPerformance/Quality:\n";
   cerr << "-s: small training corpus flag [off by default]\n";
-  cerr << "-t: number of threads [2]\n";
+  cerr << "-t: number of threads [1 -- multithreading may be unstable]\n";
   cerr << "-T: over-parsing level [210]\n";
-  cerr << "-P: smooth known part of speech probabilities. Set to a float to enable. [0]\n";
+  cerr << "-p: smooth known part of speech probabilities. Set to a float to enable. [0]\n";
 
   cerr << "\nInput:\n";
   cerr << "-C: case-insensitive flag\n";
@@ -115,8 +115,6 @@ static void usage(const char *program)
   cerr << "-d: print debug info at specified detail level\n";
   cerr << "-P: pretty-print flag\n";
   cerr << "-S: silent failure flag\n";
-
-  //cerr << "-t: report timings\n"; // this was in comment at start of main but appears deprecated
 
   cerr << "\nSee README file for additional information.\n\n";
 }
