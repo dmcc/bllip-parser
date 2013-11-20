@@ -1,18 +1,17 @@
 ~BLLIP/reranking-parser/README
 
-(c) Mark Johnson,Eugene Charniak, 24th November 2005 --- August 2006
+(c) Mark Johnson, Eugene Charniak, 24th November 2005 --- August 2006
 
 We request acknowledgement in any publications that make use of this
 software and any code derived from this software.  Please report the
-release date of the software that you are using (this is part of the
-name of the tar file you have downloaded), as this will enable others
-to compare their results to yours.
+release date of the software that you are using, as this will enable
+others to compare their results to yours.
 
-COMPILING THE PARSER
-====================
+COMPILING AND RUNNING THE PARSER
+================================
 
 To compile the two-stage parser, first define GCCFLAGS appropriately
-for your machine, e.g., with csh or tcsh
+for your machine, e.g., with csh or tcsh:
 
 > setenv GCCFLAGS "-march=pentium4 -mfpmath=sse -msse2 -mmmx"
 
@@ -20,12 +19,12 @@ or
 
 > setenv GCCFLAGS "-march=opteron -m64"
 
-(if unsure, it is safe to leave GCCFLAGS unset -- it just won't be
-as optimized as possible)
+(if unsure, it is safe to leave GCCFLAGS unset -- the defaults are
+generally good these days)
 
 Then execute 
 
-make
+> make
 
 After it has built, the parser can be run with
 
@@ -34,6 +33,14 @@ After it has built, the parser can be run with
 E.g.,
 
 > parse.sh sample-text/sample-data.txt
+
+The input text must be pre-sentence segmented with each sentence in an <s> tag:
+
+    <s> Sentence 1 </s>
+    <s> Sentence 2 </s>
+    ...
+
+Note that there needs to be a space before and after the sentence.
 
 The script parse-eval.sh takes a list of treebank files as arguments
 and extracts the terminal strings from them, runs the two-stage parser
@@ -95,17 +102,17 @@ removed from this distribution due to licensing conflicts (but see the
 license section at the bottom of this file).
 
 If you're using cvlm as your estimator (the default), you'll also need
-the Boost C++ and the Petsc/Tao C++ libraries in order to retrain the
+the Boost C++ and the libLBFGS library in order to retrain the
 reranker.  If you're using cvlm-owlqn as your estimator, you can ignore
-these steps.  Install instructions for Petsc/Tao are given later in
-this document.  The environment variables PETSC_DIR and TAO_DIR should
-all point to the installation directories of this software.  I define
-these variables in my .login file as follows on my machine.
+this. libLBFGS is available at http://www.chokkan.org/software/liblbfgs/
+under the MIT license. In Ubuntu, you'll need the liblbfgs-dev package:
 
-setenv PETSC_DIR /usr/local/share/petsc
-setenv TAO_DIR /usr/local/share/tao
-setenv PETSC_ARCH linux
-setenv BOPT O_c++
+> sudo apt-get install liblbfgs-dev
+
+Boost can be obtained from http://www.boost.org/ or with the libboost-dev
+package in Ubuntu:
+
+> sudo apt-get install libboost-dev
 
 While many modern Linux distributions come with the Boost C++
 libraries pre-installed, if the Boost C++ libraries are not included

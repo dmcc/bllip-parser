@@ -156,8 +156,8 @@ TMP=tmp
 # section 24 is used as dev and sections 22 and 23 are used as test1
 # and test2 respectively.
 #
-VERSION=nonfinal
-# VERSION=final
+# VERSION=nonfinal
+VERSION=final
 
 # FEATUREEXTRACTOR is the program that used to extract features from
 # the 20-fold n-best parses.  If you change this, please pick a new 
@@ -189,15 +189,15 @@ FEATURESNICKNAME=sp
 # of these variable values can be found in the train-eval-reranker.sh
 # script.
 #
-ESTIMATOR=second-stage/programs/wlle/avper
+ESTIMATOR=second-stage/programs/wlle/cvlm-lbfgs
 
 # ESTIMATORFLAGS are flags given to the estimator
 #
-ESTIMATORFLAGS=-n 10 -d 0 -F 1 -N 10
+ESTIMATORFLAGS=-l 1 -c 10 -F 1 -n -1 -p 2
 
 # ESTIMATORNICKNAME is used to name the feature weights file
 #
-ESTIMATORNICKNAME=avper
+ESTIMATORNICKNAME=cvlm-lbfgs
 
 # ESTIMATORSTACKSIZE is the size (in KB) of the per-thread stacks
 # used during estimation
@@ -252,7 +252,7 @@ reranker-runtime:
 #       program, sparseval, etc., 
 #  extract-spfeatures, which produces feature-count files used to train 
 #       the reranker, 
-#  cvlm/avper, which estimates the feature weights.
+#  cvlm-lbfgs/avper, which estimates the feature weights.
 #
 .PHONY: reranker
 reranker: top TRAIN

@@ -30,6 +30,7 @@ glob:second-stage/programs/prepare-data/ptb
 glob:second-stage/programs/wlle/avper
 glob:second-stage/programs/wlle/gavper
 glob:second-stage/programs/wlle/cvlm
+glob:second-stage/programs/wlle/cvlm-lbfgs
 glob:second-stage/programs/wlle/oracle
 glob:*.swp
 glob:*.orig

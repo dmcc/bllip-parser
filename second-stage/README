@@ -42,24 +42,6 @@ INSTALLATION
 This software uses g++ and gcc 4.0; it may also function using earlier
 versions of g++ and gcc.
 
-It also uses the PETSc and TAO optimization packages available from
-Argonne National Labs.  You should install these packages before attempting
-to install this software.  PETSc (which you should install first) can be 
-obtained from
-
-	http://www-unix.mcs.anl.gov/petsc/petsc-2/
-
-and TAO can be obtained from
-
-	http://www-fp.mcs.anl.gov/tao/
-
-PETSc and TAO are used in the programs in the programs/wlle directory.
-If you set the PETSC_DIR, PETSC_ARCH and TAO_DIR environment variables
-as required for the proper functioning of PETSc and TAO, you should not
-need to change anything in my programs.  But if you have a non-standard
-installation of PETSc or TAO, you may need to edit
-programs/wlle/Makefile accordingly.
-
 A single "make" command in the top-level directory should run the feature
 extractor on the trees, run the training program to estimate the model,
 and runs the evaluation program to evaluate model's predictions.
