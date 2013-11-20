@@ -1,6 +1,6 @@
 language: cpp
 compiler: gcc
-install: sudo apt-get install libboost-dev
+install: sudo apt-get install libboost-dev liblbfgs-dev
 script:
   - make
   - make reranker
