@@ -1,6 +1,8 @@
 language: cpp
 compiler: gcc
-before_install: sudo apt-get update
+before_install:
+  - sudo add-apt-repository ppa:ktm5j/uva-cs-ppa
+  - sudo apt-get update
 install: sudo apt-get install libboost-dev liblbfgs-dev
 script:
   - make
