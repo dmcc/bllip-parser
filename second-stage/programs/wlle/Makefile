@@ -23,7 +23,7 @@ cvlm-owlqn: cvlm-owlqn.o OWLQN.o TerminationCriterion.o liblmdata.a
 	$(CXX) $(LDFLAGS) $^ -o cvlm-owlqn
 
 cvlm-lbfgs: cvlm-lbfgs.o liblmdata.a cobyla.o
-	$(CXX) $(LDFLAGS) -L/usr/local/lib -llbfgs $^ -o cvlm-lbfgs
+	$(CXX) $(LDFLAGS) $^ -L/usr/local/lib -llbfgs -o cvlm-lbfgs
 
 hlm: hlm.o OWLQN.o TerminationCriterion.o liblmdata.a
 	$(CXX) $(LDFLAGS) $^ -o $@
@@ -46,18 +46,18 @@ libdata.a: data.o
 liblmdata.a: lmdata.o
 	ar rcv liblmdata.a lmdata.o; ranlib liblmdata.a
 
-# Compilation help: you may need to remove -march=native on older compilers.
-GCCFLAGS=-march=native -mfpmath=sse -msse2 -mmmx
-
 CC=gcc
 
 # fast options
+# Compilation help: you may need to remove -march=native on older compilers.
+GCCFLAGS=-march=native -mfpmath=sse -msse2 -mmmx
 FOPENMP=-fopenmp
 CFLAGS=-MMD -O6 -ffast-math -fstrict-aliasing -Wall -finline-functions $(GCCFLAGS) $(FOPENMP)
 LDFLAGS=$(FOPENMP)
 CXXFLAGS=${CFLAGS} -Wno-deprecated
 
 # debugging options
+# GCCFLAGS=
 # FOPENMP=
 # CFLAGS=-MMD -O0 -g $(GCCFLAGS) $(FOPENMP)
 # LDFLAGS=-g $(FOPENMP)
