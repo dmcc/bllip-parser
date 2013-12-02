@@ -26,6 +26,17 @@ Then execute
 
 > make
 
+    Sidenote on compiling on OS X
+    -----------------------------
+    OS X uses the clang compiler by default which may cause compilation
+    problems.  Try setting this environment variable to change the
+    default C++ compiler:
+
+    > setenv CXX g++
+
+    See https://github.com/BLLIP/bllip-parser/issues/13 for more
+    information.
+
 After it has built, the parser can be run with
 
 > parse.sh <sourcefile.txt>
@@ -51,9 +62,11 @@ following code evaluates the two-stage parser on section 24.
 
 > parse-eval.sh /usr/local/data/Penn3/parsed/mrg/wsj/24/wsj*.mrg
 
+The Makefile will attempt to automatically download and build Sparseval
+for you if you run "make sparseval".
+
 [*] Sparseval is available from 
 	http://old-site.clsp.jhu.edu/ws2005/groups/eventdetect/files/SParseval.tgz
-    The Makefile will automatically download and build it if you run "make sparseval"
     See this paper for more information:
     @inproceedings{roark2006sparseval,
         title={SParseval: Evaluation metrics for parsing speech},
@@ -108,6 +121,12 @@ this. libLBFGS is available at http://www.chokkan.org/software/liblbfgs/
 under the MIT license. In Ubuntu, you'll need the liblbfgs-dev package:
 
 > sudo apt-get install liblbfgs-dev
+
+For older versions of Ubuntu, you may need to install a PPA to get
+liblbfgs-dev:
+
+> sudo add-apt-repository --yes ppa:ktm5j/uva-cs-ppa
+> sudo apt-get update
 
 Boost can be obtained from http://www.boost.org/ or with the libboost-dev
 package in Ubuntu:
