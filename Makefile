@@ -36,6 +36,7 @@
 # make features        # extracts features from 20-fold parses
 # make train-reranker  # trains reranker model
 # make train-clean     # removes all temporary files used in training
+# make sparseval       # download and install SParseval
 #
 # I typically run nbesttrain to produce the n-best parses 
 
@@ -217,7 +218,7 @@ ESTIMATORENV=
 # TARGETS is the list of targets built when make is called
 # without arguments
 #
-TARGETS = PARSE reranker-runtime sparseval
+TARGETS = PARSE reranker-runtime
 
 .PHONY: top
 top: $(TARGETS)

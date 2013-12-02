@@ -8,3 +8,4 @@ script:
   - make
   - make reranker
   - make -C second-stage/programs/features parallel-tools
+  - make sparseval
