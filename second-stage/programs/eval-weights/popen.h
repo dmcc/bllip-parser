@@ -61,7 +61,7 @@ struct izstream_helper {
   {
     const char* filesuffix = strrchr(filename, '.');
     popen_command = (strcasecmp(filesuffix, ".bz2")
-		     ? (strcasecmp(filesuffix, ".gz") ? "cat " : "zcat ")
+		     ? (strcasecmp(filesuffix, ".gz") ? "cat " : "gunzip -c ")
 		     : "bzcat ");
     popen_command += filename;
   }

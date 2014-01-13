@@ -339,7 +339,7 @@ struct Estimator1 {
       popen_flag = true;
     }
     else if (strcasecmp(filesuffix, ".gz") == 0) {
-      std::string command("zcat ");
+      std::string command("gunzip -c ");
       command += filename;
       errno = 0;
       in = popen(command.c_str(), "r");

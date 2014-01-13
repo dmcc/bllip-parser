@@ -83,7 +83,7 @@ struct FeatureClasses {
     
     const char* filesuffix = strrchr(filename, '.');
     std::string command(strcasecmp(filesuffix, ".bz2")
-			? (strcasecmp(filesuffix, ".gz") ? "cat " : "zcat ")
+			? (strcasecmp(filesuffix, ".gz") ? "cat " : "gunzip -c ")
 			: "bzcat ");
     command += filename;
     FILE* in = popen(command.c_str(), "r");
@@ -225,7 +225,7 @@ int main(int argc, char* argv[])
   cf.Pyx_factor = cf.Px_propto_g = 0;
   const char* filesuffix = strrchr(argv[optind+1], '.');
   std::string command(strcasecmp(filesuffix, ".bz2")
-		      ? (strcasecmp(filesuffix, ".gz") ? "cat " : "zcat ")
+		      ? (strcasecmp(filesuffix, ".gz") ? "cat " : "gunzip -c ")
 		      : "bzcat ");
   command += argv[optind+1];
   std::cout << "# Evaluating " << argv[optind+1] << std::endl;

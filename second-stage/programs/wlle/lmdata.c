@@ -514,7 +514,7 @@ corpus_type *read_corpus_file(corpusflags_type *flags, const char* filename) {
     in = popen(command, "r");
   }
   else if (strcasecmp(filesuffix, ".gz") == 0) {
-    const char zcat[] = "zcat ";
+    const char zcat[] = "gunzip -c ";
     command = malloc(sizeof(zcat)+strlen(filename)+1);
     strcpy(command, zcat);
     strcat(command, filename);

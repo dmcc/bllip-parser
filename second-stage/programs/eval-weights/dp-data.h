@@ -284,7 +284,7 @@ struct corpus_type {
   inline static FILE* popen_decompress(const char filename[]) {
     const char* filesuffix = strrchr(filename, '.');
     std::string command(strcasecmp(filesuffix, ".bz2")
-			? (strcasecmp(filesuffix, ".gz") ? "cat " : "zcat ")
+			? (strcasecmp(filesuffix, ".gz") ? "cat " : "gunzip -c ")
 			: "bzcat ");
     command += filename;
     FILE* fp = popen(command.c_str(), "r");

@@ -53,7 +53,7 @@ int main(int argc, char* argv[])
   cf.Pyx_factor = cf.Px_propto_g = 0;
   const char* filesuffix = strrchr(argv[1], '.');
   std::string command(strcasecmp(filesuffix, ".bz2")
-		      ? (strcasecmp(filesuffix, ".gz") ? "cat " : "zcat ")
+		      ? (strcasecmp(filesuffix, ".gz") ? "cat " : "gunzip -c ")
 		      : "bzcat ");
   command += argv[1];
   FILE* fcfp = popen(command.c_str(), "r");

@@ -195,6 +195,9 @@ export CXXFLAGS
 .PHONY: top
 top: $(TARGETS)
 
+# zcat on OS X behaves differently in some cases
+ZCAT = gunzip -c
+
 # PARSE builds the n-best first-stage parser (i.e., Eugene's parser).
 #
 .PHONY: PARSE
@@ -376,15 +379,15 @@ $(TMP)/section%/yield: second-stage/programs/prepare-data/ptb
 
 .PHONY: nbest-oracle
 nbest-oracle: second-stage/programs/features/oracle-score second-stage/programs/prepare-data/ptb $(NBESTFILES)
-	second-stage/programs/features/oracle-score "zcat $(NBESTDIR)/fold[0-1][0-9].gz" "second-stage/programs/prepare-data/ptb -g $(TRAIN)"
-	second-stage/programs/features/oracle-score "zcat $(NBESTDIR)/section22.gz" "second-stage/programs/prepare-data/ptb -g $(PENNWSJTREEBANK)/22/wsj*.mrg"
-	second-stage/programs/features/oracle-score "zcat $(NBESTDIR)/section24.gz" "second-stage/programs/prepare-data/ptb -g $(PENNWSJTREEBANK)/24/wsj*.mrg"
+	second-stage/programs/features/oracle-score "$(ZCAT) $(NBESTDIR)/fold[0-1][0-9].gz" "second-stage/programs/prepare-data/ptb -g $(TRAIN)"
+	second-stage/programs/features/oracle-score "$(ZCAT) $(NBESTDIR)/section22.gz" "second-stage/programs/prepare-data/ptb -g $(PENNWSJTREEBANK)/22/wsj*.mrg"
+	second-stage/programs/features/oracle-score "$(ZCAT) $(NBESTDIR)/section24.gz" "second-stage/programs/prepare-data/ptb -g $(PENNWSJTREEBANK)/24/wsj*.mrg"
 
 .PHONY: nbest-oracle-detailed
 nbest-oracle-detailed: second-stage/programs/eval-beam/main second-stage/programs/prepare-data/ptb $(NBESTFILES)
-	second-stage/programs/eval-beam/main "zcat $(NBESTDIR)/fold[0-1][0-9].gz" "second-stage/programs/prepare-data/ptb -g $(TRAIN)"
-	second-stage/programs/eval-beam/main "zcat $(NBESTDIR)/section22.gz" "second-stage/programs/prepare-data/ptb -g $(PENNWSJTREEBANK)/22/wsj*.mrg"
-	second-stage/programs/eval-beam/main "zcat $(NBESTDIR)/section24.gz" "second-stage/programs/prepare-data/ptb -g $(PENNWSJTREEBANK)/24/wsj*.mrg"
+	second-stage/programs/eval-beam/main "$(ZCAT) $(NBESTDIR)/fold[0-1][0-9].gz" "second-stage/programs/prepare-data/ptb -g $(TRAIN)"
+	second-stage/programs/eval-beam/main "$(ZCAT) $(NBESTDIR)/section22.gz" "second-stage/programs/prepare-data/ptb -g $(PENNWSJTREEBANK)/22/wsj*.mrg"
+	second-stage/programs/eval-beam/main "$(ZCAT) $(NBESTDIR)/section24.gz" "second-stage/programs/prepare-data/ptb -g $(PENNWSJTREEBANK)/24/wsj*.mrg"
 
 ########################################################################
 #                                                                      #
@@ -422,16 +425,16 @@ $(MODELBASEDIR)nonfinal/features.gz $(FEATBASEDIR)nonfinal/train.gz $(FEATBASEDI
 	mkdir -p $(FEATBASEDIR)nonfinal
 	mkdir -p $(MODELBASEDIR)nonfinal
 	$(FEATUREEXTRACTOR) $(FEATUREEXTRACTORFLAGS) \
-		"zcat $(NBESTDIR)/fold0[0-9].gz $(NBESTDIR)/fold1[0-7].gz" \
+		"$(ZCAT) $(NBESTDIR)/fold0[0-9].gz $(NBESTDIR)/fold1[0-7].gz" \
 		"second-stage/programs/prepare-data/ptb -g -n 10 -x 9 $(TRAIN)" \
 		$(FEATBASEDIR)nonfinal/train.gz \
-		"zcat $(NBESTDIR)/fold1[8-9].gz" \
+		"$(ZCAT) $(NBESTDIR)/fold1[8-9].gz" \
 		"second-stage/programs/prepare-data/ptb -g -n 10 -i 9 $(TRAIN)" \
 		$(FEATBASEDIR)nonfinal/dev.gz \
-		"zcat $(NBESTDIR)/section22.gz" \
+		"$(ZCAT) $(NBESTDIR)/section22.gz" \
 		"second-stage/programs/prepare-data/ptb -g $(PENNWSJTREEBANK)/22/*mrg" \
 		$(FEATBASEDIR)nonfinal/test1.gz \
-		"zcat $(NBESTDIR)/section24.gz" \
+		"$(ZCAT) $(NBESTDIR)/section24.gz" \
 		"second-stage/programs/prepare-data/ptb -g $(PENNWSJTREEBANK)/24/*mrg" \
 		$(FEATBASEDIR)nonfinal/test2.gz \
 		| gzip > $(MODELBASEDIR)nonfinal/features.gz
@@ -444,16 +447,16 @@ $(MODELBASEDIR)final/features.gz $(FEATBASEDIR)final/train.gz $(FEATBASEDIR)fina
 	mkdir -p $(FEATBASEDIR)final
 	mkdir -p $(MODELBASEDIR)final
 	$(FEATUREEXTRACTOR) $(FEATUREEXTRACTORFLAGS) \
-		"zcat $(NBESTDIR)/fold*.gz" \
+		"$(ZCAT) $(NBESTDIR)/fold*.gz" \
 		"second-stage/programs/prepare-data/ptb -g $(TRAIN)" \
 		$(FEATBASEDIR)final/train.gz \
-		"zcat $(NBESTDIR)/section22.gz" \
+		"$(ZCAT) $(NBESTDIR)/section22.gz" \
 		"second-stage/programs/prepare-data/ptb -g $(PENNWSJTREEBANK)/22/*mrg" \
 		$(FEATBASEDIR)final/test1.gz \
-		"zcat $(NBESTDIR)/section23.gz" \
+		"$(ZCAT) $(NBESTDIR)/section23.gz" \
 		"second-stage/programs/prepare-data/ptb -g $(PENNWSJTREEBANK)/23/*mrg" \
 		$(FEATBASEDIR)final/test2.gz \
-		"zcat $(NBESTDIR)/section24.gz" \
+		"$(ZCAT) $(NBESTDIR)/section24.gz" \
 		"second-stage/programs/prepare-data/ptb -g $(PENNWSJTREEBANK)/24/*mrg" \
 		$(FEATBASEDIR)final/dev.gz \
 		| gzip > $(MODELBASEDIR)final/features.gz
@@ -477,7 +480,7 @@ train-reranker: $(WEIGHTSFILEGZ)
 #
 # $(WEIGHTSFILEGZ): $(ESTIMATOR)
 $(WEIGHTSFILEGZ): $(ESTIMATOR) $(MODELDIR)/features.gz $(FEATDIR)/train.gz $(FEATDIR)/dev.gz $(FEATDIR)/test1.gz
-	zcat $(FEATDIR)/train.gz | $(ESTIMATOR) $(ESTIMATORFLAGS) -e $(FEATDIR)/dev.gz -f $(MODELDIR)/features.gz -o $(WEIGHTSFILE) -x $(FEATDIR)/test1.gz
+	$(ZCAT) $(FEATDIR)/train.gz | $(ESTIMATOR) $(ESTIMATORFLAGS) -e $(FEATDIR)/dev.gz -f $(MODELDIR)/features.gz -o $(WEIGHTSFILE) -x $(FEATDIR)/test1.gz
 	rm -f $(WEIGHTSFILEGZ)
 	gzip $(WEIGHTSFILE)
 
@@ -494,12 +497,12 @@ eval-reranker: $(EVALDIR)/weights-eval # $(EVALDIR)/dev-parsediffs.gz
 
 $(EVALDIR)/weights-eval: $(WEIGHTSFILEGZ) $(MODELDIR)/features.gz $(FEATDIR)/dev.gz $(FEATDIR)/test1.gz $(FEATDIR)/test2.gz second-stage/programs/eval-weights/eval-weights
 	mkdir -p $(EVALDIR)
-	zcat $(WEIGHTSFILEGZ) | second-stage/programs/eval-weights/eval-weights $(EVALWEIGHTSARGS) $(MODELDIR)/features.gz $(FEATDIR)/dev.gz > $(EVALDIR)/weights-eval
-	zcat $(WEIGHTSFILEGZ) | second-stage/programs/eval-weights/eval-weights $(EVALWEIGHTSARGS) $(MODELDIR)/features.gz $(FEATDIR)/test1.gz >> $(EVALDIR)/weights-eval
-	zcat $(WEIGHTSFILEGZ) | second-stage/programs/eval-weights/eval-weights $(EVALWEIGHTSARGS) $(MODELDIR)/features.gz $(FEATDIR)/test2.gz >> $(EVALDIR)/weights-eval
+	$(ZCAT) $(WEIGHTSFILEGZ) | second-stage/programs/eval-weights/eval-weights $(EVALWEIGHTSARGS) $(MODELDIR)/features.gz $(FEATDIR)/dev.gz > $(EVALDIR)/weights-eval
+	$(ZCAT) $(WEIGHTSFILEGZ) | second-stage/programs/eval-weights/eval-weights $(EVALWEIGHTSARGS) $(MODELDIR)/features.gz $(FEATDIR)/test1.gz >> $(EVALDIR)/weights-eval
+	$(ZCAT) $(WEIGHTSFILEGZ) | second-stage/programs/eval-weights/eval-weights $(EVALWEIGHTSARGS) $(MODELDIR)/features.gz $(FEATDIR)/test2.gz >> $(EVALDIR)/weights-eval
 
 $(EVALDIR)/dev-parsediffs.gz: $(WEIGHTSFILEGZ) $(FEATDIR)/test1.gz $(NBESTDIR)/section24.gz second-stage/programs/eval-weights/best-indices second-stage/programs/eval-weights/best-parses second-stage/programs/eval-weights/pretty-print
-	zcat $(WEIGHTSFILEGZ) \
+	$(ZCAT) $(WEIGHTSFILEGZ) \
 	 | second-stage/programs/eval-weights/best-indices $(FEATDIR)/test1.gz \
 	 | second-stage/programs/eval-weights/best-parses $(NBESTDIR)/section24.gz \
 	 | second-stage/programs/eval-weights/pretty-print -d \
