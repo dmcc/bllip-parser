@@ -21,7 +21,7 @@
 #include <vector>
 #include <clocale>
 
-#define WARN( msg ) warn( __FILE__, __LINE__, msg )
+#define WARN( msg ) if (!Bchart::silent) { warn( __FILE__, __LINE__, msg ); }
 #define ERROR( msg ) error( __FILE__, __LINE__, msg )
 
 void warn( const char *filename, int filelinenum, const char *msg );

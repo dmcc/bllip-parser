@@ -15,6 +15,7 @@
  */
 
 #include "ChartBase.h"
+#include "Bchart.h"
 #include <math.h>
 #include "GotIter.h"
 #include "InputTree.h"
