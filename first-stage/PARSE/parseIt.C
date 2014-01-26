@@ -258,18 +258,18 @@ mainLoop(void* arg)
       if( printS.numDiff == 0)
 	{
           if (extPos.hasExtPos()) {
-              WARN("Parse failed from 0, inf or nan probabililty -- reparsing without POS constraints");
+              WARN("Parse failed from 0, inf or NaN probabililty -- reparsing without POS constraints");
               chart = new MeChart(*srp, *id);
               chart->parse();
 
               bool failed = decodeParses(len, locCount, srp, chart, printS, printStack);
               if (failed || printS.numDiff == 0) {
-                WARN("Parse failed from 0, inf or nan probabililty -- failed even without POS constraints");
+                WARN("Parse failed from 0, inf or NaN probabililty -- failed even without POS constraints");
                 printSkipped(srp,chart,printStack,printS);
                 continue;
               }
           } else {
-              WARN("Parse failed from 0, inf or nan probabililty");
+              WARN("Parse failed from 0, inf or NaN probabililty");
               printSkipped(srp,chart,printStack,printS);
               continue;
           }
