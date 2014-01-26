@@ -261,8 +261,11 @@ mainLoop(void* arg)
               WARN("Parse failed from 0, inf or NaN probabililty -- reparsing without POS constraints");
               chart = new MeChart(*srp, *id);
               chart->parse();
-
-              bool failed = decodeParses(len, locCount, srp, chart, printS, printStack);
+              Item* topS = chart->topS();
+              bool failed = !topS;
+              if (!failed) {
+                  failed = decodeParses(len, locCount, srp, chart, printS, printStack);
+              }
               if (failed || printS.numDiff == 0) {
                 WARN("Parse failed from 0, inf or NaN probabililty -- failed even without POS constraints");
                 printSkipped(srp,chart,printStack,printS);
