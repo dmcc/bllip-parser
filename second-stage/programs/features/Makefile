@@ -13,6 +13,7 @@
 TARGETS = best-parses best-splhparses best-spmparses extract-spmfeatures best-nmparses extract-nmfeatures extract-spmultifeatures extract-nmultifeatures extract-spfeatures extract-splhfeatures extract-nfeatures oracle-score
 SOURCES = best-parses.cc best-splhparses.cc best-spmparses.cc extract-spmultifeatures.cc extract-spmfeatures.cc extract-nmultifeatures.cc best-nmparses.cc extract-nmfeatures.cc extract-nfeatures.cc extract-splhfeatures.cc extract-spfeatures.cc heads.cc read-tree.l sym.cc oracle-score.cc
 OBJECTS = $(patsubst %.l,%.o,$(patsubst %.c,%.o,$(SOURCES:%.cc=%.o)))
+PARALLEL_TOOLS_TARGETS = count-spfeatures count-nfeatures parallel-extract-nfeatures parallel-extract-spfeatures
 
 FOPENMP=-fopenmp
 
@@ -78,7 +79,7 @@ count-nfeatures: count-nfeatures.o heads.o read-tree.o sym.o
 parallel-extract-nfeatures: parallel-extract-nfeatures.o heads.o read-tree.o sym.o
 	$(CXX) $(LDFLAGS) $^ -o $@
 
-parallel-tools: count-spfeatures count-nfeatures parallel-extract-nfeatures parallel-extract-spfeatures
+parallel-tools: $(PARALLEL_TOOLS_TARGETS)
 
 all: top parallel-tools
 
@@ -91,7 +92,7 @@ clean:
 
 .PHONY: real-clean
 real-clean: clean
-	rm -fr $(TARGETS) tags TAGS
+	rm -fr $(TARGETS) $(PARALLEL_TOOLS_TARGETS) tags TAGS
 
 #
 # SWIG wrappers for Java and Python
