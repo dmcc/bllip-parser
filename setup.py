@@ -63,18 +63,20 @@ reranker_sources = [reranker_base + src for src in
      reranker_wrapper]]
 
 # what's with the -O0? well, using even the lowest levels of optimization
-# (gcc -O1) cause symbols to be inlined and disappear in _JohnsonReranker.so.
-# it's not clear how to fix this at this point.
+# (gcc -O1) causes one symbol which we wrap with SWIG to be inlined and
+# disappear in _JohnsonReranker.so which causes an ImportError.  this will
+# hopefully be addressed in the near future
 reranker_module = Extension('bllipparser._JohnsonReranker',
     sources=reranker_sources,
     extra_compile_args=['-iquote', reranker_base, '-O0'])
 
 setup(name='bllipparser',
-    version='2013.10.16-1',
+    version='2014.02.09',
     description='Python bindings for the BLLIP natural language parser',
     long_description='See http://pypi.python.org/pypi/bllipparser/',
-    author='David McClosky',
-    author_email='notsoweird+pybllipparser@gmail.com',
+    author='Eugene Charniak, Mark Johnson, David McClosky, many others',
+    maintainer='David McClosky',
+    maintainer_email='notsoweird+pybllipparser@gmail.com',
     classifiers=[
         'Development Status :: 4 - Beta',
         'Intended Audience :: Science/Research',

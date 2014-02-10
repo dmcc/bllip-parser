@@ -22,12 +22,17 @@ except ImportError:
 
 from bllipparser.RerankingParser import RerankingParser
 
+# TODO should integrate with bllipparser.ModelFetcher
+
 class ParsingShell(Cmd):
     def __init__(self, model):
         Cmd.__init__(self)
         self.prompt = 'rrp> '
         print "Loading models..."
-        self.rrp = RerankingParser.load_unified_model_dir(model)
+        if model is None:
+            self.rrp = None
+        else:
+            self.rrp = RerankingParser.from_unified_model_dir(model)
         self.last_nbest_list = []
 
     def do_visual(self, text):
