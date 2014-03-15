@@ -169,7 +169,7 @@ FEATURESNICKNAME=splh
 # perceptron).  If you decide to use a different feature weight
 # estimator you should also change ESTIMATORNICKNAME below.
 #
-ESTIMATOR=second-stage/programs/wlle/cvlm
+ESTIMATOR=second-stage/programs/wlle/cvlm-lbfgs
 
 # ESTIMATORFLAGS are flags given to the estimator
 #
@@ -177,7 +177,7 @@ ESTIMATORFLAGS=-l 1 -c0 10 -Pyx_factor 1 -debug 10 -ns -1
 
 # ESTIMATORNICKNAME
 #
-ESTIMATORNICKNAME=cvlm-l1c10P1
+ESTIMATORNICKNAME=lbfgs-l1c10F1n1p2
 
 ########################################################################
 #

@@ -198,7 +198,7 @@ ESTIMATORFLAGS=-l 1 -c 10 -F 1 -n -1 -p 2
 
 # ESTIMATORNICKNAME is used to name the feature weights file
 #
-ESTIMATORNICKNAME=cvlm-lbfgs
+ESTIMATORNICKNAME=lbfgs-l1c10F1n1p2
 
 # ESTIMATORSTACKSIZE is the size (in KB) of the per-thread stacks
 # used during estimation

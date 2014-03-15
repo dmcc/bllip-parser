@@ -26,9 +26,13 @@ FEATURESNICKNAME=spnn
 FEATUREEXTRACTOR=second-stage/programs/features/extract-spfeatures
 FEATUREEXTRACTORFLAGS="-l -c -i -s 5 -f $FEATURESNICKNAME"
 
-ESTIMATOR=second-stage/programs/wlle/cvlm
-ESTIMATORFLAGS="-l 1 -c0 10 -Pyx_factor 1 -debug 10 -ns -1"
-ESTIMATORNICKNAME=cvlm-l1c10P1
+ESTIMATOR=second-stage/programs/wlle/cvlm-lbfgs
+ESTIMATORFLAGS=-l 1 -c 10 -F 1 -n -1 -p 2
+ESTIMATORNICKNAME=lbfgs-l1c10F1n1p2
+
+# ESTIMATOR=second-stage/programs/wlle/cvlm
+# ESTIMATORFLAGS="-l 1 -c0 10 -Pyx_factor 1 -debug 10 -ns -1"
+# ESTIMATORNICKNAME=cvlm-l1c10P1
 
 # ESTIMATOR=second-stage/programs/wlle/cvlm-owlqn
 # ESTIMATORFLAGS="-l 1 -c 10 -F 1 -d 10 -n -1 -p 1 -t 1e-7"
