@@ -159,8 +159,8 @@ default is -T210.)
 
 8. Multi-threaded version
 
-[Update 2013] Using multiple threads is not currently recommended as
-there appear to be thread safety issues.
+[Update 2013] Using more than one thread is not currently recommended
+as there appear to be thread safety issues.
 
 parseIt is multithreaded.  It currently defaults to using a single thread.
 To change this, use the command line argument, -t4 to have it use, e,g,
@@ -168,6 +168,10 @@ To change this, use the command line argument, -t4 to have it use, e,g,
 line in Features.h and recompile parseIt.
 
 #define MAXNUMTHREADS [maximum number of threads]
+
+The original non-threaded parseIt is available as oparseIt (possibly has
+fewer features/bugfixes than parseIt). However, parseIt with a single
+thread should be safe to run.
 
 9. evalTree
 
