@@ -1,5 +1,7 @@
 ## BLLIP Reranking Parser
 
+[![Build Status](https://travis-ci.org/BLLIP/bllip-parser.png?branch=master)](https://travis-ci.org/BLLIP/bllip-parser)
+
 (c) Copyright Mark Johnson, Eugene Charniak, 24th November 2005 --- August 2006
 
 We request acknowledgement in any publications that make use of this
