@@ -1,4 +1,4 @@
-include README-python.txt
+include README-python.rst
 include NOTICE
 include LICENSE-2.0.txt
 include first-stage/PARSE/*.h
