@@ -44,11 +44,11 @@ Compiling the parser
    defaults should be okay. With ``csh`` or ``tcsh``, try something
    like::
 
-     shell> setenv GCCFLAGS "-march=pentium4 -mfpmath=sse -msse2 -mmmx"``
+     shell> setenv GCCFLAGS "-march=pentium4 -mfpmath=sse -msse2 -mmmx"
 
    or::
 
-     shell> setenv GCCFLAGS "-march=opteron -m64"``
+     shell> setenv GCCFLAGS "-march=opteron -m64"
 
 2. Build the parser with::
 
