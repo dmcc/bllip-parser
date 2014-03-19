@@ -72,15 +72,15 @@
 
 # CFLAGS is used for all C and C++ compilation
 #
-CFLAGS = -MMD -O6 -Wall -ffast-math -finline-functions -fomit-frame-pointer -fstrict-aliasing $(GCCFLAGS)
+CFLAGS = -MMD -O3 -Wall -ffast-math -finline-functions -fomit-frame-pointer -fstrict-aliasing $(GCCFLAGS)
 LDFLAGS = $(GCCLDFLAGS)
 EXEC = time
 
 # for SWIG wrappers, use these flags instead
 #
-CFLAGS = -MMD -O6 -Wall -ffast-math -finline-functions -fomit-frame-pointer -fno-strict-aliasing -fPIC $(GCCFLAGS)
-LDFLAGS = $(GCCLDFLAGS)
-EXEC = time
+# CFLAGS = -MMD -O3 -Wall -ffast-math -finline-functions -fomit-frame-pointer -fno-strict-aliasing -fPIC $(GCCFLAGS)
+# LDFLAGS = $(GCCLDFLAGS)
+# EXEC = time
 
 # for debugging, uncomment the following CFLAGS, LDFLAGS and EXEC
 #

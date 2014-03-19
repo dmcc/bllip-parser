@@ -16,7 +16,7 @@ top: $(TARGETS)
 
 # CXX = g++
 # CC = $(CXX)
-# CFLAGS = -MMD -O6 -Wall -ffast-math -finline-functions -fstrict-aliasing $(GCCFLAGS)
+# CFLAGS = -MMD -O3 -Wall -ffast-math -finline-functions -fstrict-aliasing $(GCCFLAGS)
 # CFLAGS = -g -MMD -Wall
 
 

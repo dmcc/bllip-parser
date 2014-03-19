@@ -52,7 +52,7 @@ CC=gcc
 # Compilation help: you may need to remove -march=native on older compilers.
 GCCFLAGS=-march=native -mfpmath=sse -msse2 -mmmx
 FOPENMP=-fopenmp
-CFLAGS=-MMD -O6 -ffast-math -fstrict-aliasing -Wall -finline-functions $(GCCFLAGS) $(FOPENMP)
+CFLAGS=-MMD -O3 -ffast-math -fstrict-aliasing -Wall -finline-functions $(GCCFLAGS) $(FOPENMP)
 LDFLAGS=$(FOPENMP)
 CXXFLAGS=${CFLAGS} -Wno-deprecated
 

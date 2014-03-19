@@ -71,7 +71,7 @@
 
 # CFLAGS is used for all C and C++ compilation
 #
-CFLAGS = -MMD -O6 -Wall -ffast-math -finline-functions -fomit-frame-pointer -fstrict-aliasing $(GCCFLAGS)
+CFLAGS = -MMD -O3 -Wall -ffast-math -finline-functions -fomit-frame-pointer -fstrict-aliasing $(GCCFLAGS)
 
 # for debugging, uncomment the following CFLAGS and LDFLAGS
 #
