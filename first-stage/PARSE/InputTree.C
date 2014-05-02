@@ -30,8 +30,7 @@ int              InputTree::tempwordnum= 0;
 InputTree::
 InputTree(InputTree* it) :
   start_(it->start_), finish_(it->finish_), word_(it->word_),
-    term_(it->term_), ntInfo_(it->ntInfo_), parent_(it->parent_),
-     headTree_(headTree_)
+    term_(it->term_), ntInfo_(it->ntInfo_), parent_(it->parent_)
 {
   InputTreesIter subti = it->subTrees().begin();
   for( ; subti != it->subTrees().end() ; subti++)
