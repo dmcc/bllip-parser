@@ -263,6 +263,6 @@ from RerankingParser import RerankingParser, Tree, tokenize
 
 __authors__ = 'Eugene Charniak, Mark Johnson, David McClosky, many others'
 __license__ = 'Apache 2.0'
-__version__ = '2014.08.29'
+__version__ = '2014.08.29b'
 __maintainer__ = 'David McClosky'
 __email__ = 'notsoweird+pybllipparser@gmail.com'

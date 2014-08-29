@@ -80,7 +80,7 @@ reranker_module = Extension('bllipparser._JohnsonReranker',
     extra_compile_args=['-iquote', reranker_base, '-O0'])
 
 setup(name='bllipparser',
-    version='2014.08.29',
+    version='2014.08.29b',
     description='Python bindings for the BLLIP natural language parser',
     long_description=file('README-python.rst').read(),
     author='Eugene Charniak, Mark Johnson, David McClosky, many others',
