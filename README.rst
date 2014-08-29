@@ -15,13 +15,13 @@ others to compare their results to yours.
 
 References:
 
-* Charniak, Eugene, and Mark Johnson. "Coarse-to-fine n-best parsing and
+* Eugene Charniak and Mark Johnson. "Coarse-to-fine n-best parsing and
   MaxEnt discriminative reranking." Proceedings of the 43rd Annual Meeting
   on Association for Computational Linguistics. Association for
   Computational Linguistics, 2005.
   http://aclweb.org/anthology/P/P05/P05-1022.pdf
 
-* Charniak, Eugene. "A maximum-entropy-inspired parser." Proceedings of
+* Eugene Charniak. "A maximum-entropy-inspired parser." Proceedings of
   the 1st North American chapter of the Association for Computational
   Linguistics conference. Association for Computational Linguistics, 2000.
   http://aclweb.org/anthology//A/A00/A00-2018.pdf
