@@ -15,7 +15,6 @@ import fileinput
 
 if __name__ == "__main__":
     from test import initialize, display_parses
-    thread_slot = SWIGParser.ThreadSlot()
     initialize(n=50)
     for line in fileinput.input():
         line = line.strip()
@@ -25,10 +24,10 @@ if __name__ == "__main__":
         print tree
         sentence = tree.toSentRep()
         print sentence
-        parses = SWIGParser.parse(sentence, thread_slot)
+        parses = SWIGParser.parse(sentence)
         print len(parses), 'parses'
         if not parses:
             raise 'failed'
         display_parses(parses)
-        print 'example failure tree', sentence.makeFailureTree('Xyz', thread_slot)
+        print 'example failure tree', sentence.makeFailureTree('Xyz')
         print

@@ -18,11 +18,76 @@ from os.path import exists, join
 import CharniakParser as parser
 import JohnsonReranker as reranker
 
+class Tree:
+    """Represents a single parse tree in Penn Treebank format. This
+    wraps the InputTree structure in the Charniak parser."""
+    def __init__(self, input_tree_or_string):
+        """These can be constructed from the Penn Treebank string
+        representations of trees, e.g.:
+
+            >>> Tree('(S1 (NP (NN tree)))')
+            bllipparser.RerankingParser.Tree('(S1 (NP (NN tree)))')
+
+        Or from an existing InputTree (internal SWIG object). Users will
+        generally want the former."""
+        if not isinstance(input_tree_or_string, parser.InputTree):
+            if not isinstance(input_tree_or_string, basestring):
+                raise TypeError("input_tree_or_string (%r) must be an InputTree or string." % input_tree_or_string)
+            input_tree_or_string = \
+                parser.inputTreeFromString(input_tree_or_string)
+        self._tree = input_tree_or_string
+    def __iter__(self):
+        """Provides an iterator over immediate subtrees in this Tree.
+        Each item yielded will be a Tree object rooted at one of the
+        children of this tree."""
+        for tree in self._tree.subTrees():
+            yield self.__class__(tree)
+    def subtrees(self):
+        """Returns a list of direct subtrees."""
+        return list(iter(self))
+    def __len__(self):
+        """Returns the number of direct subtrees."""
+        return len(self.subtrees())
+    def __repr__(self):
+        """Provides a representation of this tree which can be used to
+        reconstruct it."""
+        return '%s(%r)' % (self.__class__, str(self))
+    def __str__(self):
+        """Represent the tree in Penn Treebank format on one line."""
+        return str(self._tree)
+    def pretty_string(self):
+        """Represent the tree in Penn Treebank format with line wrapping."""
+        return self._tree.toStringPrettyPrint()
+    def tokens(self):
+        """Return a tuple of the word tokens in this tree."""
+        return tuple(self._tree.getWords())
+    def tags(self):
+        """Return a tuple of the part-of-speech tags in this tree."""
+        return tuple(self._tree.getTags())
+    def tokens_and_tags(self):
+        """Return a list of (word, tag) pairs."""
+        return zip(self.tokens(), self.tags())
+    def span(self):
+        """Returns indices of the span for this tree: (start, end)"""
+        return (self._tree.start(), self._tree.finish())
+    def label(self):
+        """Returns the label at the top of the tree. If the tree is a
+        preterminal, returns the part of speech."""
+        return self._tree.term()
+
 class ScoredParse:
     """Represents a single parse and its associated parser
-    probability and reranker score. Note that ptb_parse is actually
-    a CharniakParser.InputTree rather than a string (str()ing it will
-    return the actual PTB parse."""
+    probability and reranker score.
+    
+    Properties:
+    - ptb_parse: a Tree object representing the parse (str() it to get the
+        actual PTB formatted parse)
+    - parser_score: The log probability of the parse according to the parser
+    - parser_rank: The rank of the parse according to the parser
+    - reranker_score: The log probability of the parse according to the reranker
+    - reranker_rank: The rank of the parse according to the reranker
+
+    The latter two will be None if the reranker isn't being used."""
     def __init__(self, ptb_parse, parser_score=None, reranker_score=None,
                  parser_rank=None, reranker_rank=None):
         self.ptb_parse = ptb_parse
@@ -41,18 +106,22 @@ class ScoredParse:
 class Sentence:
     """Represents a single sentence as input to the parser. You should
     not typically need to construct this object directly."""
-    def __init__(self, text_or_tokens, max_sentence_length=399):
+    def __init__(self, text_or_tokens):
         if isinstance(text_or_tokens, Sentence):
             self.sentrep = text_or_tokens.sentrep
         elif isinstance(text_or_tokens, basestring):
-            self.sentrep = parser.tokenize('<s> ' + text_or_tokens + ' </s>',
-                                           max_sentence_length)
+            self.sentrep = parser.tokenize('<s> ' + text_or_tokens + ' </s>')
         else:
             # text_or_tokens is a sequence -- need to make sure that each
             # element is a string to avoid crashing
-            text_or_tokens = map(str, text_or_tokens)
+            text_or_tokens = [parser.ptbEscape(str(token))
+                for token in text_or_tokens]
             self.sentrep = parser.SentRep(text_or_tokens)
-    def get_tokens(self):
+    def __len__(self):
+        """Returns the number of tokens in this sentence."""
+        return len(self.sentrep)
+    def tokens(self):
+        """Returns a list of tokens in this sentence."""
         tokens = []
         for index in range(len(self.sentrep)):
             tokens.append(self.sentrep.getWord(index).lexeme())
@@ -60,15 +129,16 @@ class Sentence:
 
 class NBestList:
     """Represents an n-best list of parses of the same sentence."""
-    def __init__(self, sentrep, parses):
+    def __init__(self, sentrep, parses, sentence_id=None):
         # we keep this around since it's our key to converting our input
         # to the reranker's format (see __str__())
         self._parses = parses
         self._sentrep = sentrep
         self.parses = []
         for index, (score, parse) in enumerate(parses):
-            scored_parse = ScoredParse(parse, score, parser_rank=index)
+            scored_parse = ScoredParse(Tree(parse), score, parser_rank=index)
             self.parses.append(scored_parse)
+        self.sentence_id = sentence_id
         self._reranked = False
 
     def __getattr__(self, key):
@@ -88,9 +158,9 @@ class NBestList:
     def get_reranker_best(self):
         """Get the best parse in this n-best list according to the reranker."""
         return min(self, key=lambda parse: parse.reranker_rank)
-    def get_tokens(self):
+    def tokens(self):
         """Get the tokens of this sentence as a sequence of strings."""
-        return self._sentrep.get_tokens()
+        return self._sentrep.tokens()
     def rerank(self, reranker, lowercase=True):
         """Rerank this n-best list according to a reranker model. reranker
         can be a RerankingParser or RerankerModel."""
@@ -113,17 +183,18 @@ class NBestList:
     def __str__(self):
         """Represent the n-best list in a similar output format to the
         command-line parser and reranker."""
+        sentence_id = self.sentence_id or 'x'
         if self._reranked:
             from cStringIO import StringIO
             combined = StringIO()
-            combined .write('%d dummy\n' % len(self.parses))
+            combined.write('%d %s\n' % (len(self.parses), sentence_id))
             for parse in self.parses:
                 combined.write('%s %s\n%s\n' % \
                     (parse.reranker_score, parse.parser_score, parse.ptb_parse))
             combined.seek(0)
             return combined.read()
         else:
-            return parser.asNBestList(self._parses)
+            return parser.asNBestList(self._parses, str(sentence_id))
     def as_reranker_input(self, lowercase=True):
         """Convert the n-best list to an internal structure used as input
         to the reranker. You shouldn't typically need to call this."""
@@ -142,7 +213,6 @@ class RerankingParser:
         self.parser_model_dir = None
         self.parser_options = {}
         self.reranker_model = None
-        self._parser_thread_slot = parser.ThreadSlot()
         self.unified_model_dir = None
 
     def __repr__(self):
@@ -163,7 +233,8 @@ class RerankingParser:
         if self._parser_model_loaded:
             raise RuntimeError('Parser is already loaded and can only be loaded once.')
         if not exists(model_dir):
-            raise ValueError('Parser model directory %r does not exist.' % model_dir)
+            raise ValueError('Parser model directory %r does not exist.' % \
+                model_dir)
         self._parser_model_loaded = True
         self.parser_model_dir = model_dir
         parser.loadModel(model_dir)
@@ -171,8 +242,8 @@ class RerankingParser:
 
     def load_reranker_model(self, features_filename, weights_filename,
                             feature_class=None):
-        """Load the reranker model from its feature and weights files. A feature
-        class may optionally be specified."""
+        """Load the reranker model from its feature and weights files. A
+        feature class may optionally be specified."""
         if not exists(features_filename):
             raise ValueError('Reranker features filename %r does not exist.' % \
                 features_filename)
@@ -183,26 +254,31 @@ class RerankingParser:
                                                      features_filename,
                                                      weights_filename)
 
-    def parse(self, sentence, rerank='auto', max_sentence_length=399):
+    def parse(self, sentence, rerank='auto', sentence_id=None):
         """Parse some text or tokens and return an NBestList with the
         results. sentence can be a string or a sequence. If it is a
         string, it will be tokenized. If rerank is True, we will rerank
         the n-best list, if False the reranker will not be used. rerank
         can also be set to 'auto' which will only rerank if a reranker
-        model is loaded."""
+        model is loaded. If there are no parses or an error occurs,
+        this will return an empty NBestList."""
         rerank = self._check_loaded_models(rerank)
 
-        sentence = Sentence(sentence, max_sentence_length)
+        sentence = Sentence(sentence)
+        if len(sentence) > parser.max_sentence_length:
+            raise ValueError("Sentence is too long (%s tokens, maximum supported: %s)" % (len(sentence), parser.max_sentence_length))
+
         try:
-            parses = parser.parse(sentence.sentrep, self._parser_thread_slot)
+            parses = parser.parse(sentence.sentrep)
         except RuntimeError:
             parses = []
-        nbest_list = NBestList(sentence, parses)
+        nbest_list = NBestList(sentence, parses, sentence_id)
         if rerank:
             nbest_list.rerank(self)
         return nbest_list
 
-    def parse_tagged(self, tokens, possible_tags, rerank='auto'):
+    def parse_tagged(self, tokens, possible_tags, rerank='auto',
+                     sentence_id=None):
         """Parse some pre-tagged, pre-tokenized text. tokens must be a
         sequence of strings. possible_tags is map from token indices
         to possible POS tags (strings). Tokens without an entry in
@@ -228,12 +304,39 @@ class RerankingParser:
                 self._find_bad_tag_and_raise_error(tags)
 
         sentence = Sentence(tokens)
-        parses = parser.parse(sentence.sentrep, ext_pos,
-            self._parser_thread_slot)
-        nbest_list = NBestList(sentence, parses)
+        parses = parser.parse(sentence.sentrep, ext_pos)
+        nbest_list = NBestList(sentence, parses, sentence_id)
         if rerank:
             nbest_list.rerank(self)
         return nbest_list
+
+    def simple_parse(self, text_or_tokens):
+        """Helper method for just parsing a single sentence and getting
+        its Penn Treebank tree.  If you want anything more complicated
+        (e.g., the Tree objects, n-best lists, parser or reranker scores,
+        etc.), you'll want the more complicated parse() or parse_tagged()
+        interfaces.
+
+            >>> rrp.simple_parse('Parse this.')
+            '(S1 (S (VP (VB Parse) (NP (DT this))) (. .)))'
+
+        text_or_tokens can be either a string or a sequence of tokens."""
+        parses = self.parse(text_or_tokens)
+        return str(parses[0].ptb_parse)
+
+    def tag(self, text_or_tokens):
+        """Helper method for just getting the part-of-speech tags of
+        a single sentence. This will parse the sentence and then read
+        part-of-speech tags off the tree, so it's not recommended if
+        all you need is a fast tagger. Returns a list of (token, tag)
+        using Penn Treebank part-of-speech tags.
+
+            >>> rrp.tag('Tag this.')
+            [('Tag', 'VB'), ('this', 'DT'), ('.', '.')]
+
+        text_or_tokens can be either a string or a sequence of tokens."""
+        parses = self.parse(text_or_tokens)
+        return parses[0].ptb_parse.tokens_and_tags()
 
     def _find_bad_tag_and_raise_error(self, tags):
         ext_pos = parser.ExtPos()
@@ -297,20 +400,12 @@ class RerankingParser:
         return self.parser_options
 
     @classmethod
-    def load_unified_model_dir(this_class, *args, **kwargs):
-        """Deprecated. Use from_unified_model_dir() instead as this
-        method will eventually disappear."""
-        import warnings
-        warnings.warn('BllipParser.load_parser_model() method is deprecated now, use BllipParser.from_unified_model_dir() instead.')
-        return this_class.from_unified_model_dir(*args, **kwargs)
-
-    @classmethod
     def from_unified_model_dir(this_class, model_dir, parsing_options=None,
-        reranker_options=None):
+        reranker_options=None, parser_only=False):
         """Create a RerankingParser from a unified parsing model on disk.
         A unified parsing model should have the following filesystem
         structure:
-        
+
         parser/
             Charniak parser model: should contain pSgT.txt, *.g files
             among others
@@ -318,29 +413,34 @@ class RerankingParser:
             features.gz or features.bz2 -- features for reranker
             weights.gz or weights.bz2 -- corresponding weights of those
             features
-        """
+
+        If one of these subdirectories is missing, the corresponding
+        component will not be loaded. The parser_only flag can be used
+        to skip loading the reranker even if it available on disk."""
         parsing_options = parsing_options or {}
         reranker_options = reranker_options or {}
         (parser_model_dir, reranker_features_filename,
          reranker_weights_filename) = get_unified_model_parameters(model_dir)
+        if parser_only and reranker_options:
+            raise ValueError("Can't set reranker_options if parser_only is on.")
 
         rrp = this_class()
         if parser_model_dir:
             rrp.load_parser_model(parser_model_dir, **parsing_options)
-        if reranker_features_filename and reranker_weights_filename:
+        if reranker_features_filename and reranker_weights_filename and \
+            not parser_only:
             rrp.load_reranker_model(reranker_features_filename,
                 reranker_weights_filename, **reranker_options)
 
         rrp.unified_model_dir = model_dir
         return rrp
 
-def tokenize(text, max_sentence_length=399):
+def tokenize(text):
     """Helper method to tokenize a string. Note that most methods accept
     untokenized text so you shouldn't need to run this if you intend
-    to parse this text. Returns a list of string tokens. If the text is
-    longer than max_sentence_length tokens, it will be truncated."""
+    to parse this text. Returns a list of string tokens."""
     sentence = Sentence(text)
-    return sentence.get_tokens()
+    return sentence.tokens()
 
 def get_unified_model_parameters(model_dir):
     """Determine the actual parser and reranker model filesystem entries

@@ -25,7 +25,8 @@ using namespace std;
 
 #ifdef SWIGPYTHON
 %include "std_list.i"
-// make default stringification work in Python even though we use Java names here
+// make default stringification work in Python even though we use Java
+// names here
 %rename(__str__) toString;
 %rename(__len__) length;
 #endif
@@ -63,7 +64,6 @@ typedef std::string ECString;
     #include "Params.h"
     #include "SentRep.h"
     #include "TimeIt.h"
-    #include "ThreadManager.h"
     #include "UnitRules.h"
     #include "utils.h"
     #include "Wrd.h"
@@ -130,16 +130,19 @@ typedef std::string ECString;
 %newobject asNBestList;
 
 %inline{
+    const int max_sentence_length = MAXSENTLEN;
+
     typedef pair<double,InputTree*> ScoredTree;
 
     /* main parsing workhorse in the wrapped world */
-    vector<ScoredTree>* parse(SentRep* sent, ExtPos& tag_constraints, ThreadSlot threadSlot) {
-        if (!threadSlot.acquiredThreadSlot()) {
-            throw ParserError("No free thread slots available.");
+    vector<ScoredTree>* parse(SentRep* sent, ExtPos& tag_constraints) {
+        if (sent->length() > MAXSENTLEN) {
+            throw ParserError("Sentence is longer than maximum supported sentence length.");
         }
+
         vector<ScoredTree>* scoredTrees = new vector<ScoredTree>();
 
-        MeChart* chart = new MeChart(*sent, tag_constraints, threadSlot.getThreadSlotIndex());
+        MeChart* chart = new MeChart(*sent, tag_constraints, 0);
         chart->parse();
         Item* topS = chart->topS();
         if (!topS) {
@@ -198,13 +201,14 @@ typedef std::string ECString;
         return scoredTrees;
     }
 
-    vector<ScoredTree>* parse(SentRep* sent, ThreadSlot threadSlot) {
+    vector<ScoredTree>* parse(SentRep* sent) {
         ExtPos extPos;
-        return parse(sent, extPos, threadSlot);
+        return parse(sent, extPos);
     }
 
     void setOptions(string language, bool caseInsensitive, int nBest,
-            bool smallCorpus, double overparsing, int debug, float smoothPosAmount) {
+            bool smallCorpus, double overparsing, int debug,
+            float smoothPosAmount) {
         Bchart::caseInsensitive = caseInsensitive;
         Bchart::Nth = nBest;
         Bchart::smallCorpus = smallCorpus;
@@ -214,19 +218,30 @@ typedef std::string ECString;
         Bchart::smoothPosAmount = smoothPosAmount;
     }
 
-    SentRep* tokenize(string text, int maxTokens) {
+    /* Tokenizes the text and returns a SentRep with the tokens in it.
+       expectedTokens is an estimate of the number of tokens in the sentence.
+       It's not bad if you're wrong since this is just used to preallocate
+       a vector of words. */
+    SentRep* tokenize(string text, int expectedTokens) {
         istringstream* inputstream = new istringstream(text);
         ewDciTokStrm* tokStream = new ewDciTokStrm(*inputstream);
         // not sure why we need an extra read here, but the first word is null
         // otherwise
         tokStream->read();
 
-        SentRep* srp = new SentRep(maxTokens);
+        SentRep* srp = new SentRep(expectedTokens);
         *tokStream >> *srp;
 
         delete inputstream;
         delete tokStream;
         return srp;
+    }
+
+    /* Tokenizes the text and returns a SentRep with the tokens in it.
+       Uses the approximate average length of an (English) sentence
+       (+1 for a space) to estimate the number of tokens in the text. */
+    SentRep* tokenize(string text) {
+        return tokenize(text, text.length() / 6);
     }
 
     InputTree* inputTreeFromString(const char* str) {
@@ -237,11 +252,12 @@ typedef std::string ECString;
     }
 
     /* Returns a string suitable for use with read_nbest_list() in
-       the reranker */
-    string asNBestList(vector<ScoredTree>& scoredTrees) {
+       the reranker. Ideally, we'd convert directly from ScoredTree to
+       the reranker's equivalent structure. */
+    string asNBestList(vector<ScoredTree>& scoredTrees, string sentenceId) {
         stringstream nbest_list;
         nbest_list.precision(10);
-        nbest_list << scoredTrees.size() << " dummy" << endl;
+        nbest_list << scoredTrees.size() << " " << sentenceId << endl;
         for (int i = 0; i < scoredTrees.size(); i++) {
             ScoredTree scoredTree = scoredTrees[i];
             nbest_list << scoredTree.first << endl;
@@ -257,6 +273,18 @@ typedef std::string ECString;
     void error(const char *filename, int filelinenum, const char *msg) {
         throw ParserError(filename, filelinenum, msg);
     }
+
+    /* Apply PTB escaping to a string (left parens become -LRB-, etc.) */
+    string ptbEscape(string word) {
+        escapeParens(word);
+        return word;
+    }
+
+    /* Reverse PTB escaping to a string (-LRB- restored as a left paren, etc.) */
+    string ptbUnescape(string word) {
+        unescapeParens(word);
+        return word;
+    }
 } // end %inline
 
 namespace std {
@@ -264,6 +292,7 @@ namespace std {
 
    %template(ScoredTreePair) pair<double,InputTree*>;
    %template(ScoreVector) vector<ScoredTree>;
+   %template(InputTrees) list<InputTree*>;
 }
 
 // bits of header files to wrap -- some of these may not be necessary
@@ -290,27 +319,26 @@ class SentRep {
 
             // makeFailureTree() is adapted from makeFlat() in parseIt.C
             %newobject makeFailureTree;
-            InputTree* makeFailureTree(string category, ThreadSlot threadSlot) {
-                if (!threadSlot.acquiredThreadSlot()) {
-                    throw ParserError("No free thread slots available.");
-                }
-
-                MeChart* chart = new MeChart(*$self, threadSlot.getThreadSlotIndex());
+            InputTree* makeFailureTree(string category) {
+                MeChart* chart = new MeChart(*$self, 0);
                 if ($self->length() >= MAXSENTLEN) {
                     delete chart;
                     error("Sentence is too long.");
                 }
                 InputTrees dummy1;
-                InputTree *inner_tree = new InputTree(0, $self->length(), "", category, "", dummy1, NULL, NULL);
+                InputTree *inner_tree = new InputTree(0, $self->length(), "",
+                    category, "", dummy1, NULL, NULL);
                 InputTrees dummy2;
                 dummy2.push_back(inner_tree);
-                InputTree *top_tree = new InputTree(0, $self->length(), "", "S1", "", dummy2, NULL, NULL);
+                InputTree *top_tree = new InputTree(0, $self->length(), "",
+                    "S1", "", dummy2, NULL, NULL);
                 inner_tree->parentSet() = top_tree;
                 InputTrees its;
                 for (int index = 0; index < $self->length(); index++) {
                     Wrd& w = (*$self)[index];
                     const ECString& pos = getPOS(w, chart);
-                    InputTree *word_tree = new InputTree(index, index + 1, w.lexeme(), pos, "", dummy1, inner_tree, NULL);
+                    InputTree *word_tree = new InputTree(index, index + 1,
+                        w.lexeme(), pos, "", dummy1, inner_tree, NULL);
                     its.push_back(word_tree);
                 }
 
@@ -332,10 +360,10 @@ class InputTree {
         const ECString ntInfo() const;
         const ECString head();
         const ECString hTag();
-        InputTrees& subTrees();
+        list<InputTree*>& subTrees();
         InputTree* headTree();
-        InputTree*  parent();
-        InputTree*&  parentSet();
+        InputTree* parent();
+        InputTree*& parentSet();
 
         ~InputTree();
 
@@ -363,6 +391,23 @@ class InputTree {
                 list<ECString> leaves;
                 $self->make(leaves);
                 return new SentRep(leaves);
+            }
+
+            %newobject getTags;
+            list<ECString>* getTags() {
+                vector<ECString> tags;
+                $self->makePosList(tags);
+                // copy it to a list
+                list<ECString>* tagsList = new list<ECString>(tags.begin(),
+                    tags.end());
+                return tagsList;
+            }
+
+            %newobject getWords;
+            list<ECString>* getWords() {
+                list<ECString>* leaves = new list<ECString>();
+                $self->make(*leaves);
+                return leaves;
             }
         }
 };
@@ -407,7 +452,7 @@ class ExtPos {
         %extend {
             bool addTagConstraints(vector<string> tags) {
                 vector<const Term*> constTerms;
-                for (std::vector<Term*>::size_type i = 0; i != tags.size(); i++) {
+                for (vector<Term*>::size_type i = 0; i != tags.size(); i++) {
                     string tag = tags[i];
                     const Term* term = Term::get(tag);
                     if (!term) {
@@ -435,12 +480,3 @@ namespace std {
    %template(VectorTerm) vector<Term*>;
    %template(VectorVectorTerm) vector<vector<Term*> >;
 }
-
-class ThreadSlot {
-    public:
-        ThreadSlot();
-        ~ThreadSlot();
-        bool acquire();
-        void recycle();
-        bool acquiredThreadSlot();
-};

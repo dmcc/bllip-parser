@@ -164,7 +164,7 @@ class ParsingShell(Cmd):
     def parse(self, text):
         if text.strip(): # if no text, return the last nbest list
             nbest_list = self.rrp.parse(text)
-            print 'Tokens:', ' '.join(nbest_list.get_tokens())
+            print 'Tokens:', ' '.join(nbest_list.tokens())
             print
             self.got_nbest_list(nbest_list)
 

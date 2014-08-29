@@ -1,11 +1,32 @@
+.. image:: https://travis-ci.org/BLLIP/bllip-parser.png?branch=master
+   :target: https://travis-ci.org/BLLIP/bllip-parser
+
 The BLLIP parser (also known as the Charniak-Johnson parser or
 Brown Reranking Parser) is described in the paper `Charniak
 and Johnson (Association of Computational Linguistics, 2005)
-<http://aclweb.org/anthology/P/P05/P05-1022.pdf>`_.  This package provides
-the BLLIP parser runtime along with a Python interface. Note that it
-does not come with any parsing models but includes a downloader.
-The primary maintenance for the parser takes place at `GitHub
-<http://github.com/BLLIP/bllip-parser>`_.
+<http://aclweb.org/anthology/P/P05/P05-1022.pdf>`_.  This package
+provides the BLLIP parser runtime along with a Python interface. Note
+that it does not come with any parsing models but includes a model
+downloader.  The primary maintenance for the parser takes place at
+`GitHub <http://github.com/BLLIP/bllip-parser>`_.
+
+We request acknowledgement in any publications that make use of this
+software and any code derived from this software. Please report the
+release date of the software that you are using, as this will enable
+others to compare their results to yours.
+
+References:
+
+* Eugene Charniak and Mark Johnson. "Coarse-to-fine n-best parsing and
+  MaxEnt discriminative reranking." Proceedings of the 43rd Annual Meeting
+  on Association for Computational Linguistics. Association for
+  Computational Linguistics, 2005.
+  http://aclweb.org/anthology/P/P05/P05-1022.pdf
+
+* Eugene Charniak. "A maximum-entropy-inspired parser." Proceedings of
+  the 1st North American chapter of the Association for Computational
+  Linguistics conference. Association for Computational Linguistics, 2000.
+  http://aclweb.org/anthology/A/A00/A00-2018.pdf
 
 Fetching parsing models
 -----------------------
@@ -52,14 +73,22 @@ You can also load parser and reranker models manually::
     >>> rrp.load_parser_model('/tmp/models/WSJ/parser')
     >>> rrp.load_reranker_model('/tmp/models/WSJ/reranker')
 
-Parsing a single sentence and reading information about the top parse
-with ``parse()``. The parser produces an *n-best list* of the *n* most
-likely parses of the sentence (default: *n=50*). Typically you only want
-the top parse, but the others are available as well::
+If you only want the top parse of a sentence in Penn Treebank format, use
+the ``simple_parse()`` method::
+
+    >>> rrp.simple_parse('This is simple.')
+    '(S1 (S (NP (DT This)) (VP (VBZ is) (ADJP (JJ simple))) (. .)))'
+
+If you want more information about the parse, you'll want to use the
+``parse()`` method which returns an ``NBestList`` object.  The parser
+produces an *n-best list* of the *n* most likely parses of the sentence
+(default: *n=50*). Typically you only want the top parse, but the others
+are available as well::
 
     >>> nbest_list = rrp.parse('This is a sentence.')
 
-Getting information about the top parse::
+To get information about the top parse (note that the ptb_parse property
+is a Tree object, described later)::
 
     >>> print repr(nbest_list[0])
     ScoredParse('(S1 (S (NP (DT This)) (VP (VBZ is) (NP (DT a) (NN sentence))) (. .)))', parser_score=-29.621201629004183, reranker_score=-7.9273829816098731)
@@ -112,6 +141,11 @@ other options. It returns a dictionary of the current options::
     >>> len(nbest_list)
     10
 
+The parser can also be used as a tagger::
+
+    >>> rrp.tag("Time flies while you're having fun.")
+    [('Time', 'NNP'), ('flies', 'VBZ'), ('while', 'IN'), ('you', 'PRP'), ("'re", 'VBP'), ('having', 'VBG'), ('fun', 'NN'), ('.', '.')]
+
 Use this if all you want is a tokenizer::
 
     >>> tokenize("Tokenize this sentence, please.")
@@ -152,3 +186,62 @@ see the output::
     [graphical display of the parse appears]
 
 There is more detailed help inside the shell under the ``help`` command.
+
+The Tree class
+--------------
+
+The parser provides a simple (immutable) Tree class which provides
+information about Penn Treebank-style trees::
+
+    >>> tree = bllipparser.Tree('(S1 (S (NP (DT This)) (VP (VBZ is) (NP (DT a) (ADJP (RB fairly) (JJ simple)) (NN parse) (NN tree))) (. .)))')
+    >>> print tree
+    (S1 (S (NP (DT This)) (VP (VBZ is) (NP (DT a) (ADJP (RB fairly) (JJ simple)) (NN parse) (NN tree))) (. .)))
+
+``pretty_string()`` provides a line-wrapped stringification::
+
+    >>> print tree.pretty_string()
+    (S1 (S (NP (DT This))
+         (VP (VBZ is)
+          (NP (DT a) (ADJP (RB fairly) (JJ simple)) (NN parse) (NN tree)))
+         (. .)))
+
+You can obtain the tokens and tags of the tree::
+
+    >>> print tree.tokens()
+    ('This', 'is', 'a', 'fairly', 'simple', 'parse', 'tree', '.')
+    >>> print tree.tags()
+    ('DT', 'VBZ', 'DT', 'RB', 'JJ', 'NN', 'NN', '.')
+    >>> print tree.tokens_and_tags()
+    [('This', 'DT'), ('is', 'VBZ'), ('a', 'DT'), ('fairly', 'RB'), ('simple', 'JJ'), ('parse', 'NN'), ('tree', 'NN'), ('.', '.')]
+
+Or get information about the labeled spans in the tree::
+
+    >>> print tree.span()
+    (0, 8)
+    >>> print tree.label()
+    S1
+
+And finally navigate within the trees::
+
+    >>> tree.subtrees()
+    [bllipparser.RerankingParser.Tree('(S (NP (DT This)) (VP (VBZ is) (NP (DT a) (ADJP (RB fairly) (JJ simple)) (NN parse) (NN tree))) (. .))')]
+    >>> tree.subtrees()[0].label()
+    'S'
+    >>> tree.subtrees()[0].subtrees()[0]
+    bllipparser.RerankingParser.Tree('(NP (DT This))')
+    >>> tree.subtrees()[0].subtrees()[0].label()
+    'NP'
+    >>> tree.subtrees()[0].subtrees()[0].span()
+    (0, 1)
+    >>> tree.subtrees()[0].subtrees()[0].tags()
+    ('DT',)
+    >>> tree.subtrees()[0].subtrees()[0].tokens()
+    ('This',)
+    >>> len(tree.subtrees()[0]) # number of subtrees
+    3
+    >>> for subtree in tree.subtrees()[0]:
+    ...    print subtree
+    ... 
+    (NP (DT This))
+    (VP (VBZ is) (NP (DT a) (ADJP (RB fairly) (JJ simple)) (NN parse) (NN tree)))
+    (. .)

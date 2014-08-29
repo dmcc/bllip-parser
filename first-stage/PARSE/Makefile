@@ -99,6 +99,12 @@ valgrind-parseIt: CFLAGS += -g -O0
 valgrind-parseIt: parseIt
 	valgrind --leak-check=full ./parseIt ../DATA/EN/ ../../sample-text/sample-data.txt
 
+.PHONY: clang-leak-parseIt
+clang-leak-parseIt: CFLAGS = -fsanitize=leak
+clang-leak-parseIt: CXX = clang++
+clang-leak-parseIt: parseIt
+	ASAN_options="detect_leaks=1" ./parseIt ../DATA/EN/ short.sgml
+
 #
 # SWIG wrappers for Java and Python
 #
@@ -120,7 +126,6 @@ SWIG_JAVA_GCCFLAGS ?= -I/usr/lib/jvm/java-1.6.0-openjdk-1.6.0.0.x86_64/include/ 
 SWIG_PYTHON_GCCFLAGS ?= -I/usr/include/python2.6/
 # -L should have the path to libstdc++.so
 SWIG_LINKER_FLAGS ?= -lstdc++ -L/usr/lib/gcc/x86_64-redhat-linux/4.4.4/
-SWIG_OBJS = ThreadManager.o
 
 # Edit or set these variables as needed
 SWIG_PARSER_MODULE_NAME ?= SWIGParser
@@ -169,10 +174,10 @@ swig/build/java_wrapper.o: swig/build/java_wrapper.cxx
 	$(CC) -O3 $(CFLAGS) -c $(SWIG_JAVA_GCCFLAGS) -I. \
 		swig/build/java_wrapper.cxx -o swig/build/java_wrapper.o
 
-swig/java/lib/lib$(SWIG_PARSER_MODULE_NAME).so: swig/build/java_wrapper.o $(COMMON_OBJS) $(SWIG_OBJS)
+swig/java/lib/lib$(SWIG_PARSER_MODULE_NAME).so: swig/build/java_wrapper.o $(COMMON_OBJS)
 	$(CC) $(SWIG_LINKER_FLAGS) -shared \
 		-o swig/java/lib/lib$(SWIG_PARSER_MODULE_NAME).so \
-		$(COMMON_OBJS) $(SWIG_OBJS) swig/build/java_wrapper.o
+		$(COMMON_OBJS) swig/build/java_wrapper.o
 
 #
 # Python SWIG helpers
@@ -187,7 +192,7 @@ swig/build/python_wrapper.o: swig/build/python_wrapper.cxx
 	$(CC) -O3 -fno-strict-aliasing -fPIC -c $(SWIG_PYTHON_GCCFLAGS) \
 		-I. swig/build/python_wrapper.cxx -o swig/build/python_wrapper.o
 
-swig/python/lib/_$(SWIG_PARSER_MODULE_NAME).so: swig/build/python_wrapper.o $(COMMON_OBJS) $(SWIG_OBJS)
+swig/python/lib/_$(SWIG_PARSER_MODULE_NAME).so: swig/build/python_wrapper.o $(COMMON_OBJS)
 	$(CC) $(CFLAGS) $(SWIG_LINKER_FLAGS) -shared \
 		-o swig/python/lib/_$(SWIG_PARSER_MODULE_NAME).so \
-		$(COMMON_OBJS) $(SWIG_OBJS) swig/build/python_wrapper.o
+		$(COMMON_OBJS) swig/build/python_wrapper.o

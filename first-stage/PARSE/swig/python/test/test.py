@@ -12,8 +12,6 @@
 
 import SWIGParser as parser
 
-thread_slot = None
-
 def dir_contents():
     print 'parser contents:', dir(parser)
     print
@@ -44,37 +42,37 @@ def test_parse():
     sr2 = test_tokenizer()
 
     for sr in (sr1, sr2):
-        parses = parser.parse(sr, thread_slot)
+        parses = parser.parse(sr)
         display_parses(parses)
         print '---'
 
 def test_as_nbest_list():
     sr1 = parser.SentRep(['These', 'are', 'tokens', '.'])
-    parses = parser.parse(sr1, thread_slot)
-    print parser.asNBestList(parses)
+    parses = parser.parse(sr1)
+    print parser.asNBestList(parses, 'test_as_nbest_list_sentence')
 
 def test_extpos():
     sr1 = parser.SentRep(['record'])
 
     print 'Unconstrained'
-    display_parses(parser.parse(sr1, thread_slot))
+    display_parses(parser.parse(sr1))
 
     print 'NN'
     ext_pos1 = parser.ExtPos()
     ext_pos1.addTagConstraints(parser.VectorString(['NN']))
 
-    display_parses(parser.parse(sr1, ext_pos1, thread_slot))
+    display_parses(parser.parse(sr1, ext_pos1))
 
     print 'VB'
     ext_pos2 = parser.ExtPos()
     ext_pos2.addTagConstraints(parser.VectorString(['VB']))
-    display_parses(parser.parse(sr1, ext_pos2, thread_slot))
+    display_parses(parser.parse(sr1, ext_pos2))
 
 def test_multiword_extpos():
     sr1 = parser.SentRep('British left waffles on Falklands .'.split())
 
     print 'waffles = [anything]:'
-    display_parses(parser.parse(sr1, thread_slot))
+    display_parses(parser.parse(sr1))
 
     if 1:
         print 'waffles = VBZ/VBD/VB:'
@@ -85,7 +83,7 @@ def test_multiword_extpos():
         ext_pos.addTagConstraints(parser.VectorString([]))
         ext_pos.addTagConstraints(parser.VectorString([]))
         ext_pos.addTagConstraints(parser.VectorString([]))
-        display_parses(parser.parse(sr1, ext_pos, thread_slot))
+        display_parses(parser.parse(sr1, ext_pos))
 
         print 'waffles = NNS:'
         ext_pos = parser.ExtPos()
@@ -95,7 +93,7 @@ def test_multiword_extpos():
         ext_pos.addTagConstraints(parser.VectorString([]))
         ext_pos.addTagConstraints(parser.VectorString([]))
         ext_pos.addTagConstraints(parser.VectorString([]))
-        display_parses(parser.parse(sr1, ext_pos, thread_slot))
+        display_parses(parser.parse(sr1, ext_pos))
 
         print 'waffles = NN/NNS:'
         ext_pos = parser.ExtPos()
@@ -105,21 +103,9 @@ def test_multiword_extpos():
         ext_pos.addTagConstraints(parser.VectorString([]))
         ext_pos.addTagConstraints(parser.VectorString([]))
         ext_pos.addTagConstraints(parser.VectorString([]))
-        display_parses(parser.parse(sr1, ext_pos, thread_slot))
-
-def test_threadslot():
-    print 'parser.ThreadSlot contents:', dir(parser.ThreadSlot)
-    print
-    z = parser.ThreadSlot()
-    print z
-    print z.acquiredThreadSlot()
-    print z.recycle()
-    print z.acquiredThreadSlot()
-    print z.acquire()
-    print z.acquiredThreadSlot()
+        display_parses(parser.parse(sr1, ext_pos))
 
 if __name__ == "__main__":
-    thread_slot = parser.ThreadSlot()
     dir_contents()
     if 1:
         initialize(n=5)

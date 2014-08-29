@@ -16,15 +16,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class test {
-    public static ThreadSlot threadSlot = null;
-
     static {
         System.loadLibrary("SWIGParser");
     }
 
     public static void main(String argv[]) {
-        threadSlot = new ThreadSlot();
-
         initialize(5);
         testReadAndParse();
         testMultiwordExtPos();
@@ -149,7 +145,7 @@ public class test {
         System.out.println("inputTreeFromString: " + tree);
         SentRep sent = tree.toSentRep();
         System.out.println("sent: " + sent);
-        System.out.println("fail tree from sentence: " + sent.makeFailureTree("X", threadSlot));
+        System.out.println("fail tree from sentence: " + sent.makeFailureTree("X"));
         dumpParses(parse(sent));
     }
 
@@ -182,12 +178,12 @@ public class test {
         List<ScoredTreePair> results = new ArrayList<ScoredTreePair>();
         ScoreVector scoreList;
         if (extPos == null) {
-            scoreList = SWIGParser.parse(sentRep, threadSlot);
+            scoreList = SWIGParser.parse(sentRep);
         } else {
             if (sentRep.length() != extPos.size()) {
                 throw new RuntimeException("ExtPos constraints don't match the length of the sentence (extPos: " + extPos.size() + ", sentence: " + sentRep.length() + ")");
             }
-            scoreList = SWIGParser.parse(sentRep, extPos, threadSlot);
+            scoreList = SWIGParser.parse(sentRep, extPos);
         }
 
         // ScoreVector isn't Iterable so we copy its contents over to a Java List
