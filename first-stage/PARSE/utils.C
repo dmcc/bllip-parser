@@ -82,28 +82,37 @@ vECfind(const ECString& s, ECStrings& sts)
   return ( find(sts.begin(),sts.end(),s) != sts.end() );
 }
 
-void findAndReplace(std::string & tInput, std::string tFind, std::string tReplace) {
-    size_t uPos = 0;
-    size_t uFindLen = tFind.length();
-    size_t uReplaceLen = tReplace.length();
+void findAndReplace(string& text, string oldPattern, string newPattern) {
+    size_t pos = 0;
+    size_t oldLength = oldPattern.length();
+    size_t newLength = newPattern.length();
 
-    if (uFindLen == 0) {
+    if (oldLength == 0) {
         return;
     }
 
-    for (; (uPos = tInput.find(tFind, uPos)) != std::string::npos; ) {
-        tInput.replace(uPos, uFindLen, tReplace);
-        uPos += uReplaceLen;
+    for (; (pos = text.find(oldPattern, pos)) != string::npos; ) {
+        text.replace(pos, oldLength, newPattern);
+        pos += newLength;
     }
 }
 
-void escapeParens(ECString& word) {
+void escapeParens(string& word) {
     findAndReplace(word, "(", "-LRB-");
     findAndReplace(word, ")", "-RRB-");
     findAndReplace(word, "{", "-LCB-");
     findAndReplace(word, "}", "-RCB-");
     findAndReplace(word, "[", "-LSB-");
     findAndReplace(word, "]", "-RSB-");
+}
+
+void unescapeParens(string& word) {
+    findAndReplace(word, "-LRB-", "(");
+    findAndReplace(word, "-RRB-", ")");
+    findAndReplace(word, "-LCB-", "{");
+    findAndReplace(word, "-RCB-", "}");
+    findAndReplace(word, "-LSB-", "[");
+    findAndReplace(word, "-RSB-", "]");
 }
 
 // returns whether string ends with pattern
