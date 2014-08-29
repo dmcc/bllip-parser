@@ -18,7 +18,7 @@ from os import makedirs, system, chdir, getcwd
 from os.path import basename, exists, join
 
 class ModelInfo:
-    def __init__(self, model_desc, url, uncompressed_size='unknown '):
+    def __init__(self, model_desc, url, uncompressed_size='unknown'):
         """uncompressed_size is approximate size in megabytes."""
         self.model_desc = model_desc
         self.url = url
