@@ -32,7 +32,7 @@ and point trainParser at your copied directory.
 Some additional notes on training:
 
 * The file "terms.txt" must contain a list of all part-of-speech and
-bracket lablels found in the train and dev corpus, so you may need to
+bracket labels found in the train and dev corpus, so you may need to
 add additional labels to it for your corpora.  See details of its
 file format below.
 
@@ -76,7 +76,7 @@ The following files are static and required for training:
 -rw-r--r--  1 ec fac 553 May 23 16:54 headInfo.txt
 -rw-r--r--  1 ec fac 609 May 23 16:54 terms.txt
 
-* bugFix.txt includes shards of sentences which are necessary to covery
+* bugFix.txt includes shards of sentences which are necessary to cover
   very unlikely combinations which the training data do not cover:
      ( (FRAG (NP (NN Task) (# #)) (. .)))
 
@@ -117,10 +117,21 @@ Files created during training
 endings.txt:  guessing POS of unknown wods by  2-letter suffix
 * col 1: POS
 * col 2: suffix
-* col 3: P(suffix|POS) (eg. all rows with POS 3 sum to 1)
+* col 3: P(suffix|POS) (e.g., all rows with POS 3 sum to 1)
 
 pUgT.txt
 * col 1: POS
 * col 2: P(unknown|POS)
 * col 3: P(capitalized|POS)
 * col 4: P(contains hypen|POS)
+
+------------------------
+Rough training procedure
+------------------------
+Extract vocabulary (pSgT.txt) , unknown word statistics (endings.txt, pUgT.txt, nttCounts.txt)
+
+For each feature, run:
+  rCounts - get counts of features (reads train trees, writes .ff files)
+  selFeats - prune features (reads .ff files, writes .f files)
+  iScale - normalize pruned features (reads .f files, writes .g files)
+  trainRs - tune backoff coefficients from dev data (reads dev trees, writes .lambdas)
