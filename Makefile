@@ -267,7 +267,7 @@ reranker: top TRAIN
 sparseval: SParseval/src/sparseval
 
 SParseval:
-	wget http://old-site.clsp.jhu.edu/ws2005/groups/eventdetect/files/SParseval.tgz
+	wget http://www.clsp.jhu.edu/vfsrv/ws2005/groups/eventdetect/files/SParseval.tgz
 	tar xvzf SParseval.tgz
 	rm SParseval.tgz
 
