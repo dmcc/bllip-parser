@@ -83,7 +83,7 @@ You can also load parser and reranker models manually::
 
     >>> rrp = RerankingParser()
     >>> rrp.load_parser_model('/tmp/models/WSJ/parser')
-    >>> rrp.load_reranker_model('/tmp/models/WSJ/reranker')
+    >>> rrp.load_reranker_model('/tmp/models/WSJ/reranker/features.gz', '/tmp/models/WSJ/reranker/weights.gz')
 
 If you only want the top parse of a sentence in Penn Treebank format, use
 the ``simple_parse()`` method::
