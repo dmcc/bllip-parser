@@ -16,12 +16,16 @@ import nltk.tree
 try:
     import nltk.draw.tree
     have_tree_drawing = False
-    read_nltk_tree = nltk.tree.Tree.fromstring
+    read_nltk_tree = nltk.tree.Tree.parse
     have_tree_drawing = True
 except ImportError:
     have_tree_drawing = False
 except AttributeError:
-    have_tree_drawing = False
+    try:
+        read_nltk_tree = nltk.tree.Tree.fromstring
+        have_tree_drawing = True
+    except AttributeError:
+        have_tree_drawing = False
 
 from bllipparser.RerankingParser import RerankingParser
 
