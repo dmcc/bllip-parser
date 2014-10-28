@@ -96,7 +96,7 @@ static void usage(const char *program)
 
   cerr << "\nRun mode:\n";
   cerr << "-M: language modeling flag\n";
-  cerr << "-N: n-best parsing\n"; 
+  cerr << "-N: number of parses to produce in n-best parsing\n"; 
 
   cerr << "\nPerformance/Quality:\n";
   cerr << "-s: small training corpus flag [off by default]\n";
@@ -107,6 +107,7 @@ static void usage(const char *program)
   cerr << "\nInput:\n";
   cerr << "-C: case-insensitive flag\n";
   cerr << "-K: pre-tokenized data flag (implied if -LAr)\n";
+  cerr << "-E: use external POS tags file (see first-stage/README for format)\n";
   cerr << "-l: skip sentences exceeding specified length [100]\n";
   cerr << "-L: language selection (En|Ch|Ar) [En]\n";
   cerr << "-n: process every Nth sentence only\n";
