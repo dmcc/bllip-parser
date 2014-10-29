@@ -132,7 +132,7 @@ is maintained by `David McClosky <http://nlp.stanford.edu/~mcclosky>`_.
 Parser details
 ^^^^^^^^^^^^^^
 For details on the running and training the parser, see
-``first-stage/README``. ``first-stage/TRAIN/README`` includes notes
+``first-stage/README.rst``. ``first-stage/TRAIN/README`` includes notes
 about how to retrain the parser and some information about the parser
 model file formats.
 
