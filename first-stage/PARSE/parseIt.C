@@ -107,7 +107,7 @@ static void usage(const char *program)
   cerr << "\nInput:\n";
   cerr << "-C: case-insensitive flag\n";
   cerr << "-K: pre-tokenized data flag (implied if -LAr)\n";
-  cerr << "-E: use external POS tags file (see first-stage/README for format)\n";
+  cerr << "-E: use external POS tags file (see first-stage/README.rst for format)\n";
   cerr << "-l: skip sentences exceeding specified length [100]\n";
   cerr << "-L: language selection (En|Ch|Ar) [En]\n";
   cerr << "-n: process every Nth sentence only\n";
