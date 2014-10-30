@@ -15,16 +15,16 @@ others to compare their results to yours.
 
 References:
 
-* Eugene Charniak and Mark Johnson. "Coarse-to-fine n-best parsing and
-  MaxEnt discriminative reranking." Proceedings of the 43rd Annual Meeting
-  on Association for Computational Linguistics. Association for
-  Computational Linguistics, 2005.
-  http://aclweb.org/anthology/P/P05/P05-1022.pdf
+* Eugene Charniak and Mark Johnson. "`Coarse-to-fine n-best parsing and
+  MaxEnt discriminative reranking
+  <http://aclweb.org/anthology/P/P05/P05-1022.pdf>`_."  Proceedings of
+  the 43rd Annual Meeting on Association for Computational Linguistics.
+  Association for Computational Linguistics, 2005.
 
-* Eugene Charniak. "A maximum-entropy-inspired parser." Proceedings of
+* Eugene Charniak. "`A maximum-entropy-inspired parser
+  <http://aclweb.org/anthology//A/A00/A00-2018.pdf>`_." Proceedings of
   the 1st North American chapter of the Association for Computational
   Linguistics conference. Association for Computational Linguistics, 2000.
-  http://aclweb.org/anthology//A/A00/A00-2018.pdf
 
 Overview
 ~~~~~~~~
@@ -32,17 +32,17 @@ BLLIP Parser is a statistical natural language parser including a
 generative constituent parser (``first-stage``) and discriminative
 maximum entropy reranker (``second-stage``). The latest version can be
 found on `GitHub <https://github.com/BLLIP/bllip-parser>`_. This
-document describes basic usage of the command-line interface and
+document describes basic usage of the command line interface and
 describes how to build and run the reranking parser. There are now
 `Python <http://pypi.python.org/pypi/bllipparser/>`_ and Java interfaces
-as well. The Python interface described in ``README-python.rst``.
+as well. The Python interface is described in ``README-python.rst``.
 
 Compiling the parser
 ~~~~~~~~~~~~~~~~~~~~
 1. *(optional)* For optimal speed, you may want to define ``$GCCFLAGS``
-   specifically for your machine. This step can be safely skipped as the
-   defaults should be okay. With ``csh`` or ``tcsh``, try something
-   like::
+   specifically for your machine. However, this step can be safely
+   skipped as the defaults are usually fine. With ``csh`` or ``tcsh``,
+   try something like::
 
      shell> setenv GCCFLAGS "-march=pentium4 -mfpmath=sse -msse2 -mmmx"
 
@@ -67,7 +67,7 @@ Compiling the parser
 
 Running the parser
 ~~~~~~~~~~~~~~~~~~
-After it has built, the parser can be run with::
+After it has been built, the parser can be run with::
 
     shell> parse.sh <sourcefile.txt>
 
@@ -102,10 +102,10 @@ parser on section 24::
 The ``Makefile`` will attempt to automatically download and build
 Sparseval for you if you run ``make sparseval``.
 
-For more information on
-`Sparseval <http://old-site.clsp.jhu.edu/ws2005/groups/eventdetect/files/SParseval.tgz>`_
-see this
-`paper <http://www.lrec-conf.org/proceedings/lrec2006/pdf/116_pdf.pdf>`_::
+For more information on `Sparseval
+<http://www.clsp.jhu.edu/vfsrv/ws2005/groups/eventdetect/files/SParseval.tgz>`_
+see this `paper
+<http://www.lrec-conf.org/proceedings/lrec2006/pdf/116_pdf.pdf>`_::
 
     @inproceedings{roark2006sparseval,
         title={SParseval: Evaluation metrics for parsing speech},
@@ -123,18 +123,20 @@ not have these issues.
 
 More questions?
 ~~~~~~~~~~~~~~~
-There is more information about different components of the parser
-spread across ``README`` files in this distribution (see below). If you
-encounter a bug, please use the `issue
-tracker <http://github.com/BLLIP/bllip-parser/issues>`_. BLLIP Parser
-is maintained by `David McClosky <http://nlp.stanford.edu/~mcclosky>`_.
+There is more information about different components of the
+parser spread across ``README`` files in this distribution (see
+below). If you encounter a bug, please use the `issue tracker
+<http://github.com/BLLIP/bllip-parser/issues>`_. BLLIP Parser is
+maintained by `David McClosky <http://nlp.stanford.edu/~mcclosky>`_.
+
+Twitter: `@bllipparser <https://twitter.com/bllipparser>`_
 
 Parser details
 ^^^^^^^^^^^^^^
 For details on the running and training the parser, see
-``first-stage/README.rst``. ``first-stage/TRAIN/README`` includes notes
-about how to retrain the parser and some information about the parser
-model file formats.
+``first-stage/README.rst``. ``first-stage/TRAIN/README.rst`` includes
+notes about how to retrain the parser and some information about the
+parser model file formats.
 
 Reranker details
 ^^^^^^^^^^^^^^^^
