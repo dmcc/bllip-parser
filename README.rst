@@ -62,8 +62,10 @@ Compiling the parser
 
          shell> setenv CXX g++
 
-      See http://github.com/BLLIP/bllip-parser/issues/13 for more
-      information. Recent versions of OS X may have additional issues.
+      Recent versions of OS X may have additional issues. See issues
+      `19 <http://github.com/BLLIP/bllip-parser/issues/19>`_ and `13
+      <https://github.com/BLLIP/bllip-parser/issues/13>`_ for more
+      information.
 
 Running the parser
 ~~~~~~~~~~~~~~~~~~
@@ -125,11 +127,12 @@ More questions?
 ~~~~~~~~~~~~~~~
 There is more information about different components of the
 parser spread across ``README`` files in this distribution (see
-below). If you encounter a bug, please use the `issue tracker
-<http://github.com/BLLIP/bllip-parser/issues>`_. BLLIP Parser is
+below). BLLIP Parser is
 maintained by `David McClosky <http://nlp.stanford.edu/~mcclosky>`_.
 
-Twitter: `@bllipparser <https://twitter.com/bllipparser>`_
+- Usage help: `StackOverflow <http://stackoverflow.com/tags/charniak-parser/info>`_
+- Bug reports and feature requests: `GitHub issue tracker <http://github.com/BLLIP/bllip-parser/issues>`_
+- Twitter: `@bllipparser <https://twitter.com/bllipparser>`_
 
 Parser details
 ^^^^^^^^^^^^^^
