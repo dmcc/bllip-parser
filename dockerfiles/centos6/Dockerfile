@@ -3,7 +3,7 @@ MAINTAINER Jim White <mailto:jimwhite@uw.edu>
 
 # Here I only install tools which we must have:
 RUN yum -y update && \
-	yum -y install wget which git rpm-build tar \
+	yum -y install wget which git rpm-build tar time \
 		gcc gcc-c++ make flex libtool aclocal autoheader automake autoconf \
 		boost-devel && \
 	yum clean all
