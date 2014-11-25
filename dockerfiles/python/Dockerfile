@@ -36,7 +36,7 @@ RUN git clone https://github.com/BLLIP/bllip-parser.git && \
 	./setup.py install
 	
 # Start me with:
-# 	docker run -it --rm -p 5901:5901 jimwhite/bllip-parser-python
+# 	docker run -it --rm -p 5901:5901 bllip/bllip-parser-python
 
 # Then at the prompt you can start VNC if you want graphics:
 #	./runvnc.sh
