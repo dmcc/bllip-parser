@@ -1,0 +1,4 @@
+#!/bin/bash
+unset SESSION_MANAGER
+
+startlxde & lxterminal &
