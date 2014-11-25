@@ -17,16 +17,18 @@ others to compare their results to yours.
 
 References:
 
-* Eugene Charniak and Mark Johnson. "Coarse-to-fine n-best parsing and
-  MaxEnt discriminative reranking." Proceedings of the 43rd Annual Meeting
-  on Association for Computational Linguistics. Association for
-  Computational Linguistics, 2005.
-  http://aclweb.org/anthology/P/P05/P05-1022.pdf
+* Eugene Charniak and Mark Johnson. "`Coarse-to-fine n-best parsing and
+  MaxEnt discriminative reranking
+  <http://aclweb.org/anthology/P/P05/P05-1022.pdf>`_."  Proceedings of
+  the 43rd Annual Meeting on Association for Computational Linguistics.
+  `Association for Computational Linguistics, 2005
+  <http://bllip.cs.brown.edu/publications/index_bib.shtml#charniak-johnson:2005:ACL>`_.
 
-* Eugene Charniak. "A maximum-entropy-inspired parser." Proceedings of
+* Eugene Charniak. "`A maximum-entropy-inspired parser
+  <http://aclweb.org/anthology//A/A00/A00-2018.pdf>`_." Proceedings of
   the 1st North American chapter of the Association for Computational
-  Linguistics conference. Association for Computational Linguistics, 2000.
-  http://aclweb.org/anthology/A/A00/A00-2018.pdf
+  Linguistics conference. `Association for Computational Linguistics, 2000
+  <http://bllip.cs.brown.edu/publications/index_bib.shtml#Charniak:2000:NAACL>`_.
 
 Fetching parsing models
 -----------------------
