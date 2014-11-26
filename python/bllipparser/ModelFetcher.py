@@ -82,7 +82,15 @@ def download_and_install_model(model_name, target_directory, verbose=False):
                 sys.stdout.write('Downloaded %.1f%% (%.1f MB)\r' % (percent_downloaded, size))
     else:
         status_func = None
-    downloaded_filename, headers = urllib.urlretrieve(model_url, reporthook=status_func)
+
+    # needed since 404s, etc. aren't handled otherwise
+    class ErrorAwareOpener(urllib.FancyURLopener):
+        def http_error_default(self, url, fp, errcode, errmsg, headers):
+            print "Error downloading model (%s %s)" % (errcode, errmsg)
+            raise SystemExit
+
+    downloaded_filename, headers = ErrorAwareOpener().retrieve(model_url,
+                                                               reporthook=status_func)
     if verbose:
         sys.stdout.write('\rDownload complete' + (' ' * 20) + '\n')
         print 'Downloaded to temporary file', downloaded_filename
