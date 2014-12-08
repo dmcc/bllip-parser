@@ -9,3 +9,4 @@ script:
   - make reranker
   - make -C second-stage/programs/features parallel-tools
   - make sparseval
+  - python setup.py build
