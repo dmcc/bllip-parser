@@ -58,6 +58,7 @@ class  InputTree
   short       length() const { return (finish() - start()); }
   short       finish() const { return finish_; }
   const ECString word() const { return word_; }  
+  ECString& word() { return word_; }
   const ECString term() const { return term_; }
   ECString& term() { return term_; }
   const ECString ntInfo() const { return ntInfo_; }

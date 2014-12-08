@@ -259,7 +259,7 @@ And finally navigate within the trees::
     (. .)
 """
 
-from RerankingParser import RerankingParser, Tree, tokenize
+from RerankingParser import RerankingParser, Tree, Sentence, tokenize
 
 __authors__ = 'Eugene Charniak, Mark Johnson, David McClosky, many others'
 __license__ = 'Apache 2.0'

@@ -127,6 +127,10 @@ typedef std::string ECString;
 %newobject parse;
 %newobject tokenize;
 %newobject inputTreeFromString;
+%newobject inputTreesFromString;
+%newobject inputTreesFromFile;
+%newobject sentRepsFromString;
+%newobject sentRepsFromFile;
 %newobject asNBestList;
 
 %inline{
@@ -251,6 +255,85 @@ typedef std::string ECString;
         return tree;
     }
 
+    // NOTE: this leaks! the list is handed off to the higher-level
+    // language but the InputTree objects in it are never freed.
+    // the current workaround is to make sure that we aquire() the
+    // pointers in the higher-level language.
+    list<InputTree* >* inputTreesFromString(const char* str) {
+        stringstream inputstream;
+        inputstream << str;
+        list<InputTree* >* trees = new list<InputTree* >();
+
+        while (inputstream) {
+            InputTree* tree = new InputTree();
+            inputstream >> *tree;
+            // returns an empty tree when the stream is finished
+            if (!tree->length()) {
+                delete tree;
+                break;
+            }
+            trees->push_back(tree);
+        }
+
+        return trees;
+    }
+
+    // NOTE: this leaks. see inputTreesFromString
+    list<InputTree* >* inputTreesFromFile(const char* filename) {
+        ifstream filestream(filename);
+        list<InputTree* >* trees = new list<InputTree* >();
+
+        while (filestream) {
+            InputTree* tree = new InputTree();
+            filestream >> *tree;
+            // returns an empty tree when the stream is finished
+            if (!tree->length()) {
+                delete tree;
+                break;
+            }
+            trees->push_back(tree);
+        }
+
+        return trees;
+    }
+
+    // NOTE: this leaks. see inputTreesFromString
+    list<SentRep* >* sentRepsFromString(const char* str) {
+        stringstream inputstream;
+        inputstream << str;
+        list<SentRep* >* sentReps = new list<SentRep* >();
+
+        while (inputstream) {
+            SentRep* sentRep = new SentRep();
+            inputstream >> *sentRep;
+            if (!sentRep->length()) {
+                delete sentRep;
+                break;
+            }
+            sentReps->push_back(sentRep);
+        }
+
+        return sentReps;
+    }
+
+    // NOTE: this leaks. see inputTreesFromString
+    list<SentRep* >* sentRepsFromFile(const char* filename) {
+        ifstream filestream(filename);
+        list<SentRep* >* sentReps = new list<SentRep* >();
+
+        while (filestream) {
+            SentRep* sentRep = new SentRep();
+            filestream >> *sentRep;
+            if (!sentRep->length()) {
+                delete sentRep;
+                break;
+            }
+            sentReps->push_back(sentRep);
+        }
+
+        return sentReps;
+    }
+
     /* Returns a string suitable for use with read_nbest_list() in
        the reranker. Ideally, we'd convert directly from ScoredTree to
        the reranker's equivalent structure. */
@@ -274,13 +357,13 @@ typedef std::string ECString;
         throw ParserError(filename, filelinenum, msg);
     }
 
-    /* Apply PTB escaping to a string (left parens become -LRB-, etc.) */
+    // Apply PTB escaping to a string ("(" becomes "-LRB-", etc.)
     string ptbEscape(string word) {
         escapeParens(word);
         return word;
     }
 
-    /* Reverse PTB escaping to a string (-LRB- restored as a left paren, etc.) */
+    // Reverse PTB escaping to a string ("-LRB-" restored as "(", etc.)
     string ptbUnescape(string word) {
         unescapeParens(word);
         return word;
@@ -289,10 +372,15 @@ typedef std::string ECString;
 
 namespace std {
    %template(StringList) list<string>;
+   %template(SentRepList) list<SentRep*>;
 
    %template(ScoredTreePair) pair<double,InputTree*>;
-   %template(ScoreVector) vector<ScoredTree>;
    %template(InputTrees) list<InputTree*>;
+
+   %template(VectorScoredTree) vector<ScoredTree>;
+   %template(StringVector) vector<string>;
+   %template(TermVector) vector<Term*>;
+   %template(TermVectorVector) vector<vector<Term*> >;
 }
 
 // bits of header files to wrap -- some of these may not be necessary
@@ -409,6 +497,16 @@ class InputTree {
                 $self->make(*leaves);
                 return leaves;
             }
+
+            void setTerm(ECString newTerm) {
+                $self->term() = newTerm;
+            }
+            void setNtInfo(ECString newInfo) {
+                $self->ntInfo() = newInfo;
+            }
+            void setWord(ECString newWord) {
+                $self->word() = newWord;
+            }
         }
 };
 
@@ -474,9 +572,3 @@ class ExtPos {
             }
         }
 };
-
-namespace std {
-   %template(VectorString) vector<string>;
-   %template(VectorTerm) vector<Term*>;
-   %template(VectorVectorTerm) vector<vector<Term*> >;
-}

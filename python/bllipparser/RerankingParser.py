@@ -18,8 +18,32 @@ from os.path import exists, join
 import CharniakParser as parser
 import JohnsonReranker as reranker
 
-class Tree:
-    """Represents a single parse tree in Penn Treebank format. This
+class DeprecatedGetter:
+    """Used when a getter method has been converted to a property. All
+    attributes will be dispatched to the property's value and a warning
+    will be raised if this is called. This doesn't work if the property
+    being deprecated has its own __call__ method, since that will be
+    unreachable as a DeprecatedGetter."""
+    def __init__(self, name, value):
+        """name is the attribute name of the property. value is its
+        value."""
+        self.__name = name
+        self.__value = value
+    def __getattr__(self, attr):
+        """All attributes except __call__ are dispatched to the property's
+        value."""
+        return getattr(self.__value, attr)
+    def __call__(self, *args, **kwargs):
+        """Shouldn't be called except by deprecated code. Issues a warning
+        about the deprecation then returns the value so that deprecated
+        code will continue to work."""
+        from warnings import warn
+        warn("%r is no longer a method. It's now a property." % self.__name,
+             DeprecationWarning, stacklevel=2)
+        return self.__value
+
+class Tree(object):
+    """Represents a single parse (sub)tree in Penn Treebank format. This
     wraps the InputTree structure in the Charniak parser."""
     def __init__(self, input_tree_or_string):
         """These can be constructed from the Penn Treebank string
@@ -30,18 +54,47 @@ class Tree:
 
         Or from an existing InputTree (internal SWIG object). Users will
         generally want the former."""
-        if not isinstance(input_tree_or_string, parser.InputTree):
+        if isinstance(input_tree_or_string, parser.InputTree):
+            # ensure that Python owns the pointer
+            input_tree_or_string.this.acquire()
+        else:
             if not isinstance(input_tree_or_string, basestring):
                 raise TypeError("input_tree_or_string (%r) must be an InputTree or string." % input_tree_or_string)
             input_tree_or_string = \
                 parser.inputTreeFromString(input_tree_or_string)
         self._tree = input_tree_or_string
+    def __getitem__(self, index):
+        """Indexes into subtrees for this node. Raises an IndexError if
+        there's no such subtree. Slices are supported."""
+        # list is necessary since otherwise it doesn't support all the
+        # slice stuff
+        subtrees = list(self._tree.subTrees())
+        try:
+            subtree = subtrees[index]
+        except IndexError:
+            if self.is_preterminal():
+                message = 'node is a preterminal'
+            else:
+                message = 'only %s children for this node' % len(self)
+            raise IndexError("list index %r out of range (%s)" % \
+                             (index, message))
+        if isinstance(index, slice):
+            return [self.__class__(s) for s in subtree]
+        else: # single InputTree object
+            return self.__class__(subtree)
     def __iter__(self):
         """Provides an iterator over immediate subtrees in this Tree.
         Each item yielded will be a Tree object rooted at one of the
         children of this tree."""
         for tree in self._tree.subTrees():
             yield self.__class__(tree)
+    def all_subtrees(self):
+        """Iterates over all nodes in this tree in preorder (this node,
+        followed by its first child, etc.)"""
+        yield self
+        for subtree in self:
+            for subsubtree in subtree.all_subtrees():
+                yield subsubtree
     def subtrees(self):
         """Returns a list of direct subtrees."""
         return list(iter(self))
@@ -51,7 +104,7 @@ class Tree:
     def __repr__(self):
         """Provides a representation of this tree which can be used to
         reconstruct it."""
-        return '%s(%r)' % (self.__class__, str(self))
+        return '%s(%r)' % (self.__class__.__name__, str(self))
     def __str__(self):
         """Represent the tree in Penn Treebank format on one line."""
         return str(self._tree)
@@ -70,10 +123,81 @@ class Tree:
     def span(self):
         """Returns indices of the span for this tree: (start, end)"""
         return (self._tree.start(), self._tree.finish())
-    def label(self):
-        """Returns the label at the top of the tree. If the tree is a
-        preterminal, returns the part of speech."""
-        return self._tree.term()
+    def is_preterminal(self):
+        """Returns True iff this node is a preterminal (that is, its
+        label is a part of speech tag, it has a non-empty token, and it
+        has no child nodes)."""
+        return len(self) == 0
+
+    #
+    # properties
+    #
+
+    def token():
+        doc = """The word for the top node in this subtree. If this
+        node is not a preterminal, this will be return None. Setting
+        the token on a non-preterminal to anything other than None will
+        cause a ValueError. The same goes for setting a preterminal's
+        token to None."""
+        def fget(self):
+            return self._tree.word() or None
+        def fset(self, new_word):
+            new_word = new_word or None
+            if self.is_preterminal():
+                if new_word is None:
+                    raise ValueError("Can't set a null token on a preterminal Tree.")
+            else:
+                # not a preterminal
+                if new_word is not None:
+                    raise ValueError("Can't set the token on a non-preterminal Tree.")
+            self._tree.setWord(new_word)
+        return locals()
+    token = property(**token())
+
+    def label():
+        doc = """The label at the top of this subtree as a string. If
+        this tree is a preterminal, this will be its part of speech,
+        otherwise it will be the phrasal category. This property was
+        previously a method. It now returns a DeprecatedGetter as an
+        intermediate solution to help you find deprecated calls."""
+        def fget(self):
+            return DeprecatedGetter('label', self._tree.term())
+        def fset(self, new_label):
+            self._tree.setTerm(new_label)
+        return locals()
+    label = property(**label())
+
+    def labelSuffix():
+        doc = """Suffix for the label at the top node of this subtree
+        (including the hyphen). These include function tags (e.g.,
+        "-SBJ" for subject") and coindexing ("-2"). In general, this
+        will be the empty string for any trees produced by BLLIP parser
+        but this property may be set if you read in gold trees."""
+        def fget(self):
+            return self._tree.ntInfo()
+        def fset(self, new_tag):
+            self._tree.setNtInfo(new_tag)
+        return locals()
+    labelSuffix = property(**labelSuffix())
+
+    @classmethod
+    def trees_from_string(this_class, text):
+        """Given text containing multiple Penn Treebank trees, returns
+        a list of Tree objects (one for each tree in the text)."""
+        # Note that the native method below leaks. We work around this
+        # by acquiring its pointer in __init__
+        trees = parser.inputTreesFromString(text)
+        return map(this_class, trees)
+
+    @classmethod
+    def trees_from_file(this_class, filename):
+        """Given the path to a file containing multiple Penn Treebank
+        trees, returns a list of Tree objects (one for each tree in the
+        file)."""
+        # Note that the native method below leaks. We work around this
+        # by acquiring its pointer in __init__
+        trees = parser.inputTreesFromFile(filename)
+        return map(this_class, trees)
 
 class ScoredParse:
     """Represents a single parse and its associated parser
@@ -104,10 +228,15 @@ class ScoredParse:
              self.parser_score, self.reranker_score)
 
 class Sentence:
-    """Represents a single sentence as input to the parser. You should
-    not typically need to construct this object directly."""
+    """Represents a single sentence as input to the parser. Typically,
+    you won't need to construct this object directly. This wraps the
+    SentRep structure in the Charniak parser."""
     def __init__(self, text_or_tokens):
-        if isinstance(text_or_tokens, Sentence):
+        if isinstance(text_or_tokens, parser.SentRep):
+            # ensure that Python owns the pointer
+            text_or_tokens.this.acquire()
+            self.sentrep = text_or_tokens
+        elif isinstance(text_or_tokens, Sentence):
             self.sentrep = text_or_tokens.sentrep
         elif isinstance(text_or_tokens, basestring):
             self.sentrep = parser.tokenize('<s> ' + text_or_tokens + ' </s>')
@@ -117,6 +246,9 @@ class Sentence:
             text_or_tokens = [parser.ptbEscape(str(token))
                 for token in text_or_tokens]
             self.sentrep = parser.SentRep(text_or_tokens)
+    def __repr__(self):
+        """Represent the Sentence as a string."""
+        return "%s(%s)" % (self.__class__, self.tokens())
     def __len__(self):
         """Returns the number of tokens in this sentence."""
         return len(self.sentrep)
@@ -126,6 +258,30 @@ class Sentence:
         for index in range(len(self.sentrep)):
             tokens.append(self.sentrep.getWord(index).lexeme())
         return tokens
+
+    @classmethod
+    def sentences_from_string(this_class, text):
+        """Given text containing SGML(-ish) lines (typical input to
+        the command line parser), returns a list of Sentence objects
+        (one for each tree in the text). Example usage:
+
+        >>> Sentence.sentences_from_string('<s> Test </s>')
+        [bllipparser.RerankingParser.Sentence(['Test'])]
+        """
+        # Note that the native method below leaks. We work around this
+        # by acquiring its pointer in __init__
+        sentReps = parser.sentRepsFromString(text)
+        return map(this_class, sentReps)
+
+    @classmethod
+    def sentences_from_file(this_class, filename):
+        """Given the path to a filename containing multiple SGML(-ish)
+        lines (typical input to the command line parser), returns a list
+        of Sentence objects (one for each tree in the text)."""
+        # Note that the native method below leaks. We work around this
+        # by acquiring its pointer in __init__
+        sentReps = parser.sentRepsFromFile(filename)
+        return map(this_class, sentReps)
 
 class NBestList:
     """Represents an n-best list of parses of the same sentence."""
