@@ -76,7 +76,7 @@ class Tree(object):
                 message = 'node is a preterminal'
             else:
                 message = 'only %s children for this node' % len(self)
-            raise IndexError("list index %r out of range (%s)" % \
+            raise IndexError("list index %r out of range (%s)" %
                              (index, message))
         if isinstance(index, slice):
             return [self.__class__(s) for s in subtree]
@@ -202,13 +202,14 @@ class Tree(object):
 class ScoredParse:
     """Represents a single parse and its associated parser
     probability and reranker score.
-    
+
     Properties:
     - ptb_parse: a Tree object representing the parse (str() it to get the
         actual PTB formatted parse)
     - parser_score: The log probability of the parse according to the parser
     - parser_rank: The rank of the parse according to the parser
-    - reranker_score: The log probability of the parse according to the reranker
+    - reranker_score: The log probability of the parse according to
+      the reranker
     - reranker_rank: The rank of the parse according to the reranker
 
     The latter two will be None if the reranker isn't being used."""
@@ -224,7 +225,7 @@ class ScoredParse:
             (self.parser_score, self.reranker_score, self.ptb_parse)
     def __repr__(self):
         return "%s(%r, parser_score=%r, reranker_score=%r)" % \
-            (self.__class__.__name__, str(self.ptb_parse), 
+            (self.__class__.__name__, str(self.ptb_parse),
              self.parser_score, self.reranker_score)
 
 class Sentence:
@@ -244,7 +245,7 @@ class Sentence:
             # text_or_tokens is a sequence -- need to make sure that each
             # element is a string to avoid crashing
             text_or_tokens = [parser.ptbEscape(str(token))
-                for token in text_or_tokens]
+                              for token in text_or_tokens]
             self.sentrep = parser.SentRep(text_or_tokens)
     def __repr__(self):
         """Represent the Sentence as a string."""
@@ -317,17 +318,17 @@ class NBestList:
     def tokens(self):
         """Get the tokens of this sentence as a sequence of strings."""
         return self._sentrep.tokens()
-    def rerank(self, reranker, lowercase=True):
-        """Rerank this n-best list according to a reranker model. reranker
-        can be a RerankingParser or RerankerModel."""
-        assert reranker
+    def rerank(self, reranker_instance, lowercase=True):
+        """Rerank this n-best list according to a reranker model.
+        reranker_instance can be a RerankingParser or RerankerModel."""
+        assert reranker_instance
         if not self.parses:
             self._reranked = True
             return
-        if isinstance(reranker, RerankingParser):
-            reranker = reranker.reranker_model
+        if isinstance(reranker_instance, RerankingParser):
+            reranker_instance = reranker_instance.reranker_model
         reranker_input = self.as_reranker_input()
-        scores = reranker.scoreNBestList(reranker_input)
+        scores = reranker_instance.scoreNBestList(reranker_input)
         # this could be more efficient if needed
         for (score, nbest_list_item) in zip(scores, self.parses):
             nbest_list_item.reranker_score = score
@@ -345,8 +346,9 @@ class NBestList:
             combined = StringIO()
             combined.write('%d %s\n' % (len(self.parses), sentence_id))
             for parse in self.parses:
-                combined.write('%s %s\n%s\n' % \
-                    (parse.reranker_score, parse.parser_score, parse.ptb_parse))
+                combined.write('%s %s\n%s\n' % (parse.reranker_score,
+                                                parse.parser_score,
+                                                parse.ptb_parse))
             combined.seek(0)
             return combined.read()
         else:
@@ -389,8 +391,8 @@ class RerankingParser:
         if self._parser_model_loaded:
             raise RuntimeError('Parser is already loaded and can only be loaded once.')
         if not exists(model_dir):
-            raise ValueError('Parser model directory %r does not exist.' % \
-                model_dir)
+            raise ValueError('Parser model directory %r does not exist.' %
+                             model_dir)
         self._parser_model_loaded = True
         self.parser_model_dir = model_dir
         parser.loadModel(model_dir)
@@ -401,11 +403,11 @@ class RerankingParser:
         """Load the reranker model from its feature and weights files. A
         feature class may optionally be specified."""
         if not exists(features_filename):
-            raise ValueError('Reranker features filename %r does not exist.' % \
-                features_filename)
+            raise ValueError('Reranker features filename %r does not exist.' %
+                             features_filename)
         if not exists(weights_filename):
-            raise ValueError('Reranker weights filename %r does not exist.' % \
-                weights_filename)
+            raise ValueError('Reranker weights filename %r does not exist.' %
+                             weights_filename)
         self.reranker_model = reranker.RerankerModel(feature_class,
                                                      features_filename,
                                                      weights_filename)
@@ -510,7 +512,7 @@ class RerankingParser:
         value of rerank if rerank='auto')."""
         if not self._parser_model_loaded:
             raise ValueError("Parser model has not been loaded.")
-        if rerank == True and not self.reranker_model:
+        if rerank is True and not self.reranker_model:
             raise ValueError("Reranker model has not been loaded.")
         if rerank == 'auto':
             return bool(self.reranker_model)
@@ -518,7 +520,8 @@ class RerankingParser:
             return rerank
 
     def set_parser_options(self, language='En', case_insensitive=False,
-        nbest=50, small_corpus=True, overparsing=21, debug=0, smooth_pos=0):
+                           nbest=50, small_corpus=True, overparsing=21,
+                           debug=0, smooth_pos=0):
         """Set options for the parser. Note that this is called
         automatically by load_parser_model() so you should only need to
         call this to update the parsing options. The method returns a
@@ -542,7 +545,7 @@ class RerankingParser:
             raise RuntimeError('Parser must already be loaded (call load_parser_model() first)')
 
         parser.setOptions(language, case_insensitive, nbest, small_corpus,
-            overparsing, debug, smooth_pos)
+                          overparsing, debug, smooth_pos)
         self.parser_options = {
             'language': language,
             'case_insensitive': case_insensitive,
@@ -556,7 +559,7 @@ class RerankingParser:
 
     @classmethod
     def from_unified_model_dir(this_class, model_dir, parsing_options=None,
-        reranker_options=None, parser_only=False):
+                               reranker_options=None, parser_only=False):
         """Create a RerankingParser from a unified parsing model on disk.
         A unified parsing model should have the following filesystem
         structure:
@@ -583,9 +586,10 @@ class RerankingParser:
         if parser_model_dir:
             rrp.load_parser_model(parser_model_dir, **parsing_options)
         if reranker_features_filename and reranker_weights_filename and \
-            not parser_only:
+           not parser_only:
             rrp.load_reranker_model(reranker_features_filename,
-                reranker_weights_filename, **reranker_options)
+                                    reranker_weights_filename,
+                                    **reranker_options)
 
         rrp.unified_model_dir = model_dir
         return rrp
