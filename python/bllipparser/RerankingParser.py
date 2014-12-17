@@ -470,8 +470,7 @@ class RerankingParser:
         """Helper method for just parsing a single sentence and getting
         its Penn Treebank tree.  If you want anything more complicated
         (e.g., the Tree objects, n-best lists, parser or reranker scores,
-        etc.), you'll want the more complicated parse() or parse_tagged()
-        interfaces.
+        etc.), you'll want the parse() or parse_tagged() interfaces.
 
             >>> rrp.simple_parse('Parse this.')
             '(S1 (S (VP (VB Parse) (NP (DT this))) (. .)))'
