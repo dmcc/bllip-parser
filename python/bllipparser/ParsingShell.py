@@ -144,6 +144,16 @@ class ParsingShell(Cmd):
         self.got_nbest_list(nbest_list)
         self.print_parses()
 
+    def do_sdparse(self, text):
+        """Use reranking parser to parse text, then show the
+        output as Stanford Dependencies in CoNLL format.  Requires
+        PyStanfordDependencies."""
+        nbest_list = self.parse(text)
+
+        tokens = nbest_list[0].ptb_parse.sd_tokens()
+        for token in tokens:
+            print token.as_conll()
+
     def default(self, text):
         if text == 'EOF':
             raise SystemExit

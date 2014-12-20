@@ -65,6 +65,7 @@ class Tree(object):
             input_tree_or_string = \
                 parser.inputTreeFromString(input_tree_or_string)
         self._tree = input_tree_or_string
+        self._sd_tokens = None
     def __getitem__(self, index):
         """Indexes into subtrees for this node. Raises an IndexError if
         there's no such subtree. Slices are supported."""
@@ -192,6 +193,26 @@ class Tree(object):
         # by acquiring its pointer in __init__
         trees = parser.inputTreesFromString(text)
         return map(this_class, trees)
+
+    def sd_tokens(self, sd_converter=None, conversion_kwargs=None):
+        """Convert this Tree to Stanford Dependencies
+        (requires PyStanfordDependencies). Returns a list of
+        StanfordDependencies.Token objects. This method caches
+        the converted tokens. You may optionally specify a
+        StanfordDependencies instance in sd_converter and keyword
+        arguments to StanfordDependencies.convert_tree as a dictionary
+        in conversion_kwargs."""
+        if not self._sd_tokens:
+            try:
+                import StanfordDependencies
+            except ImportError:
+                raise ImportError("For sd_tokens(), you need to Install"
+                                  "PyStanfordDependencies from PyPI")
+            sd_converter = sd_converter or StanfordDependencies.get_instance()
+            conversion_kwargs = conversion_kwargs or {}
+            self._sd_tokens = sd_converter.convert_tree(str(self),
+                                                        **conversion_kwargs)
+        return self._sd_tokens
 
     @classmethod
     def trees_from_file(this_class, filename):
