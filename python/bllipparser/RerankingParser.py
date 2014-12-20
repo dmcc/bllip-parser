@@ -171,7 +171,7 @@ class Tree(object):
         return locals()
     label = property(**label())
 
-    def labelSuffix():
+    def label_suffix():
         doc = """Suffix for the label at the top node of this subtree
         (including the hyphen). These include function tags (e.g.,
         "-SBJ" for subject") and coindexing ("-2"). In general, this
@@ -182,7 +182,7 @@ class Tree(object):
         def fset(self, new_tag):
             self._tree.setNtInfo(new_tag)
         return locals()
-    labelSuffix = property(**labelSuffix())
+    label_suffix = property(**label_suffix())
 
     @classmethod
     def trees_from_string(this_class, text):
