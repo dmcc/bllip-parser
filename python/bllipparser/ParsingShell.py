@@ -50,8 +50,10 @@ class ParsingShell(Cmd):
             return
 
         nbest_list = self.parse(text)
-        parser_top_parse = str(nbest_list.get_parser_best().ptb_parse).replace('S1', 'parser')
-        reranker_top_parse = str(nbest_list[0].ptb_parse).replace('S1', 'reranker')
+        parser_top_parse = str(nbest_list.get_parser_best().ptb_parse)
+        parser_top_parse = parser_top_parse.replace('S1', 'parser')
+        reranker_top_parse = str(nbest_list[0].ptb_parse)
+        reranker_top_parse = reranker_top_parse.replace('S1', 'reranker')
 
         nltk_trees = [read_nltk_tree(parser_top_parse)]
         if nbest_list[0].parser_rank != 0:
@@ -68,7 +70,7 @@ class ParsingShell(Cmd):
     def do_parse(self, text):
         """Use reranking parser to parse text.  Show top parses from
         parser and reranker."""
-        nbest_list = self.parse(text)
+        self.parse(text)
         self.print_parses()
 
     def do_nbest(self, text):

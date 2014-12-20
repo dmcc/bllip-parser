@@ -75,7 +75,8 @@ class RerankerSentence:
     def cvlm_format(self):
         """Render this sentence in cvlm's sparse feature vector format."""
         return 'G=%s N=%s %s' % (self.gold_brackets, len(self.parses),
-            ', '.join(parse.cvlm_format() for parse in self.parses)) + ','
+                                 ', '.join(parse.cvlm_format()
+                                           for parse in self.parses)) + ','
     def __iter__(self):
         return iter(self.parses)
 
@@ -93,7 +94,7 @@ class RerankerSentence:
             matched_brackets = features.pop('W')
 
             parses.append(RerankerParse(proposed_brackets, matched_brackets,
-                features))
+                                        features))
         assert gold_brackets is not None
         return this_class(gold_brackets, parses, index)
 

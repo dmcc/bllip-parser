@@ -13,7 +13,9 @@
 
 """Simple BLLIP Parser unified parsing model repository and installer."""
 from __future__ import division
-import sys, urlparse, urllib
+import sys
+import urlparse
+import urllib
 from os import makedirs, system, chdir, getcwd
 from os.path import basename, exists, join
 
@@ -28,17 +30,18 @@ class ModelInfo:
 
 # should this grow large enough, we'll find a better place to store it
 models = {
-    'OntoNotes-WSJ' : ModelInfo('OntoNotes portion of WSJ', 'http://nlp.stanford.edu/~mcclosky/models/BLLIP-OntoNotes-WSJ.tar.bz2', 61),
-    'SANCL2012-Uniform' : ModelInfo('Self-trained model on OntoNotes-WSJ and the Google Web Treebank',
-                                    'http://nlp.stanford.edu/~mcclosky/models/BLLIP-SANCL2012-Uniform.tar.bz2', 890),
-    'WSJ+Gigaword' : ModelInfo('Self-trained model on PTB2-WSJ and approx. two million sentences from Gigaword',
-                               'http://nlp.stanford.edu/~mcclosky/models/BLLIP-WSJ-Gigaword2000.tar.bz2', 473),
-    'WSJ+PubMed' : ModelInfo('Self-trained model on PTB2-WSJ and approx. 200k sentences from PubMed',
-                             'http://nlp.stanford.edu/~mcclosky/models/BLLIP-WSJ-PubMed.tar.bz2', 152),
-    'WSJ' : ModelInfo('Wall Street Journal corpus from Penn Treebank, version 2',
-                      'http://nlp.stanford.edu/~mcclosky/models/BLLIP-WSJ-no-AUX.tar.bz2', 52),
-    'WSJ-with-AUX' : ModelInfo('Wall Street Journal corpus from Penn Treebank, version 2 (AUXified version, deprecated)',
-                               'http://nlp.stanford.edu/~mcclosky/models/BLLIP-WSJ-with-AUX.tar.bz2', 55),
+    'OntoNotes-WSJ': ModelInfo('OntoNotes portion of WSJ',
+                               'http://nlp.stanford.edu/~mcclosky/models/BLLIP-OntoNotes-WSJ.tar.bz2', 61),
+    'SANCL2012-Uniform': ModelInfo('Self-trained model on OntoNotes-WSJ and the Google Web Treebank',
+                                   'http://nlp.stanford.edu/~mcclosky/models/BLLIP-SANCL2012-Uniform.tar.bz2', 890),
+    'WSJ+Gigaword': ModelInfo('Self-trained model on PTB2-WSJ and approx. two million sentences from Gigaword',
+                              'http://nlp.stanford.edu/~mcclosky/models/BLLIP-WSJ-Gigaword2000.tar.bz2', 473),
+    'WSJ+PubMed': ModelInfo('Self-trained model on PTB2-WSJ and approx. 200k sentences from PubMed',
+                            'http://nlp.stanford.edu/~mcclosky/models/BLLIP-WSJ-PubMed.tar.bz2', 152),
+    'WSJ': ModelInfo('Wall Street Journal corpus from Penn Treebank, version 2',
+                     'http://nlp.stanford.edu/~mcclosky/models/BLLIP-WSJ-no-AUX.tar.bz2', 52),
+    'WSJ-with-AUX': ModelInfo('Wall Street Journal corpus from Penn Treebank, version 2 (AUXified version, deprecated)',
+                              'http://nlp.stanford.edu/~mcclosky/models/BLLIP-WSJ-with-AUX.tar.bz2', 55),
 }
 
 class UnknownParserModel(ValueError):
@@ -79,7 +82,8 @@ def download_and_install_model(model_name, target_directory, verbose=False):
             else:
                 percent_downloaded = 100 * amount_downloaded / total_size
                 size = amount_downloaded / (1024 ** 2)
-                sys.stdout.write('Downloaded %.1f%% (%.1f MB)\r' % (percent_downloaded, size))
+                sys.stdout.write('Downloaded %.1f%% (%.1f MB)\r' %
+                                 (percent_downloaded, size))
     else:
         status_func = None
 
@@ -89,8 +93,9 @@ def download_and_install_model(model_name, target_directory, verbose=False):
             print "Error downloading model (%s %s)" % (errcode, errmsg)
             raise SystemExit
 
-    downloaded_filename, headers = ErrorAwareOpener().retrieve(model_url,
-                                                               reporthook=status_func)
+    opener = ErrorAwareOpener()
+    downloaded_filename, headers = opener.retrieve(model_url,
+                                                   reporthook=status_func)
     if verbose:
         sys.stdout.write('\rDownload complete' + (' ' * 20) + '\n')
         print 'Downloaded to temporary file', downloaded_filename
@@ -124,11 +129,13 @@ def main():
     parser = OptionParser(usage="""%prog [options]
 
 Tool to help you download and install BLLIP Parser models.""")
-    parser.add_option("-l", "--list", action='store_true', help="List known parsing models.")
+    parser.add_option("-l", "--list", action='store_true',
+                      help="List known parsing models.")
     parser.add_option("-i", "--install", metavar="NAME", action='append',
-        help="Install a unified parser model.")
-    parser.add_option("-d","--directory", default='./models', metavar="PATH",
-        help="Directory to install parsing models in (will be created if it doesn't exist). Default: %default")
+                      help="Install a unified parser model.")
+    parser.add_option("-d", "--directory", default='./models', metavar="PATH",
+                      help="Directory to install parsing models in (will be "
+                           "created if it doesn't exist). Default: %default")
 
     (options, args) = parser.parse_args()
 
@@ -144,7 +151,8 @@ Tool to help you download and install BLLIP Parser models.""")
             if i:
                 print
             try:
-                ret = download_and_install_model(model, options.directory, verbose=True)
+                download_and_install_model(model, options.directory,
+                                           verbose=True)
             except UnknownParserModel, u:
                 print u
                 list_models()

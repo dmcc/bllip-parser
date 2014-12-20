@@ -59,7 +59,9 @@ class Tree(object):
             input_tree_or_string.this.acquire()
         else:
             if not isinstance(input_tree_or_string, basestring):
-                raise TypeError("input_tree_or_string (%r) must be an InputTree or string." % input_tree_or_string)
+                raise TypeError("input_tree_or_string (%r) must be "
+                                "an InputTree or string." %
+                                input_tree_or_string)
             input_tree_or_string = \
                 parser.inputTreeFromString(input_tree_or_string)
         self._tree = input_tree_or_string
@@ -145,11 +147,13 @@ class Tree(object):
             new_word = new_word or None
             if self.is_preterminal():
                 if new_word is None:
-                    raise ValueError("Can't set a null token on a preterminal Tree.")
+                    raise ValueError("Can't set a null token on a "
+                                     "preterminal Tree.")
             else:
                 # not a preterminal
                 if new_word is not None:
-                    raise ValueError("Can't set the token on a non-preterminal Tree.")
+                    raise ValueError("Can't set the token on a "
+                                     "non-preterminal Tree.")
             self._tree.setWord(new_word)
         return locals()
     token = property(**token())
@@ -389,7 +393,8 @@ class RerankingParser:
         does not allow loading multiple models within the same process
         (calling this function twice will raise a RuntimeError)."""
         if self._parser_model_loaded:
-            raise RuntimeError('Parser is already loaded and can only be loaded once.')
+            raise RuntimeError('Parser is already loaded and can only '
+                               'be loaded once.')
         if not exists(model_dir):
             raise ValueError('Parser model directory %r does not exist.' %
                              model_dir)
@@ -424,7 +429,9 @@ class RerankingParser:
 
         sentence = Sentence(sentence)
         if len(sentence) > parser.max_sentence_length:
-            raise ValueError("Sentence is too long (%s tokens, maximum supported: %s)" % (len(sentence), parser.max_sentence_length))
+            raise ValueError("Sentence is too long (%s tokens, maximum "
+                             "supported: %s)" %
+                             (len(sentence), parser.max_sentence_length))
 
         try:
             parses = parser.parse(sentence.sentrep)
@@ -503,7 +510,8 @@ class RerankingParser:
             if not good_tag:
                 bad_tags.add(tag)
 
-        raise ValueError("Invalid POS tags (not present in the parser's terms.txt file): %s" % ', '.join(sorted(bad_tags)))
+        raise ValueError("Invalid POS tags (not present in the parser's "
+                         "terms.txt file): %s" % ', '.join(sorted(bad_tags)))
 
     def _check_loaded_models(self, rerank):
         """Given a reranking mode (True, False, 'auto') determines
@@ -542,7 +550,8 @@ class RerankingParser:
         parser to assign that value as the probability of seeing a known
         word in a new part-of-speech (one never seen in training)."""
         if not self._parser_model_loaded:
-            raise RuntimeError('Parser must already be loaded (call load_parser_model() first)')
+            raise RuntimeError('Parser must already be loaded (call '
+                               'load_parser_model() first)')
 
         parser.setOptions(language, case_insensitive, nbest, small_corpus,
                           overparsing, debug, smooth_pos)
@@ -580,7 +589,8 @@ class RerankingParser:
         (parser_model_dir, reranker_features_filename,
          reranker_weights_filename) = get_unified_model_parameters(model_dir)
         if parser_only and reranker_options:
-            raise ValueError("Can't set reranker_options if parser_only is on.")
+            raise ValueError("Can't set reranker_options if "
+                             "parser_only is on.")
 
         rrp = this_class()
         if parser_model_dir:
