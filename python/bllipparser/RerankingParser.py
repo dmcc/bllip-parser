@@ -483,7 +483,7 @@ class RerankingParser:
             if isinstance(tags, basestring):
                 tags = [tags]
             tags = map(str, tags)
-            valid_tags = ext_pos.addTagConstraints(parser.VectorString(tags))
+            valid_tags = ext_pos.addTagConstraints(parser.StringVector(tags))
             if not valid_tags:
                 # at least one of the tags is bad -- find out which ones
                 # and throw a ValueError
@@ -527,7 +527,7 @@ class RerankingParser:
         ext_pos = parser.ExtPos()
         bad_tags = set()
         for tag in set(tags):
-            good_tag = ext_pos.addTagConstraints(parser.VectorString([tag]))
+            good_tag = ext_pos.addTagConstraints(parser.StringVector([tag]))
             if not good_tag:
                 bad_tags.add(tag)
 
