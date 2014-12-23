@@ -3,10 +3,11 @@ compiler: gcc
 before_install:
   - sudo add-apt-repository --yes ppa:ktm5j/uva-cs-ppa
   - sudo apt-get update
-install: sudo apt-get install libboost-dev liblbfgs-dev swig flex
+install: sudo apt-get install libboost-dev liblbfgs-dev swig flex python-nose
 script:
   - make
   - make reranker
   - make -C second-stage/programs/features parallel-tools
   - make sparseval
-  - python setup.py build
+  - sudo python setup.py install
+  - nosetests --with-doctest -dv python/tests/
