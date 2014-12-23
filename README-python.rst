@@ -46,7 +46,7 @@ as a Python library::
 
     >>> from bllipparser.ModelFetcher import download_and_install_model
     >>> download_and_install_model('WSJ', '/tmp/models')
-    /tmp/models/WSJ
+    '/tmp/models/WSJ'
 
 In this case, it would download WSJ and install it to
 ``/tmp/models/WSJ``. Note that it returns the path to the downloaded
@@ -220,30 +220,57 @@ Or get information about the labeled spans in the tree::
 
     >>> print tree.span()
     (0, 8)
-    >>> print tree.label()
+    >>> print tree.label
     S1
 
 And finally navigate within the trees::
 
     >>> tree.subtrees()
-    [bllipparser.RerankingParser.Tree('(S (NP (DT This)) (VP (VBZ is) (NP (DT a) (ADJP (RB fairly) (JJ simple)) (NN parse) (NN tree))) (. .))')]
-    >>> tree.subtrees()[0].label()
+    [Tree('(S (NP (DT This)) (VP (VBZ is) (NP (DT a) (ADJP (RB fairly) (JJ simple)) (NN parse) (NN tree))) (. .))')]
+    >>> tree[0] # first subtree
+    Tree('(S (NP (DT This)) (VP (VBZ is) (NP (DT a) (ADJP (RB fairly) (JJ simple)) (NN parse) (NN tree))) (. .))')
+    >>> tree[0].label
     'S'
-    >>> tree.subtrees()[0].subtrees()[0]
-    bllipparser.RerankingParser.Tree('(NP (DT This))')
-    >>> tree.subtrees()[0].subtrees()[0].label()
+    >>> tree[0][0] # first subtree of first subtree
+    Tree('(NP (DT This))')
+    >>> tree[0][0].label
     'NP'
-    >>> tree.subtrees()[0].subtrees()[0].span()
+    >>> tree[0][0].span()
     (0, 1)
-    >>> tree.subtrees()[0].subtrees()[0].tags()
+    >>> tree[0][0].tags()
     ('DT',)
-    >>> tree.subtrees()[0].subtrees()[0].tokens()
+    >>> tree[0][0].tokens() # tuple of all tokens in this span
     ('This',)
-    >>> len(tree.subtrees()[0]) # number of subtrees
+    >>> tree[0][0][0]
+    Tree('(DT This)')
+    >>> tree[0][0][0].token
+    'This'
+    >>> tree[0][0][0].label
+    'DT'
+    >>> tree[0][0][0].is_preterminal()
+    True
+    >>> len(tree[0]) # number of subtrees
     3
-    >>> for subtree in tree.subtrees()[0]:
+    >>> for subtree in tree[0]:
     ...    print subtree
     ... 
     (NP (DT This))
     (VP (VBZ is) (NP (DT a) (ADJP (RB fairly) (JJ simple)) (NN parse) (NN tree)))
     (. .)
+    >>> for subtree in tree.all_subtrees(): # all subtrees (recursive)
+    ...     print subtree.is_preterminal(), subtree
+    ...
+    False (S1 (S (NP (DT This)) (VP (VBZ is) (NP (DT a) (ADJP (RB fairly) (JJ simple)) (NN parse) (NN tree))) (. .)))
+    False (S (NP (DT This)) (VP (VBZ is) (NP (DT a) (ADJP (RB fairly) (JJ simple)) (NN parse) (NN tree))) (. .))
+    False (NP (DT This))
+    True (DT This)
+    False (VP (VBZ is) (NP (DT a) (ADJP (RB fairly) (JJ simple)) (NN parse) (NN tree)))
+    True (VBZ is)
+    False (NP (DT a) (ADJP (RB fairly) (JJ simple)) (NN parse) (NN tree))
+    True (DT a)
+    False (ADJP (RB fairly) (JJ simple))
+    True (RB fairly)
+    True (JJ simple)
+    True (NN parse)
+    True (NN tree)
+    True (. .)
