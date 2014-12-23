@@ -257,7 +257,7 @@ typedef std::string ECString;
 
     // NOTE: this leaks! the list is handed off to the higher-level
     // language but the InputTree objects in it are never freed.
-    // the current workaround is to make sure that we aquire() the
+    // the current workaround is to make sure that we acquire() the
     // pointers in the higher-level language.
     list<InputTree* >* inputTreesFromString(const char* str) {
         stringstream inputstream;
@@ -302,10 +302,11 @@ typedef std::string ECString;
         stringstream inputstream;
         inputstream << str;
         list<SentRep* >* sentReps = new list<SentRep* >();
+        ewDciTokStrm tokStream(inputstream);
 
-        while (inputstream) {
+        while (true) {
             SentRep* sentRep = new SentRep();
-            inputstream >> *sentRep;
+            tokStream >> *sentRep;
             if (!sentRep->length()) {
                 delete sentRep;
                 break;
@@ -320,10 +321,11 @@ typedef std::string ECString;
     list<SentRep* >* sentRepsFromFile(const char* filename) {
         ifstream filestream(filename);
         list<SentRep* >* sentReps = new list<SentRep* >();
+        ewDciTokStrm tokStream(filestream);
 
-        while (filestream) {
+        while (true) {
             SentRep* sentRep = new SentRep();
-            filestream >> *sentRep;
+            tokStream >> *sentRep;
             if (!sentRep->length()) {
                 delete sentRep;
                 break;
