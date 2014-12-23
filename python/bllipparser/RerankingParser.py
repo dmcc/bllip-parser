@@ -50,14 +50,11 @@ class Tree(object):
         representations of trees, e.g.:
 
             >>> Tree('(S1 (NP (NN tree)))')
-            bllipparser.RerankingParser.Tree('(S1 (NP (NN tree)))')
+            Tree('(S1 (NP (NN tree)))')
 
         Or from an existing InputTree (internal SWIG object). Users will
         generally want the former."""
-        if isinstance(input_tree_or_string, parser.InputTree):
-            # ensure that Python owns the pointer
-            input_tree_or_string.this.acquire()
-        else:
+        if not isinstance(input_tree_or_string, parser.InputTree):
             if not isinstance(input_tree_or_string, basestring):
                 raise TypeError("input_tree_or_string (%r) must be "
                                 "an InputTree or string." %
@@ -185,15 +182,6 @@ class Tree(object):
         return locals()
     label_suffix = property(**label_suffix())
 
-    @classmethod
-    def trees_from_string(this_class, text):
-        """Given text containing multiple Penn Treebank trees, returns
-        a list of Tree objects (one for each tree in the text)."""
-        # Note that the native method below leaks. We work around this
-        # by acquiring its pointer in __init__
-        trees = parser.inputTreesFromString(text)
-        return map(this_class, trees)
-
     def sd_tokens(self, sd_converter=None, conversion_kwargs=None):
         """Convert this Tree to Stanford Dependencies
         (requires PyStanfordDependencies). Returns a list of
@@ -215,13 +203,30 @@ class Tree(object):
         return self._sd_tokens
 
     @classmethod
+    def trees_from_string(this_class, text):
+        """Given text containing multiple Penn Treebank trees, returns
+        a list of Tree objects (one for each tree in the text)."""
+        # Note: the native method below gives us memory ownership of
+        # the InputTree objects in the vector. We acquire their pointers
+        # and store them in a Python list (the vector won't stick
+        # around). InputTree objects typically contain other InputTree
+        # objects and the outer tree will free the inner trees when it is
+        # deleted. So, we only need (and want) to acquire the pointer of
+        # the outermost InputTree tree.
+        trees = list(parser.inputTreesFromString(text))
+        for tree in trees:
+            tree.this.acquire()
+        return map(this_class, trees)
+
+    @classmethod
     def trees_from_file(this_class, filename):
         """Given the path to a file containing multiple Penn Treebank
         trees, returns a list of Tree objects (one for each tree in the
         file)."""
-        # Note that the native method below leaks. We work around this
-        # by acquiring its pointer in __init__
-        trees = parser.inputTreesFromFile(filename)
+        # see trees_from_string for an explanation
+        trees = list(parser.inputTreesFromFile(filename))
+        for tree in trees:
+            tree.this.acquire()
         return map(this_class, trees)
 
 class ScoredParse:
