@@ -4,10 +4,10 @@
 The BLLIP parser (also known as the Charniak-Johnson parser or
 Brown Reranking Parser) is described in the paper `Charniak
 and Johnson (Association of Computational Linguistics, 2005)
-<http://aclweb.org/anthology/P/P05/P05-1022.pdf>`_.  This package
+<http://aclweb.org/anthology/P/P05/P05-1022.pdf>`_. This package
 provides the BLLIP parser runtime along with a Python interface. Note
 that it does not come with any parsing models but includes a model
-downloader.  The primary maintenance for the parser takes place at
+downloader. The primary maintenance for the parser takes place at
 `GitHub <http://github.com/BLLIP/bllip-parser>`_.
 
 We request acknowledgement in any publications that make use of this
@@ -33,8 +33,8 @@ References:
 Fetching parsing models
 -----------------------
 
-Before you can parse, you'll need some parsing models.  ``ModelFetcher``
-will help you download and install parsing models.  It can be invoked
+Before you can parse, you'll need some parsing models. ``ModelFetcher``
+will help you download and install parsing models. It can be invoked
 from the command line. For example, this will download and install the
 standard WSJ model::
 
@@ -82,15 +82,15 @@ the ``simple_parse()`` method::
     '(S1 (S (NP (DT This)) (VP (VBZ is) (ADJP (JJ simple))) (. .)))'
 
 If you want more information about the parse, you'll want to use the
-``parse()`` method which returns an ``NBestList`` object.  The parser
+``parse()`` method which returns an ``NBestList`` object. The parser
 produces an *n-best list* of the *n* most likely parses of the sentence
 (default: *n=50*). Typically you only want the top parse, but the others
 are available as well::
 
     >>> nbest_list = rrp.parse('This is a sentence.')
 
-To get information about the top parse (note that the ptb_parse property
-is a Tree object, described later)::
+To get information about the top parse (note that the ``ptb_parse``
+property is a ``Tree`` object, described in more detail later)::
 
     >>> print repr(nbest_list[0])
     ScoredParse('(S1 (S (NP (DT This)) (VP (VBZ is) (NP (DT a) (NN sentence))) (. .)))', parser_score=-29.621201629004183, reranker_score=-7.9273829816098731)
@@ -102,6 +102,24 @@ is a Tree object, described later)::
     -7.92738298161
     >>> print len(nbest_list)
     50
+
+If you have the `PyStanfordDependencies
+<https://pypi.python.org/pypi/PyStanfordDependencies/>`_ package,
+you can parse straight to `Stanford Dependencies
+<http://nlp.stanford.edu/software/stanford-dependencies.shtml>`_::
+
+    >>> tokens = nbest_list[0].ptb_parse.sd_tokens()
+    >>> for token in tokens:
+    ...     print token
+    ...
+    Token(index=1, form=u'This', cpos=u'DT', pos=u'DT', head=4, deprel=u'nsubj')
+    Token(index=2, form=u'is', cpos=u'VBZ', pos=u'VBZ', head=4, deprel=u'cop')
+    Token(index=3, form=u'a', cpos=u'DT', pos=u'DT', head=4, deprel=u'det')
+    Token(index=4, form=u'sentence', cpos=u'NN', pos=u'NN', head=0, deprel=u'root')
+    Token(index=5, form=u'.', cpos=u'.', pos=u'.', head=4, deprel=u'punct')
+
+This will attempt to use a default converter but see docs for how to
+customize dependency conversion (or if you run into Java version issues).
 
 If you have an existing tokenizer, tokenization can also be specified
 by passing a list of strings::
@@ -162,7 +180,7 @@ There is an interactive shell which can help visualize a parse::
 
 Once in the shell, type a sentence to have the parser parse it::
 
-    rrp> I saw the astronomer with the telescope.
+    bllip> I saw the astronomer with the telescope.
     Tokens: I saw the astronomer with the telescope .
 
     Parser's parse:
@@ -182,10 +200,28 @@ Once in the shell, type a sentence to have the parser parse it::
 If you have ``nltk`` installed, you can use its tree visualization to
 see the output::
 
-    rrp> visual Show me this parse.
+    bllip> visual Show me this parse.
     Tokens: Show me this parse .
 
     [graphical display of the parse appears]
+
+If you have ``PyStanfordDependencies`` installed, you can parse straight
+to Stanford Dependencies::
+
+    bllip> sdparse Now with Stanford Dependencies integration!
+    Tokens: Now with Stanford Dependencies integration !
+
+    Parser and reranker:
+     Now [root]
+      +-- with [prep]
+      |  +-- integration [pobj]
+      |     +-- Stanford [nn]
+      |     +-- Dependencies [nn]
+      +-- ! [punct]
+
+The ``asciitree`` package is required to visualize Stanford Dependencies
+as a tree. If it is not available, the dependencies will be shown in
+CoNLL-X format.
 
 There is more detailed help inside the shell under the ``help`` command.
 
@@ -223,7 +259,7 @@ Or get information about the labeled spans in the tree::
     >>> print tree.label
     S1
 
-And finally navigate within the trees::
+You can navigate within the trees and more::
 
     >>> tree.subtrees()
     [Tree('(S (NP (DT This)) (VP (VBZ is) (NP (DT a) (ADJP (RB fairly) (JJ simple)) (NN parse) (NN tree))) (. .))')]
