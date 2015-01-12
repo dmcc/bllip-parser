@@ -194,7 +194,7 @@ class Tree(object):
             try:
                 import StanfordDependencies
             except ImportError:
-                raise ImportError("For sd_tokens(), you need to Install"
+                raise ImportError("For sd_tokens(), you need to install"
                                   "PyStanfordDependencies from PyPI")
             sd_converter = sd_converter or StanfordDependencies.get_instance()
             conversion_kwargs = conversion_kwargs or {}
@@ -323,9 +323,13 @@ class NBestList:
         self._sentrep = sentrep
         self.parses = []
         for index, (score, parse) in enumerate(parses):
+            # acquire the InputTree pointers or they'll never be freed
+            parse.this.acquire()
             scored_parse = ScoredParse(Tree(parse), score, parser_rank=index)
             self.parses.append(scored_parse)
         self.sentence_id = sentence_id
+        # True if we've added reranker scores to our parses
+        # (but doesn't necessarily imply that we're sorted by them)
         self._reranked = False
 
     def __getattr__(self, key):
@@ -333,8 +337,15 @@ class NBestList:
         return getattr(self.parses, key)
 
     def sort_by_reranker_scores(self):
-        self.parses.sort(key=lambda parse: -parse.reranker_score)
+        """Sort the parses by the reranker's score (highest to lowest).
+        If the reranker scores tie or there are no reranker scores, parser
+        probabilities are used as a secondary key."""
+        self.parses.sort(key=lambda parse: (parse.reranker_score,
+                                            parse.parser_score),
+                         reverse=True)
     def sort_by_parser_scores(self):
+        """Sort the parses by the parser's probability (most likely to least
+        likely)."""
         self.parses.sort(key=lambda parse: -parse.parser_score)
     def get_parser_best(self):
         """Get the best parse in this n-best list according to the parser."""
