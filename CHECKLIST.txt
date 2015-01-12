@@ -1,0 +1,13 @@
+Release checklist
+-----------------
+0a. Ensure tests are passing: nosetests --with-doctest -dv python/tests/
+0b. shell> flake8 python/bllipparser/ParsingShell.py python/bllipparser/RerankingParser.py
+1.  Version bumps in python/bllipparser/__init__.py and setup.py
+2.  Update READMEs
+3.  Sync README-python.rst content with python/bllipparser/__init__.py
+    (roughly: vimdiff -g README-python.rst python/bllipparser/__init__.py)
+4.  Run nosetests and flake8 again, commit changes
+5.  shell> python setup.py register sdist upload
+6.  Edit PyPI description, add keywords
+7.  ???
+8.  Goto 0a
