@@ -22,10 +22,12 @@ RUN apt update && \
 		swig flex libboost-dev && \
 	easy_install pip && \
 	pip install -U numpy && \
-	pip install -U nltk 
-	
-# Not using the version in PIP because of NLTK API change.
-#	pip install -U bllipparser
+	pip install -U nltk && \
+	pip install -U jpype1 && \
+	pip install -U PyStanfordDependencies && \
+	pip install -U asciitree
+
+# bllipparser not installed via pip so we'll use the latest code
 
 # To clean up the APT files we could remove them like this:
 #	rm -rf /var/lib/apt/lists/*	
