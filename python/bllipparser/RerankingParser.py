@@ -128,6 +128,33 @@ class Tree(object):
         label is a part of speech tag, it has a non-empty token, and it
         has no child nodes)."""
         return len(self) == 0
+    def evaluate(self, gold_tree):
+        """Score this tree against a gold tree and return a dictionary with
+        PARSEVAL information. Keys:
+            gold, test, matched - integers for numbers of brackets
+            precision, recall, fscore - floats between 0 and 1
+
+        Note that you must have a parser model loaded in order to
+        evaluate parses (otherwise you'll get a ValueError). This is
+        because the parser models include information about which tags
+        are punctuation."""
+        if not RerankingParser._parser_model_loaded:
+            raise ValueError("You need to have loaded a parser model in "
+                             "order to evaluate.")
+        scorer = parser.ScoreTree()
+        stats = scorer.score(self._tree, gold_tree._tree)
+        gold = stats.numInGold
+        test = stats.numInGuessed
+        matched = stats.numCorrect
+        precision = float(matched) / test
+        recall = float(matched) / gold
+        denom = precision + recall
+        if denom == 0:
+            fscore = 0
+        else:
+            fscore = (2 * precision * recall) / denom
+        return dict(gold=gold, test=test, matched=matched,
+                    precision=precision, recall=recall, fscore=fscore)
 
     #
     # properties
@@ -402,13 +429,13 @@ class NBestList:
 class RerankingParser:
     """Wraps the Charniak parser and Johnson reranker into a single
     object. Note that RerankingParser is not thread safe."""
+    _parser_model_loaded = False
     def __init__(self):
         """Create an empty reranking parser. You'll need to call
         load_parser_model() at minimum and load_reranker_model() if
         you're using the reranker. See also the from_unified_model_dir()
         classmethod which will take care of calling both of these
         for you."""
-        self._parser_model_loaded = False
         self.parser_model_dir = None
         self.parser_options = {}
         self.reranker_model = None
@@ -429,13 +456,13 @@ class RerankingParser:
         the set_parser_options() method for details. Note that the parser
         does not allow loading multiple models within the same process
         (calling this function twice will raise a RuntimeError)."""
-        if self._parser_model_loaded:
+        if RerankingParser._parser_model_loaded:
             raise RuntimeError('Parser is already loaded and can only '
                                'be loaded once.')
         if not exists(model_dir):
             raise ValueError('Parser model directory %r does not exist.' %
                              model_dir)
-        self._parser_model_loaded = True
+        RerankingParser._parser_model_loaded = True
         self.parser_model_dir = model_dir
         parser.loadModel(model_dir)
         self.set_parser_options(**parser_options)
@@ -555,7 +582,7 @@ class RerankingParser:
         whether we have the appropriately loaded models. Also returns
         whether the reranker should be used (essentially resolves the
         value of rerank if rerank='auto')."""
-        if not self._parser_model_loaded:
+        if not RerankingParser._parser_model_loaded:
             raise ValueError("Parser model has not been loaded.")
         if rerank is True and not self.reranker_model:
             raise ValueError("Reranker model has not been loaded.")
@@ -586,7 +613,7 @@ class RerankingParser:
         no?). Setting smooth_pos to a number higher than 0 will cause the
         parser to assign that value as the probability of seeing a known
         word in a new part-of-speech (one never seen in training)."""
-        if not self._parser_model_loaded:
+        if not RerankingParser._parser_model_loaded:
             raise RuntimeError('Parser must already be loaded (call '
                                'load_parser_model() first)')
 

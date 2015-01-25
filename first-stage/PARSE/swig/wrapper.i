@@ -62,6 +62,8 @@ typedef std::string ECString;
     #include "Link.h"
     #include "MeChart.h"
     #include "Params.h"
+    #include "ParseStats.h"
+    #include "ScoreTree.h"
     #include "SentRep.h"
     #include "TimeIt.h"
     #include "UnitRules.h"
@@ -573,4 +575,29 @@ class ExtPos {
                 return $self->size();
             }
         }
+};
+
+class ScoreTree {
+    public:
+        %extend {
+            %newobject score;
+            ParseStats* score(InputTree* proposed, InputTree* gold) {
+                vector<ECString> poslist;
+                gold->makePosList(poslist);
+                $self->setEquivInts(poslist);
+
+                ParseStats* stats = new ParseStats();
+                $self->recordGold(gold, *stats);
+                $self->precisionRecall(proposed, *stats);
+                return stats;
+            }
+        }
+};
+
+class ParseStats {
+    public:
+        ParseStats();
+        int numInGold;
+        int numInGuessed;
+        int numCorrect;
 };

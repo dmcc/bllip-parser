@@ -324,3 +324,27 @@ def test_reranking_parser_basics():
     >>> rrp.tag('British left waffles on Falklands .'.split())
     [('British', 'JJ'), ('left', 'NN'), ('waffles', 'VBZ'), ('on', 'IN'), ('Falklands', 'NNP'), ('.', '.')]
     """
+
+def stringify_dict(d):
+    """Yeah, we should really stop using doctests."""
+    return ', '.join('%s=%s' % item for item in sorted(d.items()))
+
+def test_tree_eval():
+    """
+    This is here and not in test_tree since it requires a parsing model
+    to be loaded.
+
+    >>> import bllipparser
+    >>> tree1 = bllipparser.Tree('(S1 (S (NP (DT This)) (VP (AUX is) (NP (DT a) (NN sentence))) (. .)))')
+    >>> tree2 = bllipparser.Tree('(S1 (S (NP (NNP This)) (VP (AUX is) (NP (DT a) (NN sentence))) (. .)))')
+    >>> tree3 = bllipparser.Tree('(S1 (SBARQ (WHNP (DT This)) (SQ (VP (AUX is) (NP (DT a) (NN sentence)))) (. .)))')
+    >>> eval1 = tree1.evaluate(tree2)
+    >>> print stringify_dict(eval1)
+    fscore=1.0, gold=4, matched=4, precision=1.0, recall=1.0, test=4
+    >>> eval2 = tree2.evaluate(tree1)
+    >>> print stringify_dict(eval2)
+    fscore=1.0, gold=4, matched=4, precision=1.0, recall=1.0, test=4
+    >>> eval3 = tree3.evaluate(tree1)
+    >>> print stringify_dict(eval3)
+    fscore=0.444444444444, gold=4, matched=2, precision=0.4, recall=0.5, test=5
+    """
