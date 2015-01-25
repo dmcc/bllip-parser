@@ -59,13 +59,13 @@ def test_extpos():
 
     print 'NN'
     ext_pos1 = parser.ExtPos()
-    ext_pos1.addTagConstraints(parser.VectorString(['NN']))
+    ext_pos1.addTagConstraints(parser.StringVector(['NN']))
 
     display_parses(parser.parse(sr1, ext_pos1))
 
     print 'VB'
     ext_pos2 = parser.ExtPos()
-    ext_pos2.addTagConstraints(parser.VectorString(['VB']))
+    ext_pos2.addTagConstraints(parser.StringVector(['VB']))
     display_parses(parser.parse(sr1, ext_pos2))
 
 def test_multiword_extpos():
@@ -77,32 +77,32 @@ def test_multiword_extpos():
     if 1:
         print 'waffles = VBZ/VBD/VB:'
         ext_pos = parser.ExtPos()
-        ext_pos.addTagConstraints(parser.VectorString([]))
-        ext_pos.addTagConstraints(parser.VectorString([]))
-        ext_pos.addTagConstraints(parser.VectorString(['VBZ', 'VBD', 'VB']))
-        ext_pos.addTagConstraints(parser.VectorString([]))
-        ext_pos.addTagConstraints(parser.VectorString([]))
-        ext_pos.addTagConstraints(parser.VectorString([]))
+        ext_pos.addTagConstraints(parser.StringVector([]))
+        ext_pos.addTagConstraints(parser.StringVector([]))
+        ext_pos.addTagConstraints(parser.StringVector(['VBZ', 'VBD', 'VB']))
+        ext_pos.addTagConstraints(parser.StringVector([]))
+        ext_pos.addTagConstraints(parser.StringVector([]))
+        ext_pos.addTagConstraints(parser.StringVector([]))
         display_parses(parser.parse(sr1, ext_pos))
 
         print 'waffles = NNS:'
         ext_pos = parser.ExtPos()
-        ext_pos.addTagConstraints(parser.VectorString([]))
-        ext_pos.addTagConstraints(parser.VectorString([]))
-        ext_pos.addTagConstraints(parser.VectorString(['NNS']))
-        ext_pos.addTagConstraints(parser.VectorString([]))
-        ext_pos.addTagConstraints(parser.VectorString([]))
-        ext_pos.addTagConstraints(parser.VectorString([]))
+        ext_pos.addTagConstraints(parser.StringVector([]))
+        ext_pos.addTagConstraints(parser.StringVector([]))
+        ext_pos.addTagConstraints(parser.StringVector(['NNS']))
+        ext_pos.addTagConstraints(parser.StringVector([]))
+        ext_pos.addTagConstraints(parser.StringVector([]))
+        ext_pos.addTagConstraints(parser.StringVector([]))
         display_parses(parser.parse(sr1, ext_pos))
 
         print 'waffles = NN/NNS:'
         ext_pos = parser.ExtPos()
-        ext_pos.addTagConstraints(parser.VectorString([]))
-        ext_pos.addTagConstraints(parser.VectorString([]))
-        ext_pos.addTagConstraints(parser.VectorString(['NN', 'NNS']))
-        ext_pos.addTagConstraints(parser.VectorString([]))
-        ext_pos.addTagConstraints(parser.VectorString([]))
-        ext_pos.addTagConstraints(parser.VectorString([]))
+        ext_pos.addTagConstraints(parser.StringVector([]))
+        ext_pos.addTagConstraints(parser.StringVector([]))
+        ext_pos.addTagConstraints(parser.StringVector(['NN', 'NNS']))
+        ext_pos.addTagConstraints(parser.StringVector([]))
+        ext_pos.addTagConstraints(parser.StringVector([]))
+        ext_pos.addTagConstraints(parser.StringVector([]))
         display_parses(parser.parse(sr1, ext_pos))
 
 if __name__ == "__main__":
