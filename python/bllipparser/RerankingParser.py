@@ -122,7 +122,7 @@ class Tree(object):
         return zip(self.tokens(), self.tags())
     def span(self):
         """Returns indices of the span for this tree: (start, end)"""
-        return (self._tree.start(), self._tree.finish())
+        return (int(self._tree.start()), int(self._tree.finish()))
     def is_preterminal(self):
         """Returns True iff this node is a preterminal (that is, its
         label is a part of speech tag, it has a non-empty token, and it
