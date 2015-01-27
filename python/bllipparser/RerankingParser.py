@@ -489,7 +489,7 @@ class RerankingParser:
         can also be set to 'auto' which will only rerank if a reranker
         model is loaded. If there are no parses or an error occurs,
         this will return an empty NBestList."""
-        rerank = self._check_loaded_models(rerank)
+        rerank = self.check_models_loaded_or_error(rerank)
 
         sentence = Sentence(sentence)
         if len(sentence) > parser.max_sentence_length:
@@ -516,7 +516,7 @@ class RerankingParser:
         a ValueError. If rerank is True, we will rerank the n-best list,
         if False the reranker will not be used. rerank can also be set to
         'auto' which will only rerank if a reranker model is loaded."""
-        rerank = self._check_loaded_models(rerank)
+        rerank = self.check_models_loaded_or_error(rerank)
         if isinstance(tokens, basestring):
             raise ValueError("tokens must be a sequence, not a string.")
 
@@ -577,12 +577,13 @@ class RerankingParser:
         raise ValueError("Invalid POS tags (not present in the parser's "
                          "terms.txt file): %s" % ', '.join(sorted(bad_tags)))
 
-    def _check_loaded_models(self, rerank):
-        """Given a reranking mode (True, False, 'auto') determines
-        whether we have the appropriately loaded models. Also returns
-        whether the reranker should be used (essentially resolves the
-        value of rerank if rerank='auto')."""
-        if not RerankingParser._parser_model_loaded:
+    def check_models_loaded_or_error(self, rerank):
+        """Given a reranking mode (True, False, 'auto') determines whether
+        we have the appropriately loaded models. Raises a ValueError
+        if model(s) are not loaded. Also returns whether the reranker
+        should be used (essentially resolves the value of rerank if
+        rerank='auto')."""
+        if not self._parser_model_loaded:
             raise ValueError("Parser model has not been loaded.")
         if rerank is True and not self.reranker_model:
             raise ValueError("Reranker model has not been loaded.")

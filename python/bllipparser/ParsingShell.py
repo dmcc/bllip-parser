@@ -64,6 +64,14 @@ class ParsingShell(Cmd):
             sys.stdout.write("Loading models... ")
             sys.stdout.flush()
             self.rrp = RerankingParser.from_unified_model_dir(model)
+            try:
+                self.rrp.check_models_loaded_or_error(False)
+            except ValueError:
+                sys.stdout.write("unified model didn't load -- trying "
+                                 "it as just a parser model... ")
+                sys.stdout.flush()
+                self.rrp = RerankingParser()
+                self.rrp.load_parser_model(model)
             print "done!"
         print "Enter a sentence to see its parse or 'help' for more options."
         self.last_nbest_list = []

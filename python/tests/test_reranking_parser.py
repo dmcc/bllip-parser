@@ -57,8 +57,25 @@ def test_reranking_parser_basics():
     >>> from bllipparser import RerankingParser
     >>> rrp = RerankingParser()
     >>> rrp.load_parser_model('first-stage/DATA/EN')
+    >>> print rrp.check_models_loaded_or_error(False)
+    False
+    >>> rrp.check_models_loaded_or_error(True)
+    Traceback (most recent call last):
+      File "/usr/lib64/python2.6/doctest.py", line 1253, in __run
+        compileflags, 1) in test.globs
+      File "<doctest test_reranking_parser_basics[4]>", line 1, in <module>
+        rrp.check_models_loaded_or_error(True)
+      File "/home/dmcclosky/local/lib/python2.6/site-packages/bllipparser/RerankingParser.py", line 589, in check_models_loaded_or_error
+        raise ValueError("Reranker model has not been loaded.")
+    ValueError: Reranker model has not been loaded.
     >>> rrp.load_reranker_model('second-stage/models/ec50spfinal/features.gz',
     ...                         'second-stage/models/ec50spfinal/cvlm-l1c10P1-weights.gz')
+    >>> print rrp.check_models_loaded_or_error(False)
+    False
+    >>> rrp.check_models_loaded_or_error(True)
+    True
+    >>> rrp.check_models_loaded_or_error('auto')
+    True
     >>> rrp.parser_model_dir
     'first-stage/DATA/EN'
     >>> rrp.simple_parse('This is simple.')
