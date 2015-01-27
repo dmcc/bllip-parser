@@ -149,3 +149,15 @@ See ``second-stage/README`` for an overview.
 ``second-stage/README-retrain.rst`` details how to retrain the reranker.
 The ``second-stage/programs/*/README`` files include additional notes
 about different reranker components.
+
+Other versions of the parser
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+We haven't tested these and can't support them, but they may be useful
+if you're working on other platforms or languages.
+
+- `Native Charniak parser for Windows
+  <https://github.com/dorony/CharniakParserWindows>`_ (doesn't need cygwin,
+  no reranker)
+- `Rutu Mulkar-Mehta's Windows version
+  <http://www.rutumulkar.com/software.html>`_
+- `Djame's French branch <https://bitbucket.org/djame/bllip-parser-fr>`_
