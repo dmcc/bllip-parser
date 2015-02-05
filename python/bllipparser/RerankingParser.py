@@ -316,6 +316,15 @@ class Sentence:
         for index in range(len(self.sentrep)):
             tokens.append(self.sentrep.getWord(index).lexeme())
         return tokens
+    def independent_tags(self):
+        """Determine the most likely tags for the words in this sentence,
+        considering each word without context. This will not parse the
+        sentence but simply use the vocabulary and unknown word model
+        to determine the tags."""
+        if not RerankingParser._parser_model_loaded:
+            raise ValueError("You need to have loaded a parser model in "
+                             "order to calculate most likely tags.")
+        return Tree(self.sentrep.makeFailureTree('X')).tags()
 
     @classmethod
     def sentences_from_string(this_class, text):
