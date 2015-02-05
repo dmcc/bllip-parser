@@ -155,6 +155,18 @@ class Tree(object):
             fscore = (2 * precision * recall) / denom
         return dict(gold=gold, test=test, matched=matched,
                     precision=precision, recall=recall, fscore=fscore)
+    def log_prob(self, warn=True):
+        """Asks the current first-stage parsing model to score an existing
+        tree.  Returns the tuple (parser model's log probability, too
+        high warning bit).  As the parser's README says: "For reasons that
+        would take us too far afield, about 13% of the time it returns a
+        probability that is too high." If warn=True and this circumstance
+        is detected, the second element in the tuple will be True."""
+        if not RerankingParser._parser_model_loaded:
+            raise ValueError("You need to have loaded a parser model in "
+                             "order to get the log probability.")
+        score_and_bool = parser.treeLogProb(self._tree, warn)
+        return (score_and_bool[0], score_and_bool[1])
 
     #
     # properties

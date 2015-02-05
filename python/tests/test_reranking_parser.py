@@ -117,6 +117,12 @@ def test_reranking_parser_basics():
     -8.88655845608
     >>> print len(nbest_list)
     13
+    >>> print nbest_list[0].ptb_parse.log_prob()
+    (-30.398166970084645, False)
+    >>> print nbest_list[0].ptb_parse.log_prob(warn=True)
+    (-30.398166970084645, False)
+    >>> nbest_list[0].ptb_parse.log_prob()[0] == nbest_list[0].parser_score
+    True
     >>> nbest_list2 = rrp.parse(['This', 'is', 'a', 'pretokenized', 'sentence', '.'])
     >>> print str(nbest_list2).strip()
     50 x
@@ -340,6 +346,9 @@ def test_reranking_parser_basics():
     [('Time', 'NNP'), ('flies', 'VBZ'), ('while', 'IN'), ('you', 'PRP'), ("'re", 'AUX'), ('having', 'AUXG'), ('fun', 'NN'), ('.', '.')]
     >>> rrp.tag('British left waffles on Falklands .'.split())
     [('British', 'JJ'), ('left', 'NN'), ('waffles', 'VBZ'), ('on', 'IN'), ('Falklands', 'NNP'), ('.', '.')]
+    >>> from bllipparser import Sentence
+    >>> Sentence('British left waffles on Falklands .').independent_tags()
+    ('JJ', 'VBN', 'NNS', 'IN', 'NNP', '.')
     """
 
 def stringify_dict(d):

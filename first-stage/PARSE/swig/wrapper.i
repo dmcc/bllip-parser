@@ -134,11 +134,13 @@ typedef std::string ECString;
 %newobject sentRepsFromString;
 %newobject sentRepsFromFile;
 %newobject asNBestList;
+%newobject treeLogProb;
 
 %inline{
     const int max_sentence_length = MAXSENTLEN;
 
     typedef pair<double,InputTree*> ScoredTree;
+    typedef pair<double,bool> ScoreAndBoolean;
 
     /* main parsing workhorse in the wrapped world */
     vector<ScoredTree>* parse(SentRep* sent, ExtPos& tag_constraints) {
@@ -207,9 +209,68 @@ typedef std::string ECString;
         return scoredTrees;
     }
 
+    // parse a sentence with no external POS tag constraints
     vector<ScoredTree>* parse(SentRep* sent) {
         ExtPos extPos;
         return parse(sent, extPos);
+    }
+
+    // get the lob probability of an existing tree against the current
+    // model. This is essentially what the evalTree command line tool
+    // does.
+    ScoreAndBoolean* treeLogProb(InputTree* tree, bool warn) {
+        if (tree->length() > MAXSENTLEN) {
+            throw ParserError("Sentence is longer than maximum supported sentence length.");
+        }
+
+        float origTimeFactor = Bchart::timeFactor;
+        Bchart::timeFactor = 3;
+        list<ECString> tokenList;
+        tree->make(tokenList);
+        vector<ECString> posList;
+        tree->makePosList(posList);
+        SentRep sentRep(tokenList);
+
+        ScoreTree sc;
+        sc.setEquivInts(posList);
+
+        MeChart* chart = new MeChart(sentRep, 0);
+        chart->setGuide(tree);
+        chart->parse();
+        Item* topS = chart->topS();
+        if(!topS) {
+            Bchart::timeFactor = origTimeFactor;
+            delete chart;
+            throw ParserError("Parse failed: !topS");
+        }
+        chart->set_Alphas();
+        Bst& bst = chart->findMapParse();
+        if (bst.empty()) {
+            Bchart::timeFactor = origTimeFactor;
+            delete chart;
+            throw ParserError("Parse failed: chart->findMapParse().empty()");
+        }
+        double logP = log2(bst.prob());
+        logP -= (sentRep.length() * log600);
+        Val* val = bst.next(0);
+        assert(val);
+
+        bool inaccurateWarning = false;
+        if (warn) {
+            // warn if inaccuracies detected
+            short pos = 0;
+            InputTree* mapparse = inputTreeFromBsts(val, pos, sentRep);
+            assert(mapparse);
+            sc.trips.clear();
+            ParseStats parseStats;
+            sc.recordGold(tree, parseStats);
+            sc.precisionRecall(mapparse, parseStats);
+            float newF = parseStats.fMeasure();
+            inaccurateWarning = newF < 1;
+        }
+        delete chart;
+        Bchart::timeFactor = origTimeFactor;
+        return new ScoreAndBoolean(logP, inaccurateWarning);
     }
 
     void setOptions(string language, bool caseInsensitive, int nBest,
@@ -375,6 +436,8 @@ typedef std::string ECString;
 } // end %inline
 
 namespace std {
+   %template(ScoreAndBoolean) pair<double,bool>;
+
    %template(StringList) list<string>;
    %template(SentRepList) list<SentRep*>;
 
