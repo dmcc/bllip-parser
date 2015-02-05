@@ -403,7 +403,7 @@ struct Estimator1 {
     int ret = lbfgs(nx, x0, NULL, loss_function_objective_wrapper,
         NULL, &fn, &params);
     if (ret != 0) {
-        std::cerr << " lbfgs returned: " << ret;
+        std::cerr << " [lbfgs returned: " << ret << "]";
     }
     for (size_type i = 0; i < nx; ++i) {
         x[i] = x0[i];
