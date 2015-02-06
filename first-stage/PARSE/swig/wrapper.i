@@ -150,6 +150,7 @@ typedef std::string ECString;
 
         vector<ScoredTree>* scoredTrees = new vector<ScoredTree>();
 
+        ChartBase::guided = false;
         MeChart* chart = new MeChart(*sent, tag_constraints, 0);
         chart->parse();
         Item* topS = chart->topS();
@@ -225,6 +226,7 @@ typedef std::string ECString;
 
         float origTimeFactor = Bchart::timeFactor;
         Bchart::timeFactor = 3;
+        ChartBase::guided = true;
         list<ECString> tokenList;
         tree->make(tokenList);
         vector<ECString> posList;
@@ -475,6 +477,7 @@ class SentRep {
             // makeFailureTree() is adapted from makeFlat() in parseIt.C
             %newobject makeFailureTree;
             InputTree* makeFailureTree(string category) {
+                ChartBase::guided = false;
                 MeChart* chart = new MeChart(*$self, 0);
                 if ($self->length() >= MAXSENTLEN) {
                     delete chart;
