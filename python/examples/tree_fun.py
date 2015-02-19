@@ -46,7 +46,7 @@ if __name__ == "__main__":
     (PRP she)) (VP (VBD recognized) (NP (PRP$ his) (NN voice))))) (, ,)
     (SBAR (IN that) (S (NP-SBJ (NNP Tim)) (VP (VBD fired) (, ,) ('' ')
     (S (S (NP-SBJ (PRP It)) (VP (VBZ 's) (NP-PRD (PRP$ my) (NN money))))
-    (CC and) (S (NP-SBJ (PRP I)) (VP (VBP want) (NP (PRP it))))) 
+    (CC and) (S (NP-SBJ (PRP I)) (VP (VBP want) (NP (PRP it)))))
     ('' ')))))) (. !)))''')
 
     for labeled_span in labeled_spans(tree):
