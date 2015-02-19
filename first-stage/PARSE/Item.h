@@ -36,6 +36,12 @@ typedef map<int,HeadMap, less<int> > PosMap;
 typedef HeadMap::iterator HeadIter;
 typedef PosMap::iterator PosIter;
 
+/* Item is an item in the chart.
+ * These include a span [start, finish), a terminal (part of speech
+ * or phrase type), the word itself (can be null), inside and outside
+ * probabilities, and other bookkeeping information (e.g., which Edges
+ * are involved with the item.
+ */
 class           Item
 {
 public:
