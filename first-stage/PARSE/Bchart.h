@@ -71,7 +71,7 @@ public:
   static UnitRules*  unitRules; 
   static bool caseInsensitive;
   static bool tokenize;
-  static int Nth;
+  static size_t Nth;
   static bool prettyPrint;
   static bool silent;
   static bool smallCorpus;
