@@ -46,7 +46,7 @@ thread has it's own PrintStack which stores the output data
 */
 typedef struct printStruct{
   int                sentenceCount;
-  int                numDiff;
+  size_t             numDiff;
   vector<InputTree*> trees;
   vector<double>     probs;
   string             name;
@@ -442,8 +442,8 @@ printSkipped(SentRep *srp, MeChart *chart,PrintStack& printStack,printStruct& pr
 static void
 workOnPrintStack(PrintStack* printStack)
 {
-  int i;
-  int numPrinted;
+  size_t i;
+  size_t numPrinted;
   PrintStack::iterator psi = printStack->begin();
   /* now look at each item from the front of the print stack
      to see if it should be printed now */
