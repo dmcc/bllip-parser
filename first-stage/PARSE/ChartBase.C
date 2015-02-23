@@ -298,6 +298,12 @@ setGuide(InputTree* tree)
     setGuide(*iti);
 }
 
+void
+ChartBase::
+addConstraint(int start, int end, int term) {
+    guide[start][end].push_back(term);
+}
+
 bool
 ChartBase::
 inGuide(int st, int ed, int trm)
@@ -312,31 +318,5 @@ bool
 ChartBase::
 inGuide(Edge* e)
 {
-  if(!inGuide(e->start(),e->loc(),e->lhs()->toInt())) return false;
-  LeftRightGotIter g1(e);
-  Item* itm;
-  if(g1.size() == 1) return true;
-  //cerr << "IG " << *e << endl;
-  while(g1.next(itm))
-    {
-      int i;
-
-      Item* itm2;
-      int st =itm->start();
-      //if(itm->term() == Term::stopTerm) continue;
-      //cerr << "POS " << g1.pos() << *(g1.index(g1.pos())) << endl;
-      for(i = g1.pos()+1 ; i < g1.size() ; i++)
-	{
-	  itm2 = g1.index(i);
-	  //cerr << "II " << *itm << " " << *itm2 << endl;
-	  if(itm2->term()->terminal_p())
-	    {
-	      if(guide[itm2->start()][itm2->finish()].size() >1) return false;
-	    }
-	  int fn = itm2->finish();
-	  if(st == e->start() && fn == e->loc()) continue;
-	  if(!guide[st][fn].empty()) return false;
-	}
-    }
-  return true;
+  return inGuide(e->start(), e->loc(), e->lhs()->toInt());
 }

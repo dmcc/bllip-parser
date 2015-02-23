@@ -33,91 +33,17 @@ using namespace std;
 #ifdef SWIGJAVA
 %include "swig/java/include/std_list.i"
 #endif
+%rename(stream_extraction) operator<<; // mostly to silence a warning
 
 %include "std_pair.i"
 #include <assert.h>
 
+%{
+    #include "SimpleAPI.C"
+%}
 typedef std::string ECString;
 
-%{
-    #include <cstddef>
-    #include <fstream>
-    #include <math.h>
-    #include <unistd.h>
-    #include <sstream>
-    #include <list>
-
-    #include "AnsHeap.h"
-    #include "AnswerTree.h"
-    #include "Bchart.h"
-    #include "Bst.h"
-    #include "ChartBase.h"
-    #include "ECArgs.h"
-    #include "ECString.h"
-    #include "ewDciTokStrm.h"
-    #include "extraMain.h"
-    #include "GotIter.h"
-    #include "InputTree.h"
-    #include <iostream>
-    #include "Link.h"
-    #include "MeChart.h"
-    #include "Params.h"
-    #include "ParseStats.h"
-    #include "ScoreTree.h"
-    #include "SentRep.h"
-    #include "TimeIt.h"
-    #include "UnitRules.h"
-    #include "utils.h"
-    #include "Wrd.h"
-
-    int sentenceCount;
-    static const double log600 = log2(600.0);
-
-    // getPOS() is adapted from parseIt.C
-
-    // Helper function to return the string name of the most likely part
-    // of speech for a specific word in a chart.
-    static const ECString& getPOS(Wrd& w, MeChart* chart) {
-        list <float>&wpl = chart->wordPlist(&w, w.loc());
-        list <float>::iterator wpli = wpl.begin();
-        float max = -1.0;
-        int termInt = (int)max;
-        for (; wpli != wpl.end(); wpli++) {
-            int term = (int)(*wpli);
-            wpli++;
-            // p*(pos|w) = argmax(pos){ p(w|pos) * p(pos) } 
-            double prob = *wpli * chart->pT(term);
-            if (prob > max) {
-                termInt = term;
-                max = prob;
-            }
-        }
-        const Term *nxtTerm = Term::fromInt(termInt);
-        return nxtTerm->name();
-    }
-
-    class ParserError {
-        public:
-            const char* description;
-
-            ParserError(string msg) {
-                this->description = msg.c_str();
-            }
-
-            ParserError(const char *filename, int filelinenum, const char *msg) {
-                stringstream description;
-                description << "[";
-                description << filename;
-                description << ":";
-                description << filelinenum;
-                description << "]: ";
-                description << msg;
-
-                this->description = description.str().c_str();
-            }
-    };
-%}
-
+// general SWIG exception handler: convert ParserError to RuntimeError
 %exception {
     try {
         $action
@@ -133,323 +59,37 @@ typedef std::string ECString;
 %newobject inputTreesFromFile;
 %newobject sentRepsFromString;
 %newobject sentRepsFromFile;
+%newobject getParseStats;
 %newobject asNBestList;
 %newobject treeLogProb;
 
 %inline{
     const int max_sentence_length = MAXSENTLEN;
 
-    typedef pair<double,InputTree*> ScoredTree;
-    typedef pair<double,bool> ScoreAndBoolean;
-
-    /* main parsing workhorse in the wrapped world */
-    vector<ScoredTree>* parse(SentRep* sent, ExtPos& tag_constraints) {
-        if (sent->length() > MAXSENTLEN) {
-            throw ParserError("Sentence is longer than maximum supported sentence length.");
-        }
-
-        vector<ScoredTree>* scoredTrees = new vector<ScoredTree>();
-
-        ChartBase::guided = false;
-        MeChart* chart = new MeChart(*sent, tag_constraints, 0);
-        chart->parse();
-        Item* topS = chart->topS();
-        if (!topS) {
-            delete chart;
-            throw ParserError("Parse failed: !topS");
-        }
-
-        chart->set_Alphas();
-        Bst& bst = chart->findMapParse();
-
-        if (bst.empty()) {
-            delete chart;
-            throw ParserError("Parse failed: chart->findMapParse().empty()");
-        }
-
-        // decode unique parses
-        Link diffs(0);
-        int numVersions = 0;
-        for ( ; ; numVersions++) {
-            short pos = 0;
-            Val *v = bst.next(numVersions);
-            if (!v) {
-                break;
-            }
-            double vp = v->prob();
-            if (vp == 0 || isnan(vp) || isinf(vp)) {
-                break;
-            }
-            InputTree *mapparse = inputTreeFromBsts(v, pos, *sent);
-            bool isUnique;
-            int length = 0;
-            diffs.is_unique(mapparse, isUnique, length);
-            if (length != sent->length()) {
-                cerr << "Bad length parse for: " << *sent << endl;
-                cerr << *mapparse << endl;
-                assert (length == sent->length());
-            }
-            if (isUnique) {
-                // this strange bit is our underflow protection system
-                double prob = log2(v->prob()) - (mapparse->length() * log600);
-                ScoredTree scoredTree(prob, mapparse);
-                scoredTrees->push_back(scoredTree);
-            } else {
-                delete mapparse;
-            }
-            if (scoredTrees->size() >= Bchart::Nth) {
-                break;
-            }
-            if (numVersions > 20000) {
-                break;
-            }
-        }
-
-        delete chart;
-        sentenceCount++;
-        return scoredTrees;
-    }
-
-    // parse a sentence with no external POS tag constraints
-    vector<ScoredTree>* parse(SentRep* sent) {
-        ExtPos extPos;
-        return parse(sent, extPos);
-    }
-
-    // get the lob probability of an existing tree against the current
-    // model. This is essentially what the evalTree command line tool
-    // does.
-    ScoreAndBoolean* treeLogProb(InputTree* tree, bool warn) {
-        if (tree->length() > MAXSENTLEN) {
-            throw ParserError("Sentence is longer than maximum supported sentence length.");
-        }
-
-        float origTimeFactor = Bchart::timeFactor;
-        Bchart::timeFactor = 3;
-        ChartBase::guided = true;
-        list<ECString> tokenList;
-        tree->make(tokenList);
-        vector<ECString> posList;
-        tree->makePosList(posList);
-        SentRep sentRep(tokenList);
-
-        ScoreTree sc;
-        sc.setEquivInts(posList);
-
-        MeChart* chart = new MeChart(sentRep, 0);
-        chart->setGuide(tree);
-        chart->parse();
-        Item* topS = chart->topS();
-        if(!topS) {
-            Bchart::timeFactor = origTimeFactor;
-            delete chart;
-            throw ParserError("Parse failed: !topS");
-        }
-        chart->set_Alphas();
-        Bst& bst = chart->findMapParse();
-        if (bst.empty()) {
-            Bchart::timeFactor = origTimeFactor;
-            delete chart;
-            throw ParserError("Parse failed: chart->findMapParse().empty()");
-        }
-        double logP = log2(bst.prob());
-        logP -= (sentRep.length() * log600);
-        Val* val = bst.next(0);
-        assert(val);
-
-        bool inaccurateWarning = false;
-        if (warn) {
-            // warn if inaccuracies detected
-            short pos = 0;
-            InputTree* mapparse = inputTreeFromBsts(val, pos, sentRep);
-            assert(mapparse);
-            sc.trips.clear();
-            ParseStats parseStats;
-            sc.recordGold(tree, parseStats);
-            sc.precisionRecall(mapparse, parseStats);
-            float newF = parseStats.fMeasure();
-            inaccurateWarning = newF < 1;
-        }
-        delete chart;
-        Bchart::timeFactor = origTimeFactor;
-        return new ScoreAndBoolean(logP, inaccurateWarning);
-    }
-
-    void setOptions(string language, bool caseInsensitive, int nBest,
-            bool smallCorpus, double overparsing, int debug,
-            float smoothPosAmount) {
-        Bchart::caseInsensitive = caseInsensitive;
-        Bchart::Nth = nBest;
-        Bchart::smallCorpus = smallCorpus;
-        Bchart::timeFactor = overparsing;
-        Bchart::printDebug() = debug;
-        Term::Language = language;
-        Bchart::smoothPosAmount = smoothPosAmount;
-    }
-
-    /* Tokenizes the text and returns a SentRep with the tokens in it.
-       expectedTokens is an estimate of the number of tokens in the sentence.
-       It's not bad if you're wrong since this is just used to preallocate
-       a vector of words. */
-    SentRep* tokenize(string text, int expectedTokens) {
-        istringstream* inputstream = new istringstream(text);
-        ewDciTokStrm* tokStream = new ewDciTokStrm(*inputstream);
-        // not sure why we need an extra read here, but the first word is null
-        // otherwise
-        tokStream->read();
-
-        SentRep* srp = new SentRep(expectedTokens);
-        *tokStream >> *srp;
-
-        delete inputstream;
-        delete tokStream;
-        return srp;
-    }
-
-    /* Tokenizes the text and returns a SentRep with the tokens in it.
-       Uses the approximate average length of an (English) sentence
-       (+1 for a space) to estimate the number of tokens in the text. */
-    SentRep* tokenize(string text) {
-        return tokenize(text, text.length() / 6);
-    }
-
-    InputTree* inputTreeFromString(const char* str) {
-        stringstream inputstream;
-        inputstream << str;
-        InputTree* tree = new InputTree(inputstream);
-        return tree;
-    }
-
-    // NOTE: this leaks! the list is handed off to the higher-level
-    // language but the InputTree objects in it are never freed.
-    // the current workaround is to make sure that we acquire() the
-    // pointers in the higher-level language.
-    list<InputTree* >* inputTreesFromString(const char* str) {
-        stringstream inputstream;
-        inputstream << str;
-        list<InputTree* >* trees = new list<InputTree* >();
-
-        while (inputstream) {
-            InputTree* tree = new InputTree();
-            inputstream >> *tree;
-            // returns an empty tree when the stream is finished
-            if (!tree->length()) {
-                delete tree;
-                break;
-            }
-            trees->push_back(tree);
-        }
-
-        return trees;
-    }
-
-    // NOTE: this leaks. see inputTreesFromString
-    list<InputTree* >* inputTreesFromFile(const char* filename) {
-        ifstream filestream(filename);
-        list<InputTree* >* trees = new list<InputTree* >();
-
-        while (filestream) {
-            InputTree* tree = new InputTree();
-            filestream >> *tree;
-            // returns an empty tree when the stream is finished
-            if (!tree->length()) {
-                delete tree;
-                break;
-            }
-            trees->push_back(tree);
-        }
-
-        return trees;
-    }
-
-    // NOTE: this leaks. see inputTreesFromString
-    list<SentRep* >* sentRepsFromString(const char* str) {
-        stringstream inputstream;
-        inputstream << str;
-        list<SentRep* >* sentReps = new list<SentRep* >();
-        ewDciTokStrm tokStream(inputstream);
-
-        while (true) {
-            SentRep* sentRep = new SentRep();
-            tokStream >> *sentRep;
-            if (!sentRep->length()) {
-                delete sentRep;
-                break;
-            }
-            sentReps->push_back(sentRep);
-        }
-
-        return sentReps;
-    }
-
-    // NOTE: this leaks. see inputTreesFromString
-    list<SentRep* >* sentRepsFromFile(const char* filename) {
-        ifstream filestream(filename);
-        list<SentRep* >* sentReps = new list<SentRep* >();
-        ewDciTokStrm tokStream(filestream);
-
-        while (true) {
-            SentRep* sentRep = new SentRep();
-            tokStream >> *sentRep;
-            if (!sentRep->length()) {
-                delete sentRep;
-                break;
-            }
-            sentReps->push_back(sentRep);
-        }
-
-        return sentReps;
-    }
-
-    /* Returns a string suitable for use with read_nbest_list() in
-       the reranker. Ideally, we'd convert directly from ScoredTree to
-       the reranker's equivalent structure. */
-    string asNBestList(vector<ScoredTree>& scoredTrees, string sentenceId) {
-        stringstream nbest_list;
-        nbest_list.precision(10);
-        nbest_list << scoredTrees.size() << " " << sentenceId << endl;
-        for (int i = 0; i < scoredTrees.size(); i++) {
-            ScoredTree scoredTree = scoredTrees[i];
-            nbest_list << scoredTree.first << endl;
-            scoredTree.second->printproper(nbest_list);
-            nbest_list << endl;
-        }
-
-        return nbest_list.str();
-    }
-
     // overridden version of error() from utils.[Ch]
     // see weakdecls.h for how we "override" C functions
     void error(const char *filename, int filelinenum, const char *msg) {
         throw ParserError(filename, filelinenum, msg);
     }
-
-    // Apply PTB escaping to a string ("(" becomes "-LRB-", etc.)
-    string ptbEscape(string word) {
-        escapeParens(word);
-        return word;
-    }
-
-    // Reverse PTB escaping to a string ("-LRB-" restored as "(", etc.)
-    string ptbUnescape(string word) {
-        unescapeParens(word);
-        return word;
-    }
 } // end %inline
 
 namespace std {
-   %template(ScoreAndBoolean) pair<double,bool>;
+    %template(ScoreAndBoolean) pair<double,bool>;
 
-   %template(StringList) list<string>;
-   %template(SentRepList) list<SentRep*>;
+    // Python doesn't need to wrap this
+#ifdef SWIGJAVA
+    %template(ScoredTree) pair<double,InputTree*>;
+#endif
 
-   %template(ScoredTreePair) pair<double,InputTree*>;
-   %template(InputTrees) list<InputTree*>;
+    %template(StringList) list<string>;
+    %template(SentRepList) list<SentRep*>;
+    %template(InputTrees) list<InputTree*>;
 
-   %template(VectorScoredTree) vector<ScoredTree>;
-   %template(StringVector) vector<string>;
-   %template(TermVector) vector<Term*>;
-   %template(TermVectorVector) vector<vector<Term*> >;
+    %template(VectorScoredTree) vector<ScoredTree>;
+    %template(StringVector) vector<string>;
+    %template(TermVector) vector<Term*>;
+    %template(TermVectorVector) vector<vector<Term*> >;
+    %template(LabeledSpans) vector<LabeledSpan>;
 }
 
 // bits of header files to wrap -- some of these may not be necessary
@@ -593,7 +233,7 @@ class Wrd {
 
 class Term {
     public:
-        Term(); // provided only for maps.
+        Term();
         Term(const ECString s, int terminal, int n);
         int toInt();
 
@@ -666,4 +306,9 @@ class ParseStats {
         int numInGold;
         int numInGuessed;
         int numCorrect;
+        float fMeasure();
+        float precision();
+        float recall();
 };
+
+%include "SimpleAPI.h"

@@ -32,7 +32,7 @@ glob:second-stage/programs/wlle/gavper
 glob:second-stage/programs/wlle/cvlm
 glob:second-stage/programs/wlle/cvlm-lbfgs
 glob:second-stage/programs/wlle/oracle
-glob:*.swp
+glob:*.sw[op]
 glob:*.orig
 glob:tags
 glob:TAGS
@@ -52,6 +52,8 @@ glob:build*
 glob:dist*
 glob:first-stage/PARSE/parser_wrapper.C
 glob:second-stage/programs/features/reranker_wrapper.C
+glob:first-stage/PARSE/swig/wrapper.C
+glob:second-stage/programs/features/swig/wrapper.C
 glob:python/bllipparser/CharniakParser.py
 glob:python/bllipparser/JohnsonReranker.py
 glob:MANIFEST

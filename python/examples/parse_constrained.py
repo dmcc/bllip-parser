@@ -11,9 +11,13 @@
 # under the License.
 
 """Example of how to parse with arbitrary constraints. The consistent()
-function can be replaced with any other predicate. Note that depending
-on your constraints, you may need to expand the n-best first before you
-find a tree that matches."""
+function can be replaced with any other predicate. Note that depending on
+the strictness of your constraints, you may need to expand the n-best
+list first before you find a tree that matches.
+
+Also note that the parser natively supports span constraints via the
+parse_constrained() method so this code is purely for demonstrating how
+more complicated constraints could be enforced in Python."""
 
 def parse_constrained(rrp, sentence, constraints):
     """Example of how to find the highest scoring parse in the n-best list
@@ -40,14 +44,14 @@ if __name__ == "__main__":
     # this needs to be run from the root of the repository since it has
     # a relative path to the parsing model
 
-    from bllipparser import RerankingParser, Tree
+    from bllipparser import RerankingParser
     rrp = RerankingParser()
     rrp.load_parser_model('first-stage/DATA/EN')
 
     # the constraint means: there must be a VP from [1,5)
     # (i.e., left ... Falklands)
     # this encourages the parser to pick "left" as the main verb
-    constraints = {(1, 5) : ['VP']}
+    constraints = {(1, 5): ['VP']}
     print parse_constrained(rrp, 'British left waffles on Falklands .'.split(),
                             constraints)
     # if we parse without constraints, we get that the main verb is "waffles"

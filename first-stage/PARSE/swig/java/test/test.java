@@ -58,7 +58,7 @@ public class test {
 
     public static void testParse() {
         SentRep sent = makeSentRep(new String[] {"These", "are", "also", "tokens", "."});
-        List<ScoredTreePair> parses = parse(sent);
+        List<ScoredTree> parses = parse(sent);
         dumpParses(parses);
     }
 
@@ -66,11 +66,11 @@ public class test {
         SentRep sent = makeSentRep(new String[] {"record"});
 
         System.out.println("Unconstrained");
-        List<ScoredTreePair> parses = parse(sent);
+        List<ScoredTree> parses = parse(sent);
         dumpParses(parses);
 
         ExtPos extPos1 = new ExtPos();
-        VectorString vs1 = new VectorString();
+        StringVector vs1 = new StringVector();
         vs1.add("NN");
         extPos1.addTagConstraints(vs1);
 
@@ -79,7 +79,7 @@ public class test {
         dumpParses(parses);
 
         ExtPos extPos2 = new ExtPos();
-        VectorString vs2 = new VectorString();
+        StringVector vs2 = new StringVector();
         vs2.add("VB");
         extPos2.addTagConstraints(vs2);
 
@@ -92,7 +92,7 @@ public class test {
         SentRep sent = makeSentRep("British left waffles on Falklands .".split(" "));
 
         System.out.println("Unconstrained");
-        List<ScoredTreePair> parses = parse(sent);
+        List<ScoredTree> parses = parse(sent);
         dumpParses(parses);
 
         ExtPos extPos1 = makeExtPos(null,
@@ -170,20 +170,20 @@ public class test {
         }
     }
 
-    public static List<ScoredTreePair> parse(SentRep sentRep) {
+    public static List<ScoredTree> parse(SentRep sentRep) {
         return parse(sentRep, null);
     }
 
-    public static List<ScoredTreePair> parse(SentRep sentRep, ExtPos extPos) {
-        List<ScoredTreePair> results = new ArrayList<ScoredTreePair>();
-        ScoreVector scoreList;
+    public static List<ScoredTree> parse(SentRep sentRep, ExtPos extPos) {
+        List<ScoredTree> results = new ArrayList<ScoredTree>();
+        VectorScoredTree scoreList;
         if (extPos == null) {
             scoreList = SWIGParser.parse(sentRep);
         } else {
             if (sentRep.length() != extPos.size()) {
                 throw new RuntimeException("ExtPos constraints don't match the length of the sentence (extPos: " + extPos.size() + ", sentence: " + sentRep.length() + ")");
             }
-            scoreList = SWIGParser.parse(sentRep, extPos);
+            scoreList = SWIGParser.parse(sentRep, extPos, null);
         }
 
         // ScoreVector isn't Iterable so we copy its contents over to a Java List
@@ -194,9 +194,9 @@ public class test {
         return results;
     }
 
-    public static void dumpParses(List<ScoredTreePair> parses) {
+    public static void dumpParses(List<ScoredTree> parses) {
         int i = 0;
-        for (ScoredTreePair scoredTreePair : parses) {
+        for (ScoredTree scoredTreePair : parses) {
             System.out.println("Parse " + i + ":");
             InputTree tree = scoredTreePair.getSecond();
             System.out.println(scoredTreePair.getFirst() + "\n" + tree);
@@ -208,7 +208,7 @@ public class test {
     public static ExtPos makeExtPos(String[]... possibleTagArray) {
         ExtPos extPos = new ExtPos();
         for (String[] possibleTags : possibleTagArray) {
-            VectorString tagConstraints = new VectorString();
+            StringVector tagConstraints = new StringVector();
             if (possibleTags != null) {
                 for (String tag : possibleTags) {
                     tagConstraints.add(tag);

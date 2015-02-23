@@ -61,12 +61,12 @@ def test_extpos():
     ext_pos1 = parser.ExtPos()
     ext_pos1.addTagConstraints(parser.StringVector(['NN']))
 
-    display_parses(parser.parse(sr1, ext_pos1))
+    display_parses(parser.parse(sr1, ext_pos1, None))
 
     print 'VB'
     ext_pos2 = parser.ExtPos()
     ext_pos2.addTagConstraints(parser.StringVector(['VB']))
-    display_parses(parser.parse(sr1, ext_pos2))
+    display_parses(parser.parse(sr1, ext_pos2, None))
 
 def test_multiword_extpos():
     sr1 = parser.SentRep('British left waffles on Falklands .'.split())
@@ -83,7 +83,7 @@ def test_multiword_extpos():
         ext_pos.addTagConstraints(parser.StringVector([]))
         ext_pos.addTagConstraints(parser.StringVector([]))
         ext_pos.addTagConstraints(parser.StringVector([]))
-        display_parses(parser.parse(sr1, ext_pos))
+        display_parses(parser.parse(sr1, ext_pos, None))
 
         print 'waffles = NNS:'
         ext_pos = parser.ExtPos()
@@ -93,7 +93,7 @@ def test_multiword_extpos():
         ext_pos.addTagConstraints(parser.StringVector([]))
         ext_pos.addTagConstraints(parser.StringVector([]))
         ext_pos.addTagConstraints(parser.StringVector([]))
-        display_parses(parser.parse(sr1, ext_pos))
+        display_parses(parser.parse(sr1, ext_pos, None))
 
         print 'waffles = NN/NNS:'
         ext_pos = parser.ExtPos()
@@ -103,7 +103,7 @@ def test_multiword_extpos():
         ext_pos.addTagConstraints(parser.StringVector([]))
         ext_pos.addTagConstraints(parser.StringVector([]))
         ext_pos.addTagConstraints(parser.StringVector([]))
-        display_parses(parser.parse(sr1, ext_pos))
+        display_parses(parser.parse(sr1, ext_pos, None))
 
 if __name__ == "__main__":
     dir_contents()

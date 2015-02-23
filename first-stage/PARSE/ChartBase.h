@@ -64,6 +64,7 @@ public:
     static vector<Item*>    itemsToDelete[MAXNUMTHREADS];
     static bool     guided;
     void            setGuide(InputTree* tree);
+    void            addConstraint(int start, int end, int term);
 protected:
     Item           *get_S() const;  
     Items           regs[MAXSENTLEN][MAXSENTLEN];

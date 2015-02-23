@@ -146,27 +146,17 @@ class Tree(object):
         gold = stats.numInGold
         test = stats.numInGuessed
         matched = stats.numCorrect
-        precision = float(matched) / test
-        recall = float(matched) / gold
-        denom = precision + recall
-        if denom == 0:
-            fscore = 0
-        else:
-            fscore = (2 * precision * recall) / denom
         return dict(gold=gold, test=test, matched=matched,
-                    precision=precision, recall=recall, fscore=fscore)
-    def log_prob(self, warn=True):
+                    fscore=stats.fMeasure(), precision=stats.precision(),
+                    recall=stats.recall())
+    def log_prob(self):
         """Asks the current first-stage parsing model to score an existing
-        tree.  Returns the tuple (parser model's log probability, too
-        high warning bit).  As the parser's README says: "For reasons that
-        would take us too far afield, about 13% of the time it returns a
-        probability that is too high." If warn=True and this circumstance
-        is detected, the second element in the tuple will be True."""
+        tree. Returns parser model's log probability. Python equivalent of the
+        evalTree command line tool."""
         if not RerankingParser._parser_model_loaded:
             raise ValueError("You need to have loaded a parser model in "
                              "order to get the log probability.")
-        score_and_bool = parser.treeLogProb(self._tree, warn)
-        return (score_and_bool[0], score_and_bool[1])
+        return parser.treeLogProb(self._tree)
 
     #
     # properties
@@ -531,30 +521,66 @@ class RerankingParser:
                      sentence_id=None):
         """Parse some pre-tagged, pre-tokenized text. tokens must be a
         sequence of strings. possible_tags is map from token indices
-        to possible POS tags (strings). Tokens without an entry in
-        possible_tags will be unconstrained by POS. POS tags must be
-        in the terms.txt file in the parsing model or else you will get
-        a ValueError. If rerank is True, we will rerank the n-best list,
-        if False the reranker will not be used. rerank can also be set to
-        'auto' which will only rerank if a reranker model is loaded."""
+        to possible POS tags (strings):
+
+                { index: [tags] }
+
+        Tokens without an entry in possible_tags will be unconstrained by
+        POS. If multiple tags are specified, their order will (roughly)
+        determine the parsers preference in using them.  POS tags must
+        be in the terms.txt file in the parsing model or else you will
+        get a ValueError. The rerank flag is the same as in parse()."""
         rerank = self.check_models_loaded_or_error(rerank)
         if isinstance(tokens, basestring):
             raise ValueError("tokens must be a sequence, not a string.")
 
-        ext_pos = parser.ExtPos()
-        for index in range(len(tokens)):
-            tags = possible_tags.get(index, [])
-            if isinstance(tags, basestring):
-                tags = [tags]
-            tags = map(str, tags)
-            valid_tags = ext_pos.addTagConstraints(parser.StringVector(tags))
-            if not valid_tags:
-                # at least one of the tags is bad -- find out which ones
-                # and throw a ValueError
-                self._find_bad_tag_and_raise_error(tags)
-
+        ext_pos = self._possible_tags_to_ext_pos(tokens, possible_tags)
         sentence = Sentence(tokens)
-        parses = parser.parse(sentence.sentrep, ext_pos)
+        parses = parser.parse(sentence.sentrep, ext_pos, None)
+        nbest_list = NBestList(sentence, parses, sentence_id)
+        if rerank:
+            nbest_list.rerank(self)
+        return nbest_list
+
+    def parse_constrained(self, tokens, constraints, possible_tags=None,
+                          rerank='auto', sentence_id=None):
+        """Parse pre-tokenized text with part of speech and/or phrasal
+        constraints. Constraints is a dictionary of
+
+            {(start, end): [terms]}
+
+        which represents the constraint that all spans between [start,end)
+        must be one of the terms in that list.
+
+        This also allows you to incorporate external POS tags as in
+        parse_tagged(). While you can specify a constraint or an external
+        POS tag for a word, the semantics are slightly different. Setting
+        a tag with possible_tags will allow you to force a word to be a
+        POS tag that the parser's tagger would not ordinarily use for
+        a tag. Setting a constraint with constraints would only limit
+        the set of allowable tags.  Additionally, setting constraints
+        doesn't change the probability of the final tree whereas setting
+        possible_tags changes the probabilities of words given tags and
+        may change the overall probability.
+
+        The rerank flag is the same as in parse()."""
+        rerank = self.check_models_loaded_or_error(rerank)
+        if isinstance(tokens, basestring):
+            raise ValueError("tokens must be a sequence, not a string.")
+
+        span_constraints = parser.SpanConstraints()
+        for (start, end), terms in constraints.items():
+            if end <= start:
+                raise ValueError("End must be at least start + 1:"
+                                 "(%r, %r) -> %r" % (start, end, terms))
+            # phrasal constraints
+            for term in terms:
+                span_constraints.addConstraint(start, end, term)
+
+        possible_tags = possible_tags or {}
+        ext_pos = self._possible_tags_to_ext_pos(tokens, possible_tags)
+        sentence = Sentence(tokens)
+        parses = parser.parse(sentence.sentrep, ext_pos, span_constraints)
         nbest_list = NBestList(sentence, parses, sentence_id)
         if rerank:
             nbest_list.rerank(self)
@@ -586,6 +612,20 @@ class RerankingParser:
         text_or_tokens can be either a string or a sequence of tokens."""
         parses = self.parse(text_or_tokens)
         return parses[0].ptb_parse.tokens_and_tags()
+
+    def _possible_tags_to_ext_pos(self, tokens, possible_tags):
+        ext_pos = parser.ExtPos()
+        for index in range(len(tokens)):
+            tags = possible_tags.get(index, [])
+            if isinstance(tags, basestring):
+                tags = [tags]
+            tags = map(str, tags)
+            valid_tags = ext_pos.addTagConstraints(parser.StringVector(tags))
+            if not valid_tags:
+                # at least one of the tags is bad -- find out which ones
+                # and throw a ValueError
+                self._find_bad_tag_and_raise_error(tags)
+        return ext_pos
 
     def _find_bad_tag_and_raise_error(self, tags):
         ext_pos = parser.ExtPos()

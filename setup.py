@@ -14,7 +14,7 @@ def run(args):
     subprocess.check_call(args)
 
 parser_base = 'first-stage/PARSE/'
-parser_wrapper = 'parser_wrapper.C'
+parser_wrapper = 'swig/wrapper.C'
 parser_wrapper_full = join(parser_base, parser_wrapper)
 
 def is_newer(filename1, filename2):
@@ -32,7 +32,8 @@ def maybe_run_swig(wrapper_filename, module_name, base_directory):
 
     print 'Generating', module_name, 'SWIG wrapper files'
     run(['swig', '-python', '-c++', '-module',
-        module_name, '-Wall', '-classic', '-outdir', 'python/bllipparser',
+        module_name, '-I' + base_directory,
+        '-Wall', '-classic', '-outdir', 'python/bllipparser',
         '-o', wrapper_filename, swig_filename])
 
 # generate parser SWIG files if needed
@@ -54,7 +55,7 @@ parser_module = Extension('bllipparser._CharniakParser',
     libraries=['stdc++'])
 
 reranker_base = 'second-stage/programs/features/'
-reranker_wrapper = 'reranker_wrapper.C'
+reranker_wrapper = 'swig/wrapper.C'
 reranker_wrapper_full = reranker_base + reranker_wrapper
 reranker_read_tree = 'read-tree.cc'
 reranker_read_tree_full = reranker_base + 'read-tree.cc'

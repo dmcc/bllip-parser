@@ -196,13 +196,14 @@ for each tree, one per line. ``evalTree`` can be run using the following::
 
     shell> evalTree /path/to/model/dir/
 
-If the tree is assigned zero probability it returns 0 for the log2
-probability.
+If the tree is assigned zero probability or the parse otherwise fails,
+it returns 0 for the log2 probability. In some cases, this may happen
+less often if the n-best list size is expanded.
 
-For reasons that would take us too far afield, about 13% of the time it
-returns a probability that is too high.  If you want to be warned when
-it is doing this, give ``evalTree`` a ``-W`` command line argument and
-the output will have an ``!`` at the end of the line when this happens.
+If the sentence is parsable with the model, ``evalTree`` now returns
+the parser's log prob correctly 99.9% of the time (this used to be
+about 87%-95%). Due to quirks in the parsing model, the remaining 0.1%
+is both hard to detect or fix.
 
 Parsing from tagged input
 -------------------------
@@ -238,7 +239,7 @@ matches, you should pretokenize your input and supply the ``-K`` flag.
 
 Frequently confusing errors
 ---------------------------
-a.  If parser provides no output at all
+a.  Parser provides no output at all:
 
     This is most likely caused by not having spaces around the ``<s>``
     and ``</s>`` brackets, i.e.,::
@@ -259,4 +260,4 @@ b.  When retraining: ``Couldn't find term: _____
     ``TRAIN`` for more details.
 
 If you're still stuck, check the other ``README`` files then consider
-filing a bug at https://github.com/BLLIP/bllip-parser/issues
+`filing a bug <https://github.com/BLLIP/bllip-parser/issues>`_.

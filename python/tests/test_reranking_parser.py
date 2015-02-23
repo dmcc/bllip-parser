@@ -118,10 +118,8 @@ def test_reranking_parser_basics():
     >>> print len(nbest_list)
     13
     >>> print nbest_list[0].ptb_parse.log_prob()
-    (-30.398166970084645, False)
-    >>> print nbest_list[0].ptb_parse.log_prob(warn=True)
-    (-30.398166970084645, False)
-    >>> nbest_list[0].ptb_parse.log_prob()[0] == nbest_list[0].parser_score
+    -30.3981669701
+    >>> nbest_list[0].ptb_parse.log_prob() == nbest_list[0].parser_score
     True
     >>> nbest_list2 = rrp.parse(['This', 'is', 'a', 'pretokenized', 'sentence', '.'])
     >>> print str(nbest_list2).strip()
@@ -349,11 +347,86 @@ def test_reranking_parser_basics():
     >>> from bllipparser import Sentence
     >>> Sentence('British left waffles on Falklands .').independent_tags()
     ('JJ', 'VBN', 'NNS', 'IN', 'NNP', '.')
+    >>> constraints = {(1, 5) : ['VP']}
+    >>> nbest_list = rrp.parse_constrained('British left waffles on Falklands .'.split(), constraints)
+    >>> print str(nbest_list).strip()
+    10 x
+    -25.836244321 -93.6286744642
+    (S1 (S (NP (NNPS British)) (VP (VBD left) (NP (NNS waffles)) (PP (IN on) (NP (NNP Falklands)))) (. .)))
+    -25.9966925705 -95.7474111377
+    (S1 (S (NP (NNPS British)) (VP (VBD left) (NP (NNS waffles)) (PP (IN on) (NP (NNPS Falklands)))) (. .)))
+    -26.6154733928 -93.1372330926
+    (S1 (S (NP (NNPS British)) (VP (VBD left) (NP (NP (NNS waffles)) (PP (IN on) (NP (NNP Falklands))))) (. .)))
+    -26.9453743621 -94.8459445679
+    (S1 (S (NP (NNPS British)) (VP (VBD left) (NP (NP (NNS waffles)) (PP (IN on) (NP (NNPS Falklands))))) (. .)))
+    -27.0537353446 -93.6112342559
+    (S1 (S (NP (NNP British)) (VP (VBD left) (NP (NNS waffles)) (PP (IN on) (NP (NNP Falklands)))) (. .)))
+    -27.3221541914 -95.7299709295
+    (S1 (S (NP (NNP British)) (VP (VBD left) (NP (NNS waffles)) (PP (IN on) (NP (NNPS Falklands)))) (. .)))
+    -27.9003378837 -93.1197928843
+    (S1 (S (NP (NNP British)) (VP (VBD left) (NP (NP (NNS waffles)) (PP (IN on) (NP (NNP Falklands))))) (. .)))
+    -28.2198807661 -95.9050765306
+    (S1 (S (NP (NNS British)) (VP (VBD left) (NP (NNS waffles)) (PP (IN on) (NP (NNP Falklands)))) (. .)))
+    -28.338209453 -94.8285043597
+    (S1 (S (NP (NNP British)) (VP (VBD left) (NP (NP (NNS waffles)) (PP (IN on) (NP (NNPS Falklands))))) (. .)))
+    -29.122754708 -95.4136351589
+    (S1 (S (NP (NNS British)) (VP (VBD left) (NP (NP (NNS waffles)) (PP (IN on) (NP (NNP Falklands))))) (. .)))
+    >>> nbest_list2 = rrp.parse_constrained('British left waffles on Falklands .'.split(), {})
+    >>> print str(nbest_list2).strip()
+    10 x
+    -25.8126695909 -90.2342444645
+    (S1 (S (NP (JJ British) (NN left)) (VP (VBZ waffles) (PP (IN on) (NP (NNP Falklands)))) (. .)))
+    -25.836244321 -93.6286744642
+    (S1 (S (NP (NNPS British)) (VP (VBD left) (NP (NNS waffles)) (PP (IN on) (NP (NNP Falklands)))) (. .)))
+    -26.0312053125 -92.352981138
+    (S1 (S (NP (JJ British) (NN left)) (VP (VBZ waffles) (PP (IN on) (NP (NNPS Falklands)))) (. .)))
+    -26.6154733928 -93.1372330926
+    (S1 (S (NP (NNPS British)) (VP (VBD left) (NP (NP (NNS waffles)) (PP (IN on) (NP (NNP Falklands))))) (. .)))
+    -26.9371121677 -93.9026623336
+    (S1 (S (NP (JJ British) (NN left)) (VP (VBZ waffles) (PP (IN on) (NP (NNS Falklands)))) (. .)))
+    -26.9453743621 -94.8459445679
+    (S1 (S (NP (NNPS British)) (VP (VBD left) (NP (NP (NNS waffles)) (PP (IN on) (NP (NNPS Falklands))))) (. .)))
+    -27.0537353446 -93.6112342559
+    (S1 (S (NP (NNP British)) (VP (VBD left) (NP (NNS waffles)) (PP (IN on) (NP (NNP Falklands)))) (. .)))
+    -27.3630657512 -95.1571335758
+    (S1 (S (NP (NNP British) (NN left)) (VP (VBZ waffles) (PP (IN on) (NP (NNP Falklands)))) (. .)))
+    -27.9003378837 -93.1197928843
+    (S1 (S (NP (NNP British)) (VP (VBD left) (NP (NP (NNS waffles)) (PP (IN on) (NP (NNP Falklands))))) (. .)))
+    -28.338209453 -94.8285043597
+    (S1 (S (NP (NNP British)) (VP (VBD left) (NP (NP (NNS waffles)) (PP (IN on) (NP (NNPS Falklands))))) (. .)))
+    >>> nbest_list3 = rrp.parse_constrained('British left waffles on Falklands .'.split(), constraints, possible_tags={1: 'VBD'})
+    >>> assert str(nbest_list).strip() == str(nbest_list3).strip()
+    >>> nbest_list4 = rrp.parse_constrained('British left waffles on Falklands .'.split(), constraints, possible_tags={1: 'VBZ'})
+    >>> print str(nbest_list4).strip()
+    10 x
+    -30.0747237573 -106.808764217
+    (S1 (S (NP (NNP British)) (VP (VBZ left) (NP (NNS waffles)) (PP (IN on) (NP (NNP Falklands)))) (. .)))
+    -30.4801072424 -108.927500891
+    (S1 (S (NP (NNP British)) (VP (VBZ left) (NP (NNS waffles)) (PP (IN on) (NP (NNPS Falklands)))) (. .)))
+    -30.5333433842 -108.948330724
+    (S1 (S (NP (NNPS British)) (VP (VBZ left) (NP (NNS waffles)) (PP (IN on) (NP (NNP Falklands)))) (. .)))
+    -30.8151980896 -104.805165121
+    (S1 (S (NP (NNP British)) (VP (VBZ left) (NP (NP (NNS waffles)) (PP (IN on) (NP (NNP Falklands))))) (. .)))
+    -31.2292881945 -106.513876597
+    (S1 (S (NP (NNP British)) (VP (VBZ left) (NP (NP (NNS waffles)) (PP (IN on) (NP (NNPS Falklands))))) (. .)))
+    -31.2785161465 -106.944731628
+    (S1 (S (NP (NNPS British)) (VP (VBZ left) (NP (NP (NNS waffles)) (PP (IN on) (NP (NNP Falklands))))) (. .)))
+    -31.5846356514 -108.653443103
+    (S1 (S (NP (NNPS British)) (VP (VBZ left) (NP (NP (NNS waffles)) (PP (IN on) (NP (NNPS Falklands))))) (. .)))
+    -31.7626299938 -108.627394514
+    (S1 (S (NP (NNP British)) (VP (VBZ left) (NP (NP (NNS waffles)) (PP (IN on) (NP (NNS Falklands))))) (. .)))
+    -33.2085090166 -107.19852478
+    (S1 (S (NP (JJ British)) (VP (VBZ left) (NP (NP (NNS waffles)) (PP (IN on) (NP (NNP Falklands))))) (. .)))
+    -33.5519491115 -108.907236256
+    (S1 (S (NP (JJ British)) (VP (VBZ left) (NP (NP (NNS waffles)) (PP (IN on) (NP (NNPS Falklands))))) (. .)))
+    >>> constraints[(1, 2)] = ['VBZ']
+    >>> nbest_list5 = rrp.parse_constrained('British left waffles on Falklands .'.split(), constraints)
+    >>> assert str(nbest_list4).strip() == str(nbest_list5).strip()
     """
 
 def stringify_dict(d):
     """Yeah, we should really stop using doctests."""
-    return ', '.join('%s=%s' % item for item in sorted(d.items()))
+    return ', '.join('%s=%.2f' % item for item in sorted(d.items()))
 
 def test_tree_eval():
     """
@@ -366,11 +439,11 @@ def test_tree_eval():
     >>> tree3 = bllipparser.Tree('(S1 (SBARQ (WHNP (DT This)) (SQ (VP (AUX is) (NP (DT a) (NN sentence)))) (. .)))')
     >>> eval1 = tree1.evaluate(tree2)
     >>> print stringify_dict(eval1)
-    fscore=1.0, gold=4, matched=4, precision=1.0, recall=1.0, test=4
+    fscore=1.00, gold=4.00, matched=4.00, precision=1.00, recall=1.00, test=4.00
     >>> eval2 = tree2.evaluate(tree1)
     >>> print stringify_dict(eval2)
-    fscore=1.0, gold=4, matched=4, precision=1.0, recall=1.0, test=4
+    fscore=1.00, gold=4.00, matched=4.00, precision=1.00, recall=1.00, test=4.00
     >>> eval3 = tree3.evaluate(tree1)
     >>> print stringify_dict(eval3)
-    fscore=0.444444444444, gold=4, matched=2, precision=0.4, recall=0.5, test=5
+    fscore=0.44, gold=4.00, matched=2.00, precision=0.40, recall=0.50, test=5.00
     """

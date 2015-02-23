@@ -15,7 +15,7 @@ default: parseIt
 all: parseIt parseAndEval evalTree
 
 clean:
-	rm -f *.o oparseIt parseIt parseAndEval evalTree *~ threads TAGS tags parser_wrapper.C
+	rm -f *.o oparseIt parseIt parseAndEval evalTree *~ threads TAGS tags parser_wrapper.C swig/wrapper.C
 
 .PHONY: real-clean
 real-clean: clean swig-clean
@@ -75,12 +75,12 @@ COMMON_OBJS = \
 	headFinder.o \
 	headFinderCh.o \
 	utils.o \
-	MeChart.o \
+	MeChart.o
 
 PARSEANDEVAL_OBJS = $(COMMON_OBJS) parseAndEval.o
 PARSE_OBJS = $(COMMON_OBJS) parseIt.o
 OPARSE_OBJS = $(COMMON_OBJS) oparseIt.o
-EVALTREE_OBJS = $(COMMON_OBJS) evalTree.o
+EVALTREE_OBJS = $(COMMON_OBJS) SimpleAPI.o evalTree.o
 
 parseAndEval: $(PARSEANDEVAL_OBJS)
 	$(CXX) $(CFLAGS) ${PARSEANDEVAL_OBJS} -o parseAndEval -D_REENTRANT -D_XOPEN_SOURCE=600 -lpthread
