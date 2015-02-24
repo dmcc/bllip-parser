@@ -191,7 +191,11 @@ class SpanConstraints: public vector<LabeledSpan> {
                 this->begin(), this->end());
         }
 
-        bool apply(ChartBase* chart, int length) {
+        // Apply these constraints to a chart. Returns true iff parsing
+        // should be done in guided mode (if the minSizeForParsing is too
+        // high, the constraints won't actually be applied and you shouldn't
+        // do guided parsing)
+        bool applyToChart(ChartBase* chart, int length) {
             if (length < minSizeForParsing) {
                 return false;
             }
@@ -252,7 +256,8 @@ vector<ScoredTree>* parse(SentRep* sent, ExtPos& tagConstraints,
 
     MeChart* chart = new MeChart(*sent, tagConstraints, 0);
     if (spanConstraints) {
-        ChartBase::guided = spanConstraints->apply(chart, sent->length());
+        ChartBase::guided = spanConstraints->applyToChart(chart,
+                                                          sent->length());
     } else {
         ChartBase::guided = false;
     }

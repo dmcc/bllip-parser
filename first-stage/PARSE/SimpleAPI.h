@@ -76,7 +76,7 @@ class SpanConstraints: public vector<LabeledSpan> {
         static void spansFromTree(InputTree* tree, SpanConstraints& spans);
 
         bool matches(InputTree* tree);
-        bool apply(ChartBase* chart, int length);
+        bool applyToChart(ChartBase* chart, int length);
         bool disrupts(int start, int end);
 };
 
