@@ -580,7 +580,10 @@ class RerankingParser:
         possible_tags = possible_tags or {}
         ext_pos = self._possible_tags_to_ext_pos(tokens, possible_tags)
         sentence = Sentence(tokens)
-        parses = parser.parse(sentence.sentrep, ext_pos, span_constraints)
+        try:
+            parses = parser.parse(sentence.sentrep, ext_pos, span_constraints)
+        except RuntimeError:
+            parses = []
         nbest_list = NBestList(sentence, parses, sentence_id)
         if rerank:
             nbest_list.rerank(self)
