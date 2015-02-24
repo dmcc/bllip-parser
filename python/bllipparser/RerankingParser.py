@@ -530,17 +530,8 @@ class RerankingParser:
         determine the parsers preference in using them.  POS tags must
         be in the terms.txt file in the parsing model or else you will
         get a ValueError. The rerank flag is the same as in parse()."""
-        rerank = self.check_models_loaded_or_error(rerank)
-        if isinstance(tokens, basestring):
-            raise ValueError("tokens must be a sequence, not a string.")
-
-        ext_pos = self._possible_tags_to_ext_pos(tokens, possible_tags)
-        sentence = Sentence(tokens)
-        parses = parser.parse(sentence.sentrep, ext_pos, None)
-        nbest_list = NBestList(sentence, parses, sentence_id)
-        if rerank:
-            nbest_list.rerank(self)
-        return nbest_list
+        return self.parse_constrained(tokens, {}, possible_tags,
+                                      rerank=rerank, sentence_id=sentence_id)
 
     def parse_constrained(self, tokens, constraints, possible_tags=None,
                           rerank='auto', sentence_id=None):
@@ -568,14 +559,16 @@ class RerankingParser:
         if isinstance(tokens, basestring):
             raise ValueError("tokens must be a sequence, not a string.")
 
-        span_constraints = parser.SpanConstraints()
-        for (start, end), terms in constraints.items():
-            if end <= start:
-                raise ValueError("End must be at least start + 1:"
-                                 "(%r, %r) -> %r" % (start, end, terms))
-            # phrasal constraints
-            for term in terms:
-                span_constraints.addConstraint(start, end, term)
+        if constraints:
+            span_constraints = parser.SpanConstraints()
+            for (start, end), terms in constraints.items():
+                if end <= start:
+                    raise ValueError("End must be at least start + 1:"
+                                     "(%r, %r) -> %r" % (start, end, terms))
+                for term in terms:
+                    span_constraints.addConstraint(start, end, term)
+        else:
+            span_constraints = None
 
         possible_tags = possible_tags or {}
         ext_pos = self._possible_tags_to_ext_pos(tokens, possible_tags)
