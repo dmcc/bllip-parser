@@ -611,6 +611,8 @@ class RerankingParser:
 
     def _possible_tags_to_ext_pos(self, tokens, possible_tags):
         ext_pos = parser.ExtPos()
+        if not possible_tags:
+            return ext_pos
         for index in range(len(tokens)):
             tags = possible_tags.get(index, [])
             if isinstance(tags, basestring):
