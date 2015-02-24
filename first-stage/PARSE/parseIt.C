@@ -381,11 +381,9 @@ static const ECString& getPOS(Wrd& w, MeChart *chart)
 //------------------------------
 static void makeFlat(SentRep *srp, MeChart *chart, InputTree*& t)
 {
-  bool allocated=false;
   if (chart == NULL && srp->length() < MAXSENTLEN) 
     {
       chart = new MeChart( *srp,0);
-      allocated=true;
     }
 
   // 05/30/06 ML: use something short for pretend POS tag
