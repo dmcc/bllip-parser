@@ -91,14 +91,12 @@ class LabeledSpan {
             }
 
             // canonicalize order so that A is at least as early as B
-            int startA, startB, endA, endB;
+            int startB, endA, endB;
             if (start < otherStart) {
-                startA = start;
                 endA = end;
                 startB = otherStart;
                 endB = otherEnd;
             } else { // start > otherStart
-                startA = otherStart;
                 endA = otherEnd;
                 startB = start;
                 endB = end;
