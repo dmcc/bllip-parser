@@ -85,11 +85,9 @@ namespace std {
     %template(SentRepList) list<SentRep*>;
     %template(InputTrees) list<InputTree*>;
 
-    %template(VectorScoredTree) vector<ScoredTree>;
     %template(StringVector) vector<string>;
     %template(TermVector) vector<Term*>;
     %template(TermVectorVector) vector<vector<Term*> >;
-    %template(LabeledSpans) vector<LabeledSpan>;
 }
 
 // bits of header files to wrap -- some of these may not be necessary
@@ -312,3 +310,8 @@ class ParseStats {
 };
 
 %include "SimpleAPI.h"
+
+namespace std {
+    %template(LabeledSpans) vector<LabeledSpan>;
+    %template(VectorScoredTree) vector<ScoredTree>;
+}
