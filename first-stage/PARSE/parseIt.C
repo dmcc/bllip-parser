@@ -125,12 +125,11 @@ static void usage(const char *program)
 int
 main(int argc, char *argv[])
 {
-  if (argc==1) {
-    usage(argv[0]);
-    return 1;
-  }
-
   ECArgs args( argc, argv );
+  if (argc == 1 || args.isset('h')) {
+    usage(argv[0]);
+    return 0;
+  }
   params.init( args );
   int numThreads=DEFAULT_NTHREAD;
   if(args.isset('t')) 
