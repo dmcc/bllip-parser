@@ -71,6 +71,7 @@ class LabeledSpan {
 
 class SpanConstraints: public vector<LabeledSpan> {
     public:
+        int minSizeForParsing;
         SpanConstraints();
         void addConstraint(int start, int end, string term);
         static void spansFromTree(InputTree* tree, SpanConstraints& spans);
