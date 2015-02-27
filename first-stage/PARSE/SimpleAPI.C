@@ -148,11 +148,9 @@ class LabeledSpan {
 
 class SpanConstraints: public vector<LabeledSpan> {
     public:
-        bool decodeOnly;
         int minSizeForParsing;
         bool sorted;
         SpanConstraints() {
-            decodeOnly = false;
             sorted = false;
             minSizeForParsing = 0;
         }
