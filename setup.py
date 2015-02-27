@@ -22,12 +22,16 @@ def is_newer(filename1, filename2):
     filename2."""
     return os.stat(filename1).st_mtime > os.stat(filename2).st_mtime
 
-def maybe_run_swig(wrapper_filename, module_name, base_directory):
+def maybe_run_swig(wrapper_filename, module_name, base_directory,
+                   extra_deps=None):
     """Run SWIG if its outputs are missing or out of date."""
     module_filename = 'python/bllipparser/%s.py' % module_name
     swig_filename = join(base_directory, 'swig', 'wrapper.i')
+    extra_deps = extra_deps or []
     if exists(wrapper_filename) and exists(module_filename):
-        if not is_newer(swig_filename, module_filename):
+        newer = any(is_newer(f, module_filename)
+                    for f in [swig_filename] + extra_deps)
+        if not newer:
             return
 
     print 'Generating', module_name, 'SWIG wrapper files'
@@ -37,7 +41,8 @@ def maybe_run_swig(wrapper_filename, module_name, base_directory):
         '-o', wrapper_filename, swig_filename])
 
 # generate parser SWIG files if needed
-maybe_run_swig(parser_wrapper_full, 'CharniakParser', parser_base)
+maybe_run_swig(parser_wrapper_full, 'CharniakParser', parser_base,
+    extra_deps=[join(parser_base, 'SimpleAPI.' + suffix) for suffix in 'Ch'])
 
 parser_sources = [join(parser_base, src) for src in
     (parser_wrapper, 'Bchart.C', 'BchartSm.C', 'Bst.C', 'FBinaryArray.C',
