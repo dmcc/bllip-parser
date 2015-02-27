@@ -431,7 +431,10 @@ class NBestList:
             combined.seek(0)
             return combined.read()
         else:
-            return parser.asNBestList(self._parses, str(sentence_id))
+            if self._parses:
+                return parser.asNBestList(self._parses, str(sentence_id))
+            else:
+                return '0 %s' % sentence_id
     def as_reranker_input(self, lowercase=True):
         """Convert the n-best list to an internal structure used as input
         to the reranker. You shouldn't typically need to call this."""
@@ -576,7 +579,16 @@ class RerankingParser:
         try:
             parses = parser.parse(sentence.sentrep, ext_pos, span_constraints)
         except RuntimeError:
-            parses = []
+            if span_constraints:
+                # we should relax them and retry
+                span_constraints.minSizeForParsing = 2
+                try:
+                    parses = parser.parse(sentence.sentrep, ext_pos,
+                                          span_constraints)
+                except RuntimeError:
+                    parses = []
+            else:
+                parses = []
         nbest_list = NBestList(sentence, parses, sentence_id)
         if rerank:
             nbest_list.rerank(self)
