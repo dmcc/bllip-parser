@@ -4,13 +4,14 @@ If you're experimenting with new reranker features or want to build a
 reranker for a different treebank, you will want to retrain the
 reranker.
 
-Retraining the reranker takes a considerable amount of time, disk space
-and RAM. At Brown we use a dual Opteron machine with 16Gb RAM, and it
-takes around two days (editors note: this was written in 2006, when
-these numbers were a little more impressive...). You should be able to
-do it with only 8Gb RAM, and maybe even with 4Gb RAM with an
-appropriately tweaked kernel (e.g., ``sysctl overcommit\_memory``, and a
-so-called 4Gb/4Gb split if you're using a 32-bit OS).
+Retraining the reranker takes a considerable amount of time, disk
+space and RAM. At Brown we use a dual Opteron machine with 16Gb RAM,
+and it takes around two days (editors note: this was written in 2006,
+when these numbers were a little more impressive... It shouldn't take
+this long anymore). You should be able to do it with only 8Gb RAM,
+and maybe even with 4Gb RAM with an appropriately tweaked kernel (e.g.,
+``sysctl overcommit\_memory``, and a so-called 4Gb/4Gb split if you're
+using a 32-bit OS).
 
 The time and memory you need depend on the features that the reranker
 extracts and the size of the n-best tree training and development data.
