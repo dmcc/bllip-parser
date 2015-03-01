@@ -30,14 +30,14 @@ class ModelInfo:
 
 # should this grow large enough, we'll find a better place to store it
 models = {
+    'GENIA+PubMed': ModelInfo('Self-trained model on GENIA treebank and approx. 200k sentences from PubMed',
+                            'http://nlp.stanford.edu/~mcclosky/models/BLLIP-GENIA-PubMed.tar.bz2', 152),
     'OntoNotes-WSJ': ModelInfo('OntoNotes portion of WSJ',
                                'http://nlp.stanford.edu/~mcclosky/models/BLLIP-OntoNotes-WSJ.tar.bz2', 61),
     'SANCL2012-Uniform': ModelInfo('Self-trained model on OntoNotes-WSJ and the Google Web Treebank',
                                    'http://nlp.stanford.edu/~mcclosky/models/BLLIP-SANCL2012-Uniform.tar.bz2', 890),
     'WSJ+Gigaword': ModelInfo('Self-trained model on PTB2-WSJ and approx. two million sentences from Gigaword',
                               'http://nlp.stanford.edu/~mcclosky/models/BLLIP-WSJ-Gigaword2000.tar.bz2', 473),
-    'WSJ+PubMed': ModelInfo('Self-trained model on PTB2-WSJ and approx. 200k sentences from PubMed',
-                            'http://nlp.stanford.edu/~mcclosky/models/BLLIP-WSJ-PubMed.tar.bz2', 152),
     'WSJ': ModelInfo('Wall Street Journal corpus from Penn Treebank, version 2',
                      'http://nlp.stanford.edu/~mcclosky/models/BLLIP-WSJ-no-AUX.tar.bz2', 52),
     'WSJ-with-AUX': ModelInfo('Wall Street Journal corpus from Penn Treebank, version 2 (AUXified version, deprecated)',
