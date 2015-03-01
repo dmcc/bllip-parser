@@ -97,9 +97,9 @@ If ``VERSION`` is ``final`` then the reranker trains on WSJ PTB sections
 and section 23 is used as test2.
 
 The ``Makefile`` also contains variables you may want to change, such as
-``NBEST``, which specfies how many parses per sentence are extracted
-from each sentence, and ``NFOLDS``, which specifies how many folds are
-created.
+``NPARSES``, which specfies how many parses per sentence are extracted
+from each sentence, and ``NFOLDS``, which specifies how many folds
+are created.
 
 If you decide to experiment with new features or new feature weight
 estimators, take a close look at the ``Makefile``. If you change the
