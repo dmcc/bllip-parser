@@ -48,9 +48,11 @@ as a Python library::
     >>> download_and_install_model('WSJ', '/tmp/models')
     '/tmp/models/WSJ'
 
-In this case, it would download WSJ and install it to
-``/tmp/models/WSJ``. Note that it returns the path to the downloaded
-model.
+In this case, it would download WSJ and install
+it to ``/tmp/models/WSJ``. Note that it returns the
+path to the downloaded model. See `BLLIP Parser models
+<https://github.com/BLLIP/bllip-parser/blob/master/MODELS.rst>`_ for
+information about which parsing model to use.
 
 Basic usage
 -----------

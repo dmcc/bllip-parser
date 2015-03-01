@@ -69,6 +69,13 @@ Compiling the parser
       <https://github.com/BLLIP/bllip-parser/issues/13>`_ for more
       information.
 
+Obtaining parser models
+~~~~~~~~~~~~~~~~~~~~~~~
+The GitHub repository includes parsing and reranker models, though
+these are mostly around for historical purposes.  See `BLLIP Parser
+models <https://github.com/BLLIP/bllip-parser/blob/master/MODELS.rst>`_
+for information about obtaining newer and more accurate parsing models.
+
 Running the parser
 ~~~~~~~~~~~~~~~~~~
 After it has been built, the parser can be run with::
