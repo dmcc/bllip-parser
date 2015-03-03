@@ -38,18 +38,18 @@ will help you download and install parsing models. It can be invoked
 from the command line. For example, this will download and install the
 standard WSJ model::
 
-    shell% python -mbllipparser.ModelFetcher -i WSJ
+    shell% python -mbllipparser.ModelFetcher -i WSJ-PTB3
 
 Run ``python -mbllipparser.ModelFetcher`` with no arguments for a full
 listing of options and available parsing models. It can also be invoked
 as a Python library::
 
     >>> from bllipparser.ModelFetcher import download_and_install_model
-    >>> download_and_install_model('WSJ', '/tmp/models')
-    '/tmp/models/WSJ'
+    >>> download_and_install_model('WSJ-PTB3', '/tmp/models')
+    '/tmp/models/WSJ-PTB3'
 
-In this case, it would download WSJ and install
-it to ``/tmp/models/WSJ``. Note that it returns the
+In this case, it would download WSJ and install it to
+``/tmp/models/WSJ-PTB3``. Note that it returns the
 path to the downloaded model. See `BLLIP Parser models
 <https://github.com/BLLIP/bllip-parser/blob/master/MODELS.rst>`_ for
 information about which parsing model to use.
@@ -68,14 +68,14 @@ with the respective model files::
 This can be integrated with ModelFetcher (if the model is already
 installed, ``download_and_install_model`` is a no-op)::
 
-    >>> model_dir = download_and_install_model('WSJ', '/tmp/models')
+    >>> model_dir = download_and_install_model('WSJ-PTB3', '/tmp/models')
     >>> rrp = RerankingParser.from_unified_model_dir(model_dir)
 
 You can also load parser and reranker models manually::
 
     >>> rrp = RerankingParser()
-    >>> rrp.load_parser_model('/tmp/models/WSJ/parser')
-    >>> rrp.load_reranker_model('/tmp/models/WSJ/reranker/features.gz', '/tmp/models/WSJ/reranker/weights.gz')
+    >>> rrp.load_parser_model('/tmp/models/WSJ-PTB3/parser')
+    >>> rrp.load_reranker_model('/tmp/models/WSJ-PTB3/reranker/features.gz', '/tmp/models/WSJ-PTB3/reranker/weights.gz')
 
 If you only want the top parse of a sentence in Penn Treebank format, use
 the ``simple_parse()`` method::

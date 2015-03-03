@@ -23,17 +23,17 @@ functionality to list and download parsing models. To list parsing models,
 run the following in your shell::
 
     shell% python -mbllipparser.ModelFetcher -l
-    6 known unified parsing models: [uncompressed size]
-        GENIA+PubMed        	Self-trained model on GENIA treebank and approx. 200k sentences from PubMed [152MB]
-        OntoNotes-WSJ       	OntoNotes portion of WSJ [61MB]
-        SANCL2012-Uniform   	Self-trained model on OntoNotes-WSJ and the Google Web Treebank [890MB]
-        WSJ                 	Wall Street Journal corpus from Penn Treebank, version 2 [52MB]
-        WSJ+Gigaword        	Self-trained model on PTB2-WSJ and approx. two million sentences from Gigaword [473MB]
-        WSJ-with-AUX        	Wall Street Journal corpus from Penn Treebank, version 2 (AUXified version, deprecated) [55MB]
+    7 known unified parsing models: [uncompressed size]
+        GENIA+PubMed            Self-trained model on GENIA treebank and approx. 200k sentences from PubMed [152MB]
+        OntoNotes-WSJ           OntoNotes portion of WSJ [61MB]
+        SANCL2012-Uniform       Self-trained model on OntoNotes-WSJ and the Google Web Treebank [890MB]
+        WSJ                     Wall Street Journal corpus from Penn Treebank, version 2 ("AnyDomain" version) [52MB]
+        WSJ+Gigaword            Self-trained model on PTB2-WSJ and approx. two million sentences from Gigaword [473MB]
+        WSJ-PTB3                Wall Street Journal corpus from Penn Treebank, version 3 [52MB]
+        WSJ-with-AUX            Wall Street Journal corpus from Penn Treebank, version 2 (AUXified version, deprecated) [55MB]
 
-This list may change as new parsing models are added to the list, but
-at time of press there are 6 available parsing models. To install one
-of them, run the following in your shell::
+This list may change as new parsing models are added to the list.
+To install one of them, run the following in your shell::
 
     % python -mbllipparser.ModelFetcher -i model-name
 
@@ -51,8 +51,9 @@ optimal parsing models. Here are the current recommendations:
 
 - **Biomedical (PubMed) text:** ``GENIA+PubMed``
 
-- **WSJ section 23 evaluations to replicate papers:** Either ``WSJ`` (for
-  Penn Treebank WSJ) or ``OntoNotes-WSJ`` (for the OnotNotes version of WSJ)
+- **WSJ section 23 evaluations to replicate papers:** Either ``WSJ-PTB3``
+  (for Penn Treebank WSJ) or ``OntoNotes-WSJ`` (for the OnotNotes version
+  of WSJ)
 
 - **Everything else:** In general, it's probably best to use
   ``SANCL2012-Uniform`` or ``WSJ+Gigaword`` depending on how well-formed
