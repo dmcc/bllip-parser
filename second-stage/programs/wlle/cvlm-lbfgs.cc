@@ -520,6 +520,11 @@ struct Estimator1 {
     
       if (!weightsfile.empty()) {
 	FILE* out = fopen(weightsfile.c_str(), "w");
+        if (out == NULL) {
+            std::cerr << "## Error opening weights file: " << weightsfile <<
+                "\n## (errno = " << errno << ")" << std::endl;
+            exit(EXIT_FAILURE);
+        }
 	for (size_type i = 0; i < x.size(); ++i) 
 	  if (x[i] != 0) {
 	    fprintf(out, "%d", i);
@@ -794,6 +799,20 @@ int main(int argc, char** argv)
 
   // I discovered a couple of years after I wrote this program that popen
   // uses fork, which doubles your virtual memory for a short instant!
+
+  // make sure weights_file is writable before we do a bunch of expensive
+  // operations (opening in append mode so we don't zero it until we're
+  // actually ready to write some weights (which happens later))
+  FILE* out = fopen(weights_file.c_str(), "a");
+  if (out == NULL) {
+      std::cerr << "## Error opening weights file: " << weights_file <<
+          "\n## This can happen if the weights file is in a directory that " <<
+          "doesn't exist" << 
+          "\n## or isn't writable. (errno = " << errno << ")" << std::endl;
+      exit(EXIT_FAILURE);
+  } else {
+      fclose(out);
+  }
 
   Estimator1 e(ltype, c0, c00, cobyla_iterations, p, r, s, tol, true, weights_file);
 
