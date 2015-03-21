@@ -107,7 +107,7 @@ readParse(istream& is)
   term_ = "S1";
   if(temp != "(")
     {
-      if(temp == "S1" || temp == "TOP")
+      if(temp == "S1" || temp == "TOP" || temp == "ROOT")
 	{
 	  temp = readNext(is);
 	}
