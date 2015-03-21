@@ -52,6 +52,77 @@ def test_reranking_parser_tokenizer():
     ['You', 'can', "n't", 'do', 'that', '-LRB-', 'or', 'can', 'you', '?', '-RRB-', '.', '-LSB-3', '-RSB-']
     """
 
+def test_reranking_parser_loading_errors():
+    """
+    >>> from bllipparser import RerankingParser
+    >>> rrp = RerankingParser()
+    >>> rrp.load_parser_model('/path/to/nowhere/hopefully')
+    Traceback (most recent call last):
+      File "/usr/lib/python2.7/doctest.py", line 1315, in __run
+        compileflags, 1) in test.globs
+      File "<doctest test_reranking_parser_loading_errors[2]>", line 1, in <module>
+        rrp.load_parser_model('/path/to/nowhere/hopefully')
+      File "/usr/local/lib/python2.7/dist-packages/bllipparser/RerankingParser.py", line 483, in load_parser_model
+        model_dir)
+    ValueError: Parser model directory '/path/to/nowhere/hopefully' does not exist.
+    >>> print rrp.check_models_loaded_or_error(False)
+    Traceback (most recent call last):
+      File "/usr/lib/python2.7/doctest.py", line 1315, in __run
+        compileflags, 1) in test.globs
+      File "<doctest test_reranking_parser_loading_errors[3]>", line 1, in <module>
+        print rrp.check_models_loaded_or_error(False)
+      File "/usr/local/lib/python2.7/dist-packages/bllipparser/RerankingParser.py", line 674, in check_models_loaded_or_error
+        raise ValueError("Parser model has not been loaded.")
+    ValueError: Parser model has not been loaded.
+    >>> rrp.load_parser_model(u'\u2602')
+    Traceback (most recent call last):
+      File "/usr/lib/python2.7/doctest.py", line 1315, in __run
+        compileflags, 1) in test.globs
+      File "<doctest test_reranking_parser_loading_errors[4]>", line 1, in <module>
+        rrp.load_parser_model(u'\u2602')
+      File "/usr/local/lib/python2.7/dist-packages/bllipparser/RerankingParser.py", line 480, in load_parser_model
+        'string.' % model_dir)
+    ValueError: Parser model directory u'\u2602' must be an ASCII string.
+    >>> print rrp.check_models_loaded_or_error(False)
+    Traceback (most recent call last):
+      File "/usr/lib/python2.7/doctest.py", line 1315, in __run
+        compileflags, 1) in test.globs
+      File "<doctest test_reranking_parser_loading_errors[3]>", line 1, in <module>
+        print rrp.check_models_loaded_or_error(False)
+      File "/usr/local/lib/python2.7/dist-packages/bllipparser/RerankingParser.py", line 674, in check_models_loaded_or_error
+        raise ValueError("Parser model has not been loaded.")
+    ValueError: Parser model has not been loaded.
+    >>> rrp.load_reranker_model(u'\u2602',
+    ...                          'second-stage/models/ec50spfinal/cvlm-l1c10P1-weights.gz')
+    Traceback (most recent call last):
+      File "/usr/lib/python2.7/doctest.py", line 1315, in __run
+        compileflags, 1) in test.globs
+      File "<doctest test_reranking_parser_loading_errors[6]>", line 2, in <module>
+        'second-stage/models/ec50spfinal/cvlm-l1c10P1-weights.gz')
+      File "/usr/local/lib/python2.7/dist-packages/bllipparser/RerankingParser.py", line 497, in load_reranker_model
+        'string.' % features_filename)
+    ValueError: Reranker features filename u'\u2602' must be an ASCII string.
+    >>> rrp.load_reranker_model('second-stage/models/ec50spfinal/features.gz',
+    ...                         u'\u2602')
+    Traceback (most recent call last):
+      File "/usr/lib/python2.7/doctest.py", line 1315, in __run
+        compileflags, 1) in test.globs
+      File "<doctest test_reranking_parser_loading_errors[7]>", line 2, in <module>
+        u'\u2602')
+      File "/usr/local/lib/python2.7/dist-packages/bllipparser/RerankingParser.py", line 502, in load_reranker_model
+        'string.' % weights_filename)
+    ValueError: Reranker weights filename u'\u2602' must be an ASCII string.
+    >>> print rrp.check_models_loaded_or_error(True)
+    Traceback (most recent call last):
+      File "/usr/lib/python2.7/doctest.py", line 1315, in __run
+        compileflags, 1) in test.globs
+      File "<doctest test_reranking_parser_loading_errors[3]>", line 1, in <module>
+        print rrp.check_models_loaded_or_error(False)
+      File "/usr/local/lib/python2.7/dist-packages/bllipparser/RerankingParser.py", line 674, in check_models_loaded_or_error
+        raise ValueError("Parser model has not been loaded.")
+    ValueError: Parser model has not been loaded.
+    """
+
 def test_reranking_parser_basics():
     """
     >>> from bllipparser import RerankingParser

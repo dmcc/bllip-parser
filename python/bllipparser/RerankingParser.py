@@ -473,6 +473,11 @@ class RerankingParser:
         if RerankingParser._parser_model_loaded:
             raise RuntimeError('Parser is already loaded and can only '
                                'be loaded once.')
+        try:
+            model_dir = str(model_dir)
+        except UnicodeEncodeError:
+            raise ValueError('Parser model directory %r must be an ASCII '
+                             'string.' % model_dir)
         if not exists(model_dir):
             raise ValueError('Parser model directory %r does not exist.' %
                              model_dir)
@@ -485,6 +490,17 @@ class RerankingParser:
                             feature_class=None):
         """Load the reranker model from its feature and weights files. A
         feature class may optionally be specified."""
+        try:
+            features_filename = str(features_filename)
+        except UnicodeEncodeError:
+            raise ValueError('Reranker features filename %r must be an ASCII '
+                             'string.' % features_filename)
+        try:
+            weights_filename = str(weights_filename)
+        except UnicodeEncodeError:
+            raise ValueError('Reranker weights filename %r must be an ASCII '
+                             'string.' % weights_filename)
+
         if not exists(features_filename):
             raise ValueError('Reranker features filename %r does not exist.' %
                              features_filename)
