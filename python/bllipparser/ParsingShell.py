@@ -23,6 +23,9 @@ trees will be shown if you have the asciitree package."""
 import sys
 from cmd import Cmd
 import importlib
+
+from bllipparser.RerankingParser import RerankingParser
+
 def import_maybe(module_name):
     "Import a module and return it if available, otherwise returns None."
     try:
@@ -46,8 +49,6 @@ except AttributeError: # handle NLTK API changes
 
 StanfordDependencies = import_maybe('StanfordDependencies')
 asciitree = import_maybe('asciitree')
-
-from bllipparser.RerankingParser import RerankingParser
 
 # TODO should integrate with bllipparser.ModelFetcher
 
