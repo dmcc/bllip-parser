@@ -498,6 +498,9 @@ def test_reranking_parser_basics():
     >>> print str(nbest_list6).strip()
     0 x
     >>> assert len(nbest_list6) == 0
+    >>> constraints = {(1, 5) : 'VP'}
+    >>> nbest_list7 = rrp.parse_constrained('British left waffles on Falklands .'.split(), constraints)
+    >>> assert str(nbest_list).strip() == str(nbest_list7).strip()
     """
 
 def stringify_dict(d):

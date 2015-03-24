@@ -560,7 +560,8 @@ class RerankingParser:
             {(start, end): [terms]}
 
         which represents the constraint that all spans between [start,end)
-        must be one of the terms in that list.
+        must be one of the terms in that list. start and end are integers
+        and terms can be a single string or a list of strings.
 
         This also allows you to incorporate external POS tags as in
         parse_tagged(). While you can specify a constraint or an external
@@ -584,8 +585,14 @@ class RerankingParser:
                 if end <= start:
                     raise ValueError("End must be at least start + 1:"
                                      "(%r, %r) -> %r" % (start, end, terms))
+                # since Tree.label currently returns a DeprecatedGetter,
+                # we take some extra steps to get these back to strings
+                # to avoid type errors
+                if isinstance(terms, (basestring, DeprecatedGetter)):
+                    terms = [str(terms)]
                 for term in terms:
-                    span_constraints.addConstraint(start, end, term)
+                    span_constraints.addConstraint(int(start), int(end),
+                                                   str(term))
         else:
             span_constraints = None
 
