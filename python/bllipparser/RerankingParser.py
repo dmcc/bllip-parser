@@ -601,6 +601,8 @@ class RerankingParser:
         sentence = Sentence(tokens)
         try:
             parses = parser.parse(sentence.sentrep, ext_pos, span_constraints)
+            if constraints and not parses:
+                raise RuntimeError("Reparsing with relaxed constraints")
         except RuntimeError:
             if span_constraints:
                 # we should relax them and retry
