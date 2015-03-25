@@ -274,10 +274,11 @@ class RerankerFeatureCorpus:
     """Made up of a series of sentences. Because these files are huge
     and the Python wrappers around these structures cannot typically be
     stored in memory, this only lets you iterate over the corpus. Note
-    that if you're generating a new reranker input file, you'll need
-    to create the 'S=n\n' (where n = number of sentences) header as
-    well. The number of sentences in the RerankerFeatureCorpus corpus
-    is available as its lengh."""
+    that if you're generating a new reranker input file for cvlm,
+    you'll need to write the result from cvlm_header_format() followed
+    by the cvlm_format() for each sentence in the corpus.  The number
+    of sentences in the RerankerFeatureCorpus corpus is available as
+    its length."""
     def __init__(self, filename):
         initialize(self, locals())
 
@@ -288,11 +289,16 @@ class RerankerFeatureCorpus:
 
     __repr__ = generic_repr
 
+    def cvlm_header_format(self):
+        """Return the header in cvlm format."""
+        return 'S=%d\n' % self.num_sentences
+
     def __len__(self):
         """Returns the number of sentences in this corpus."""
         return self.num_sentences
 
     def __iter__(self):
+        """Returns an iterator over each sentence in the corpus."""
         for i, line in enumerate(self.reader):
             sentence = RerankerSentence.from_string(line, i)
             sentence.header = self.header
