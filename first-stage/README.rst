@@ -101,12 +101,14 @@ Other options
 The ``-S`` flag tells the parser to remain silent when it cannot parse
 a sentence (it just goes on to the next one).
 
-The parser can now parse Chinese.  It requires that the Chinese characters
-already be grouped into words.  Assuming you have trained on the Chinese
-Treebank from LDC (see the ``README`` for the ``TRAIN`` programs), you
-tell the parser to be expecting Chinese by giving it the command line
-option ``-LCh``.  (The default is English, which is also be specified by
-``-LEn``.)  The files you need to train Chinese are in ``DATA/CH/``.
+The parser can now parse Chinese.  It requires that the
+Chinese characters already be grouped into words.  Assuming you
+have trained on the Chinese Treebank from LDC (see the `README
+<https://github.com/BLLIP/bllip-parser/blob/master/first-stage/TRAIN/README.rst>`_
+for the ``TRAIN`` programs), you tell the parser to be expecting Chinese
+by giving it the command line option ``-LCh``.  (The default is English,
+which is also be specified by ``-LEn``.)  The files you need to train
+Chinese are in ``DATA/CH/``.
 
 By default, the parser will skip any sentence consisting of more 100
 tokens.  To change this to 200 you give it the command line argument
@@ -132,11 +134,13 @@ of the information increases.
 
 Training
 --------
-The subdirectory ``TRAIN`` contains the programs used to collect the
-statistics the parser requires from treebank data.  As the parser comes
-with the statistics it needs you will only need this if you want to try
-experiments with the parser on more (or less, or different) treebank data.
-For more information see the ``README`` file in ``TRAIN``.
+The subdirectory ``TRAIN`` contains the programs used to collect
+the statistics the parser requires from treebank data.  As the
+parser comes with the statistics it needs you will only need this
+if you want to try experiments with the parser on more (or less,
+or different) treebank data.  For more information see the `README
+<https://github.com/BLLIP/bllip-parser/blob/master/first-stage/TRAIN/README.rst>`_
+file in ``TRAIN``.
 
 Language Modeling
 -----------------
@@ -254,10 +258,15 @@ b.  When retraining: ``Couldn't find term: _____
     pSgT: InputTree.C:206: InputTree* InputTree::newParse(std::istream&,
     int&, InputTree*): Assertion `Term::get(trm)' failed.``
 
-    This means the training data contains an unknown term (phrasal or
-    part of speech type). You'll need to add the appropriate entry to
-    ``terms.txt`` in the model you're training. See the ``README`` in
+    This means the training data contains an unknown term (phrasal
+    or part of speech type). You'll need to add the appropriate
+    entry to ``terms.txt`` in the model you're training. See the
+    `first-stage/TRAIN/README.rst
+<https://github.com/BLLIP/bllip-parser/blob/master/first-stage/TRAIN/README.rst>`_
+in
     ``TRAIN`` for more details.
 
-If you're still stuck, check the other ``README`` files then consider
-`filing a bug <https://github.com/BLLIP/bllip-parser/issues>`_.
+If you're still stuck, check the other
+``README`` files then consider asking `StackOverflow
+<http://stackoverflow.com/tags/charniak-parser/info>`_ or `filing a bug
+<https://github.com/BLLIP/bllip-parser/issues>`_.

@@ -32,12 +32,13 @@ Overview
 ~~~~~~~~
 BLLIP Parser is a statistical natural language parser including a
 generative constituent parser (``first-stage``) and discriminative
-maximum entropy reranker (``second-stage``). The latest version can be
-found on `GitHub <https://github.com/BLLIP/bllip-parser>`_. This
+maximum entropy reranker (``second-stage``). The latest version can
+be found on `GitHub <https://github.com/BLLIP/bllip-parser>`_. This
 document describes basic usage of the command line interface and
 describes how to build and run the reranking parser. There are now
 `Python <http://pypi.python.org/pypi/bllipparser/>`_ and Java interfaces
-as well. The Python interface is described in ``README-python.rst``.
+as well. The Python interface is described in `README-python.rst
+<https://github.com/BLLIP/bllip-parser/blob/master/README-python.rst>`_.
 
 Compiling the parser
 ~~~~~~~~~~~~~~~~~~~~
@@ -145,17 +146,19 @@ maintained by `David McClosky <http://nlp.stanford.edu/~mcclosky>`_.
 
 Parser details
 ^^^^^^^^^^^^^^
-For details on the running and training the parser, see
-``first-stage/README.rst``. ``first-stage/TRAIN/README.rst`` includes
-notes about how to retrain the parser and some information about the
-parser model file formats.
+For details on the running the parser, see `first-stage/README.rst
+<https://github.com/BLLIP/bllip-parser/blob/master/first-stage/README.rst>`_.
+For help retraining the parser, see `first-stage/TRAIN/README.rst
+<https://github.com/BLLIP/bllip-parser/blob/master/first-stage/TRAIN/README.rst>`_ (also includes some information about the parser model file formats).
 
 Reranker details
 ^^^^^^^^^^^^^^^^
-See ``second-stage/README`` for an overview.
-``second-stage/README-retrain.rst`` details how to retrain the reranker.
-The ``second-stage/programs/*/README`` files include additional notes
-about different reranker components.
+See `second-stage/README
+<https://github.com/BLLIP/bllip-parser/blob/master/second-stage/README>`_
+for an overview.  `second-stage/README-retrain.rst
+<https://github.com/BLLIP/bllip-parser/blob/master/second-stage/README-retrain.rst>`_ details how to retrain the reranker.  The
+``second-stage/programs/*/README`` files include additional notes about
+different reranker components.
 
 Other versions of the parser
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
