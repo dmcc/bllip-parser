@@ -261,10 +261,7 @@ b.  When retraining: ``Couldn't find term: _____
     This means the training data contains an unknown term (phrasal
     or part of speech type). You'll need to add the appropriate
     entry to ``terms.txt`` in the model you're training. See the
-    `first-stage/TRAIN/README.rst
-<https://github.com/BLLIP/bllip-parser/blob/master/first-stage/TRAIN/README.rst>`_
-in
-    ``TRAIN`` for more details.
+    `README <https://github.com/BLLIP/bllip-parser/blob/master/first-stage/TRAIN/README.rst>`_ in ``TRAIN`` for more details.
 
 If you're still stuck, check the other
 ``README`` files then consider asking `StackOverflow
