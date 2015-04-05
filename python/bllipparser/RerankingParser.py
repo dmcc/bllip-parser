@@ -152,11 +152,45 @@ class Tree(object):
     def log_prob(self):
         """Asks the current first-stage parsing model to score an existing
         tree. Returns parser model's log probability. Python equivalent of the
-        evalTree command line tool."""
+        evalTree command line tool.
+
+        Note that you must have a parser model loaded in order to call
+        this parses (otherwise you'll get a ValueError)."""
         if not RerankingParser._parser_model_loaded:
             raise ValueError("You need to have loaded a parser model in "
                              "order to get the log probability.")
         return parser.treeLogProb(self._tree)
+    def head(self):
+        """Returns the syntactic head of this tree. This will be one of
+        the children of this tree (unless this tree is a leaf in which
+        case it is its own head). Requires a parsing model to be loaded
+        (other you'll get a ValueError) since those include head finding
+        information."""
+        if not RerankingParser._parser_model_loaded:
+            raise ValueError("You need to have loaded a parser model in "
+                             "order to get the log probability.")
+        return self.__class__(self._tree.headTree())
+    def dependencies(self):
+        """Yields pairs of (governor, dependent) subtrees. Requires
+        a parsing model to be loaded (see head()).
+
+        See also the sd_tokens() method (which invokes
+        Stanford Dependencies to determine richer dependency
+        information). dependencies() uses simpler head finding rules
+        but doesn't require the PyStanfordDependencies package."""
+        tree_to_heads = {}
+        for tree in reversed(list(self.all_subtrees())):
+            if len(tree):
+                head = tree.head()
+                assert head.span() in tree_to_heads
+                tree_to_heads[tree.span()] = tree_to_heads[head.span()]
+
+                for subtree in tree:
+                    subhead = tree_to_heads[subtree.span()]
+                    if subhead.span() != head.span():
+                        yield (head, subhead)
+            else:
+                tree_to_heads[tree.span()] = tree
 
     #
     # properties
@@ -218,7 +252,10 @@ class Tree(object):
         the converted tokens. You may optionally specify a
         StanfordDependencies instance in sd_converter and keyword
         arguments to StanfordDependencies.convert_tree as a dictionary
-        in conversion_kwargs."""
+        in conversion_kwargs.
+
+        See also the dependencies() method which will give you syntactic
+        dependencies from the parser's head finder."""
         if not self._sd_tokens:
             try:
                 import StanfordDependencies
