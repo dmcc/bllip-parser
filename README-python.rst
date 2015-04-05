@@ -312,3 +312,10 @@ You can navigate within the trees and more::
     True (NN parse)
     True (NN tree)
     True (. .)
+
+More examples and advanced features
+-----------------------------------
+
+See the `examples
+<https://github.com/BLLIP/bllip-parser/tree/master/python/examples>`_
+directory in the repository.
