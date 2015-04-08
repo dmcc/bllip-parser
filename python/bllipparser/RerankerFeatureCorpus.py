@@ -65,26 +65,42 @@ def generate_kv_list(features):
             pieces.append('%s=%s' % (k, v))
     return ' '.join(pieces)
 
-def read_cvlm_weights(filename):
-    """Reads cvlm weight vectors from a filename. Returns a dictionary
-    of { feature index : feature weight }."""
-    weights = {}
-    for line in possibly_compressed_file(filename):
-        index, weight = line.split('=')
-        index = int(index)
-        weight = float(weight)
-        weights[index] = weight
-    return weights
+class FeatureMapping(dict):
+    """Subclass of dictionary with IO for handling cvlm feature mappings
+    and weights.  The mapping is stored as
 
-def read_cvlm_feature_mapping(filename):
-    """Reads cvlm feature mapping from a filename. Returns a dictionary
-    of { feature index : feature name }."""
-    names = {}
-    for line in possibly_compressed_file(filename):
-        index, name = line.split('\t')
-        index = int(index)
-        names[index] = name.strip()
-    return names
+    { feature index : feature name/weight }"""
+    def write(self, filename):
+        f = possibly_compressed_file(filename, 'w')
+        for index in range(len(self)):
+            name = self[index]
+            f.write('%d\t%s\n' % (index, name))
+        f.close()
+
+    @classmethod
+    def weights_from_filename(this_class, filename):
+        """Reads cvlm weight vectors from a filename. The expected format
+        is that each line has an index followed by an equals sign followed
+        by the feature weight (a float). Returns a FeatureMapping."""
+        weights = this_class()
+        for line in possibly_compressed_file(filename):
+            index, weight = line.split('=')
+            index = int(index)
+            weight = float(weight)
+            weights[index] = weight
+        return weights
+
+    @classmethod
+    def mapping_from_filename(this_class, filename):
+        """Reads cvlm feature mapping from a filename. The expected
+        format is that each line has an index followed by a tab followed
+        by the feature name. Returns a FeatureMapping."""
+        mapping = this_class()
+        for line in possibly_compressed_file(filename):
+            index, name = line.split('\t')
+            index = int(index)
+            mapping[index] = name.strip()
+        return mapping
 
 class RerankerParse:
     """A single parse of a RerankerSentence. Each parse includes
@@ -275,7 +291,7 @@ class RerankerFeatureCorpus:
     and the Python wrappers around these structures cannot typically be
     stored in memory, this only lets you iterate over the corpus. Note
     that if you're generating a new reranker input file for cvlm,
-    you'll need to write the result from cvlm_header_format() followed
+    you'll need to write the result from cvlm_format_header() followed
     by the cvlm_format() for each sentence in the corpus.  The number
     of sentences in the RerankerFeatureCorpus corpus is available as
     its length."""
@@ -289,7 +305,7 @@ class RerankerFeatureCorpus:
 
     __repr__ = generic_repr
 
-    def cvlm_header_format(self):
+    def cvlm_format_header(self):
         """Return the header in cvlm format."""
         return 'S=%d\n' % self.num_sentences
 
