@@ -35,6 +35,7 @@ const char usage[] =
 #include <cstdlib>
 #include <iostream>
 #include <string>
+#include <cstring>
 #include <unistd.h>
 #include <vector>
 

@@ -36,7 +36,7 @@ const char usage[] =
 
 #include <cassert>
 #include <iostream>
-#include <string>
+#include <cstring>
 
 #include "dp-data.h"
 #include "tree.h"
