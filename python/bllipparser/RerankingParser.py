@@ -559,10 +559,12 @@ class RerankingParser:
         rerank = self.check_models_loaded_or_error(rerank)
 
         sentence = Sentence(sentence)
-        if len(sentence) > parser.max_sentence_length:
-            raise ValueError("Sentence is too long (%s tokens, maximum "
-                             "supported: %s)" %
-                             (len(sentence), parser.max_sentence_length))
+        # max_sentence_length is actually 1 longer than the maximum
+        # allowed sentence length
+        if len(sentence) >= parser.max_sentence_length - 1:
+            raise ValueError("Sentence is too long (%s tokens, must be "
+                             "under %s)" %
+                             (len(sentence), parser.max_sentence_length - 1))
 
         try:
             parses = parser.parse(sentence.sentrep)

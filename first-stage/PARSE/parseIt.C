@@ -202,7 +202,7 @@ mainLoop(void* arg)
       if (len == 0) {
 	break;
       }
-      if (len > params.maxSentLen) 
+      if (len >= params.maxSentLen)
 	{
 	  ECString msg("skipping sentence longer than specified limit of ");
 	  msg += intToString(params.maxSentLen);
