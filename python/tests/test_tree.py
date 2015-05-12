@@ -1,6 +1,71 @@
 # TODO: untested:
 #       Tree.sd_tokens
 
+def test_tree_errors():
+    """
+    First tests issue #33.
+
+    >>> import bllipparser
+    >>> bllipparser.Tree('(())')
+    Traceback (most recent call last):
+      File "/usr/lib/python2.7/doctest.py", line 1315, in __run
+        compileflags, 1) in test.globs
+      File "<doctest test_tree_errors[1]>", line 1, in <module>
+        bllipparser.Tree('(())')
+      File "/usr/local/lib/python2.7/dist-packages/bllipparser/RerankingParser.py", line 63, in __init__
+        parser.inputTreeFromString(input_tree_or_string)
+    RuntimeError: [first-stage/PARSE/InputTree.C:257]: Saw paren rather than term
+    >>> bllipparser.Tree('(S1 (S (NP (DT This)) (VP (VBZ is) (NP (DT a) (ADJP (RB fairly) (JJ simple)) (NN parse) (NN tree))) (. .)))')
+    Tree('(S1 (S (NP (DT This)) (VP (VBZ is) (NP (DT a) (ADJP (RB fairly) (JJ simple)) (NN parse) (NN tree))) (. .)))')
+    >>> bllipparser.Tree('(S1 (S (NP (DT This)) (VP (VBZ is) (NP (DT a) (ADJP (RB fairly) (JJ simple)) (NN parse) (NN tree))) (. .)))')
+    Tree('(S1 (S (NP (DT This)) (VP (VBZ is) (NP (DT a) (ADJP (RB fairly) (JJ simple)) (NN parse) (NN tree))) (. .)))')
+    >>> bllipparser.Tree('(BADTOPTAG hi)')
+    Traceback (most recent call last):
+      File "/usr/lib/python2.7/doctest.py", line 1315, in __run
+        compileflags, 1) in test.globs
+      File "<doctest test_tree_errors[4]>", line 1, in <module>
+        bllipparser.Tree('(BADTOPTAG hi)')
+      File "/usr/local/lib/python2.7/dist-packages/bllipparser/RerankingParser.py", line 63, in __init__
+        parser.inputTreeFromString(input_tree_or_string)
+    RuntimeError: [first-stage/PARSE/InputTree.C:108]: Did not see legal topmost type
+    >>> bllipparser.Tree('Does not start with a paren')
+    Traceback (most recent call last):
+      File "/usr/lib/python2.7/doctest.py", line 1315, in __run
+        compileflags, 1) in test.globs
+      File "<doctest test_tree_errors[5]>", line 1, in <module>
+        bllipparser.Tree('Does not start with a paren')
+      File "/usr/local/lib/python2.7/dist-packages/bllipparser/RerankingParser.py", line 63, in __init__
+        parser.inputTreeFromString(input_tree_or_string)
+    RuntimeError: [first-stage/PARSE/InputTree.C:97]: Should have seen an open paren here.
+    >>> bllipparser.Tree('(S1 eh)')
+    Traceback (most recent call last):
+      File "/usr/lib/python2.7/doctest.py", line 1315, in __run
+        compileflags, 1) in test.globs
+      File "<doctest test_tree_errors[6]>", line 1, in <module>
+        bllipparser.Tree('(S1 eh)')
+      File "/usr/local/lib/python2.7/dist-packages/bllipparser/RerankingParser.py", line 63, in __init__
+        parser.inputTreeFromString(input_tree_or_string)
+    RuntimeError: [first-stage/PARSE/InputTree.C:114]: Should have seen second open paren here.
+    >>> bllipparser.Tree('(S1')
+    Traceback (most recent call last):
+      File "/usr/lib/python2.7/doctest.py", line 1315, in __run
+        compileflags, 1) in test.globs
+      File "<doctest test_tree_errors[7]>", line 1, in <module>
+        bllipparser.Tree('(S1')
+      File "/usr/local/lib/python2.7/dist-packages/bllipparser/RerankingParser.py", line 63, in __init__
+        parser.inputTreeFromString(input_tree_or_string)
+    RuntimeError: [first-stage/PARSE/InputTree.C:114]: Should have seen second open paren here.
+    >>> bllipparser.Tree('(S1 ((')
+    Traceback (most recent call last):
+      File "/usr/lib/python2.7/doctest.py", line 1315, in __run
+        compileflags, 1) in test.globs
+      File "<doctest test_tree_errors[8]>", line 1, in <module>
+        bllipparser.Tree('(S1 ((')
+      File "/usr/local/lib/python2.7/dist-packages/bllipparser/RerankingParser.py", line 63, in __init__
+        parser.inputTreeFromString(input_tree_or_string)
+    RuntimeError: [first-stage/PARSE/InputTree.C:257]: Saw paren rather than term
+    """
+
 def test_tree_basics():
     """
     >>> import bllipparser

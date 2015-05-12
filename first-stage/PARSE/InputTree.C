@@ -22,10 +22,13 @@
 #include "Term.h"
 
   
-int              InputTree::pageWidth = 75;  //used for prettyPrinting
+int              InputTree::pageWidth = 75; //used for prettyPrinting
+ECString         InputTree::tempword[MAXSENTLEN];
+int              InputTree::tempwordnum = 0;
 
-ECString         InputTree::tempword[400];          
-int              InputTree::tempwordnum= 0;
+// reset internal state after reporting an error
+#define TREEREADINGERROR(message) \
+    { InputTree::init(); error(__FILE__, __LINE__, message); }
 
 InputTree::
 InputTree(InputTree* it) :
@@ -41,7 +44,7 @@ void
 InputTree::
 init()
 {
-  for(int i = 0 ; i < 128 ; i++)
+  for(int i = 0 ; i < MAXSENTLEN ; i++)
     {
       tempword[i] = "";
     }
@@ -71,7 +74,7 @@ operator >>( istream& is, InputTree& parse )
 {
   if(parse.word() != "" || parse.term() != ""
      || parse.subTrees().size() > 0)
-    error( "Reading into non-empty parse." );
+    TREEREADINGERROR("Reading into non-empty parse.");
   parse.readParse(is);
   return is;
 }
@@ -91,7 +94,7 @@ readParse(istream& is)
   if(temp != "(")
     {
       cerr << "Saw " << temp << endl;
-      error("Should have seen an open paren here.");
+      TREEREADINGERROR("Should have seen an open paren here.");
     }
   /* get annotated symbols like NP-OBJ.  term_ = NP ntInfo_ = OBJ */
   temp = readNext(is);
@@ -102,13 +105,13 @@ readParse(istream& is)
 	{
 	  temp = readNext(is);
 	}
-      else error("did not see legal topmost type");
+      else TREEREADINGERROR("Did not see legal topmost type");
     }
   if(temp == ")") return;
   if(temp != "(")
     {
       cerr << "Saw " << temp << endl;
-      error("Should have seen second open paren here.");
+      TREEREADINGERROR("Should have seen second open paren here.");
     }
 
   for (;;)
@@ -123,7 +126,7 @@ readParse(istream& is)
       if (temp!="(")
 	{
 	  cerr << *this << endl;
-	  error("Should have open or closed paren here.");
+      TREEREADINGERROR("Should have open or closed paren here.");
 	}
     }
 }
@@ -251,7 +254,7 @@ InputTree::
 parseTerm(istream& is, ECString& a, ECString& b, int& num)
 {
   ECString temp = readNext(is);
-  if(temp == "(" || temp == ")") error("Saw paren rather than term");
+  if(temp == "(" || temp == ")") TREEREADINGERROR("Saw paren rather than term");
   unsigned int len = temp.length();
   size_t pos;
   pos = temp.find("^");
