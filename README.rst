@@ -171,3 +171,4 @@ if you're working on other platforms or languages.
 - `Rutu Mulkar-Mehta's Windows version
   <http://www.rutumulkar.com/software.html>`_
 - `Djame's French branch <https://bitbucket.org/djame/bllip-parser-fr>`_
+- `Liang Huang's Forest Reranker <http://acl.cs.qc.edu/~lhuang/>`_  (includes forest-dumping extensions)
