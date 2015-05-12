@@ -99,8 +99,6 @@ static T& readSentence( T& istr, vector<Wrd>& sent, ECString& name)
       if (w == "</s>" )
 	break;
 
-      // XXX previously:
-      // Wrd::substBracket(w);
       escapeParens(w);
       int pos = sent.size();
       sent.push_back(Wrd(w,pos));
