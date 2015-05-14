@@ -142,25 +142,28 @@ newParse(istream& is, int& strt, InputTree* par)
   InputTrees subTrs;
   int num = -1;
 
-  parseTerm(is, trm, ntInf,num);
-  for( ; ; )
-    {
+  parseTerm(is, trm, ntInf, num);
+  for (;;) {
       ECString temp = readNext(is);
-      if(temp == "(")
-	{
-	  InputTree* nextTree = newParse(is, strt, NULL);
-	  if(nextTree) subTrs.push_back(nextTree);
-	}
-      else if(temp == ")") break;
-      else
-	{
-	  if(trm != "-NONE-")
-	    {
-	      wrd = temp;
-	      strt++;
-	    }
-	}
-    }
+      if (temp == "(") {
+          InputTree* nextTree = newParse(is, strt, NULL);
+          if (nextTree) {
+              subTrs.push_back(nextTree);
+          }
+      }
+      else if (temp == ")") {
+          break;
+      }
+      else if (temp == "") {
+          TREEREADINGERROR("Unexpected end of string.");
+      }
+      else {
+          if (trm != "-NONE-") {
+              wrd = temp;
+              strt++;
+          }
+      }
+  }
 
   /* the Chinese treebank has a single POS for all punctuation,
      which is pretty bad for the parser, so make each punc its own POS */

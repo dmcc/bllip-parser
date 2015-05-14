@@ -14,7 +14,7 @@ def test_tree_errors():
         bllipparser.Tree('(())')
       File "/usr/local/lib/python2.7/dist-packages/bllipparser/RerankingParser.py", line 63, in __init__
         parser.inputTreeFromString(input_tree_or_string)
-    RuntimeError: [first-stage/PARSE/InputTree.C:257]: Saw paren rather than term
+    RuntimeError: [first-stage/PARSE/InputTree.C:260]: Saw paren rather than term
     >>> bllipparser.Tree('(S1 (S (NP (DT This)) (VP (VBZ is) (NP (DT a) (ADJP (RB fairly) (JJ simple)) (NN parse) (NN tree))) (. .)))')
     Tree('(S1 (S (NP (DT This)) (VP (VBZ is) (NP (DT a) (ADJP (RB fairly) (JJ simple)) (NN parse) (NN tree))) (. .)))')
     >>> bllipparser.Tree('(S1 (S (NP (DT This)) (VP (VBZ is) (NP (DT a) (ADJP (RB fairly) (JJ simple)) (NN parse) (NN tree))) (. .)))')
@@ -63,7 +63,16 @@ def test_tree_errors():
         bllipparser.Tree('(S1 ((')
       File "/usr/local/lib/python2.7/dist-packages/bllipparser/RerankingParser.py", line 63, in __init__
         parser.inputTreeFromString(input_tree_or_string)
-    RuntimeError: [first-stage/PARSE/InputTree.C:257]: Saw paren rather than term
+    RuntimeError: [first-stage/PARSE/InputTree.C:260]: Saw paren rather than term
+    >>> bllipparser.Tree('(S1 (NP')
+    Traceback (most recent call last):
+      File "/usr/lib/python2.7/doctest.py", line 1315, in __run
+        compileflags, 1) in test.globs
+      File "<doctest test_tree_errors[9]>", line 1, in <module>
+        bllipparser.Tree('(S1 (NP')
+      File "/usr/local/lib/python2.7/dist-packages/bllipparser/RerankingParser.py", line 63, in __init__
+        parser.inputTreeFromString(input_tree_or_string)
+    RuntimeError: [first-stage/PARSE/InputTree.C:158]: Unexpected end of string.
     """
 
 def test_tree_basics():
