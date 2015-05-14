@@ -162,8 +162,8 @@ newParse(istream& is, int& strt, InputTree* par)
 	}
     }
 
-  /* the Chinese treebank has a single pos for all punctuation,
-     which is pretty bad for the parser, so make each punc its own pos */
+  /* the Chinese treebank has a single POS for all punctuation,
+     which is pretty bad for the parser, so make each punc its own POS */
   /* fixes bugs in Chinese Treebank */
   if(Term::Language == "Ch")
     {
