@@ -77,13 +77,9 @@ reranker_sources = [reranker_base + src for src in
     (reranker_wrapper, 'simple-api.cc', 'heads.cc', reranker_read_tree,
      'sym.cc')]
 
-# what's with the -O0? well, using even the lowest levels of optimization
-# (gcc -O1) causes one symbol which we wrap with SWIG to be inlined and
-# disappear in _JohnsonReranker.so which causes an ImportError.  this will
-# hopefully be addressed in the near future.
 reranker_module = Extension('bllipparser._JohnsonReranker',
     sources=reranker_sources,
-    extra_compile_args=['-iquote', reranker_base, '-O0'])
+    extra_compile_args=['-iquote', reranker_base, '-DSWIGFIX'])
 
 setup(name='bllipparser',
     version='2015.01.11',

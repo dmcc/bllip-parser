@@ -128,6 +128,11 @@ struct sp_sentence_type {
   size_t gold_nedges;           // number of edges in the gold parse
   float max_fscore;             // the max f-score of all parses
   sp_parses_type parses;	// vector of parses
+#ifdef SWIGFIX
+  // can't inline this function when building the SWIG wrapper or we
+  // get undefined symbols
+  __attribute__((noinline))
+#endif
   size_t nparses() const { return parses.size(); }
   Float logsumprob;
   std::string label;
