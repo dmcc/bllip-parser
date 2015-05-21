@@ -521,6 +521,17 @@ def test_reranking_parser_basics():
       File "/home/dmcclosky/local/lib/python2.6/site-packages/bllipparser/RerankingParser.py", line 565, in parse
         (len(sentence), parser.max_sentence_length - 1))
     ValueError: Sentence is too long (400 tokens, must be under 399)
+    >>> rrp.tag('# ! ? : -', allow_failures=True)
+    Traceback (most recent call last):
+      File "/usr/lib64/python2.6/doctest.py", line 1253, in __run
+        compileflags, 1) in test.globs
+      File "<doctest test_reranking_parser_basics[56]>", line 1, in <module>
+        rrp.tag('# ! ? : -', allow_failures=True)
+      File "/usr/lib64/python2.6/site-packages/bllipparser/RerankingParser.py", line 697, in tag
+        raise ValueError('Parse failed while tagging: %r' % text_or_tokens)
+    ValueError: Parse failed while tagging: '# ! ? : -'
+    >>> rrp.tag('# ! ? : -', allow_failures=False)
+    [('#', '#'), ('!', '.'), ('?', '.'), (':', ':'), ('-', ':')]
     """
 
 def stringify_dict(d):

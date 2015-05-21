@@ -671,7 +671,7 @@ class RerankingParser:
         parses = self.parse(text_or_tokens)
         return str(parses[0].ptb_parse)
 
-    def tag(self, text_or_tokens):
+    def tag(self, text_or_tokens, allow_failures=False):
         """Helper method for just getting the part-of-speech tags of
         a single sentence. This will parse the sentence and then read
         part-of-speech tags off the tree, so it's not recommended if
@@ -681,9 +681,21 @@ class RerankingParser:
             >>> rrp.tag('Tag this.')
             [('Tag', 'VB'), ('this', 'DT'), ('.', '.')]
 
-        text_or_tokens can be either a string or a sequence of tokens."""
+        text_or_tokens can be either a string or a sequence of tokens.
+        If allow_failures=True and the parse fails, a ValueError will
+        be raised. Otherwise, we will fall back on the most frequent
+        POS tag for each word."""
         parses = self.parse(text_or_tokens)
-        return parses[0].ptb_parse.tokens_and_tags()
+        if parses:
+            tokens_and_tags = parses[0].ptb_parse.tokens_and_tags()
+        elif not allow_failures:
+            sentence = Sentence(text_or_tokens)
+            tokens = sentence.tokens()
+            tags = sentence.independent_tags()
+            tokens_and_tags = zip(tokens, tags)
+        else:
+            raise ValueError('Parse failed while tagging: %r' % text_or_tokens)
+        return tokens_and_tags
 
     def _possible_tags_to_ext_pos(self, tokens, possible_tags):
         ext_pos = parser.ExtPos()
