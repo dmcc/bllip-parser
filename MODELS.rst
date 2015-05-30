@@ -33,9 +33,9 @@ run the following in your shell::
         WSJ-with-AUX            Wall Street Journal corpus from Penn Treebank, version 2 (AUXified version, deprecated) [55MB]
 
 This list may change as new parsing models are added to the list.
-To install one of them, run the following in your shell::
+To install ``WSJ+Gigaword`` (as an example), run the following in your shell::
 
-    % python -mbllipparser.ModelFetcher -i model-name
+    % python -mbllipparser.ModelFetcher -i WSJ+Gigaword
 
 where ``model-name`` should be replaced with the model you'd like to
 download and install.
@@ -51,10 +51,11 @@ optimal parsing models. Here are the current recommendations:
 
 - **Biomedical (PubMed) text:** ``GENIA+PubMed``
 
-- **WSJ section 23 evaluations to replicate papers:** Either ``WSJ-PTB3``
-  (for Penn Treebank WSJ) or ``OntoNotes-WSJ`` (for the OnotNotes version
-  of WSJ)
+- **WSJ section 23 evaluations to replicate papers:** For purely supervised
+  parser or parser/reranker results, use either ``WSJ-PTB3``
+  (for Penn Treebank WSJ) or ``OntoNotes-WSJ`` (for the OntoNotes version
+  of WSJ). Use ``WSJ+Gigaword`` to replicate self-training results.
 
 - **Everything else:** In general, it's probably best to use
   ``SANCL2012-Uniform`` or ``WSJ+Gigaword`` depending on how well-formed
-  your text is (``SANCL2012-Uniform`` for more informal text).
+  your text is (``SANCL2012-Uniform`` for more informal web/email text).
