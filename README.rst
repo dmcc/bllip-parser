@@ -140,7 +140,7 @@ parser spread across ``README`` files in this distribution (see
 below). BLLIP Parser is
 maintained by `David McClosky <http://nlp.stanford.edu/~mcclosky>`_.
 
-- Usage help: `StackOverflow <http://stackoverflow.com/tags/charniak-parser/info>`_
+- Usage help: `StackOverflow <http://stackoverflow.com/tags/charniak-parser/info>`_ (use ``charniak-parser`` tag)
 - Bug reports and feature requests: `GitHub issue tracker <http://github.com/BLLIP/bllip-parser/issues>`_
 - Twitter: `@bllipparser <https://twitter.com/bllipparser>`_
 
