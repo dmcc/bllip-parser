@@ -11,8 +11,21 @@ from os.path import join, exists
 # these dependencies.
 
 def run(args):
-    print("Running %r" % ' '.join(map(str, args)))
-    subprocess.check_call(args)
+    cmd = ' '.join(map(str, args))
+    print("Running %r" % cmd)
+    message = None
+    try:
+        assert subprocess.check_call(args) == 0
+    except OSError, exc:
+        if exc.errno == 2:
+            message = "Command %r not found." % args[0]
+        else:
+            message = "OSError: %r" % exc
+    except AssertionError, exc:
+        message = "Bad exit code from %r" % cmd
+    if message:
+        raise SystemExit("Error while running command: %s\nBuild failed!" % \
+                         message)
 
 parser_base = 'first-stage/PARSE/'
 parser_wrapper = 'swig/wrapper.C'
@@ -35,7 +48,7 @@ def maybe_run_swig(wrapper_filename, module_name, base_directory,
         if not newer:
             return
 
-    print('Generating', module_name, 'SWIG wrapper files')
+    print('Generating ' + module_name + ' SWIG wrapper files')
     run(['swig', '-python', '-c++', '-module',
          module_name, '-I' + base_directory,
          '-Wall', '-classic', '-outdir', 'python/bllipparser',
