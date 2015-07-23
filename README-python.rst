@@ -322,6 +322,7 @@ directory in the repository.
 
 Release summaries
 -----------------
+- 2015.07.23: Fix build error, other build system improvements
 - 2015.07.08: Constrained parsing, reranker can now be built with optimization (30% faster), other API additions
 - 2015.01.11: Improved ``PyStanfordDependencies`` support, memory leak fixed, API additions, bugfixes
 - 2014.08.29: Add ``Tree`` class, ``RerankerFeatureCorpus`` module, other API updates
