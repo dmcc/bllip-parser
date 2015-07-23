@@ -2,6 +2,7 @@ include README-python.rst
 include NOTICE
 include LICENSE-2.0.txt
 include first-stage/PARSE/*.h
+include first-stage/PARSE/SimpleAPI.C
 include first-stage/PARSE/swig/wrapper.i
 include first-stage/PARSE/swig/java/include/std_list.i
 include second-stage/programs/features/*.h
