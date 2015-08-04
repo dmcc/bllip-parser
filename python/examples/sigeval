@@ -14,12 +14,12 @@
 import optparse
 
 usage = '''
-%prog -g gold-filename [flags] [test-tree-filenames]
+%prog -m parser-model -g gold-filename [flags] [test-tree-filenames]
 
 Approximate randomization testing for parser evaluation.  Takes a gold
 tree file and at least two test tree files.  It will run a randomization
 test against the first test tree file and all subsequent test tree
-files. See --help for more information.
+files. The parsing model is needed for part of speech tag information.
 '''.strip()
 
 try:
@@ -53,12 +53,12 @@ def make_scores(test_filename, gold_trees):
 if __name__ == "__main__":
     parser = optparse.OptionParser(usage=usage)
     parser.add_option('-m', '--model', metavar='DIR',
-                      help='Path to first-stage parsing model')
+                      help='Path to parsing model')
     parser.add_option('-g', '--gold', metavar='FILENAME',
                       help='Path to gold parse trees')
     parser.add_option('-v', '--verbose', action='store_true',
                       help='Print out more information')
-    parser.add_option('-t', '--trials',
+    parser.add_option('-t', '--trials', type='int',
                       help='Number of trials (default: 10000)', default=10000)
     opts, args = parser.parse_args()
     if len(args) < 2:
@@ -68,8 +68,7 @@ if __name__ == "__main__":
     if not opts.gold:
         parser.error("Must specify '-g gold-filename' argument.")
 
-    rrp = RerankingParser()
-    rrp.load_parser_model(opts.model)
+    rrp = RerankingParser.from_unified_model_directory(opts.model, parser_only=True)
     if opts.verbose:
         print("Loaded terms from parsing model: %s" % opts.model)
 
