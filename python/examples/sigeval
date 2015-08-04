@@ -1,0 +1,90 @@
+#!/usr/bin/env python
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License.  You may obtain
+# a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+# License for the specific language governing permissions and limitations
+# under the License.
+
+import optparse
+
+usage = '''
+%prog -g gold-filename [flags] [test-tree-filenames]
+
+Approximate randomization testing for parser evaluation.  Takes a gold
+tree file and at least two test tree files.  It will run a randomization
+test against the first test tree file and all subsequent test tree
+files. See --help for more information.
+'''.strip()
+
+try:
+    from art.aggregators import f_1
+    from art.scores import Scores, Score
+    from art.significance_tests import ApproximateRandomizationTest
+except ImportError:
+    print("You may need to install 'art'")
+    print("(see https://github.com/smartschat/art/tree/master/art)")
+    raise
+
+from bllipparser import RerankingParser, Tree
+
+def make_score(tree, gold_tree):
+    eval_info = gold_tree.evaluate(tree)
+    matched = eval_info['matched']
+    return Score([matched, eval_info['test'],
+                  matched, eval_info['gold']])
+
+def make_scores(test_filename, gold_trees):
+    test_trees = Tree.trees_from_file(test_filename)
+    if len(test_trees) != len(gold_trees):
+        print("Error: Test file %r only has %d trees, gold has %d" %
+              (test_filename, len(test_trees), len(gold_trees)))
+        raise SystemExit
+    scores = Scores()
+    for gold_tree, test_tree in zip(gold_trees, test_trees):
+        scores.append(make_score(test_tree, gold_tree))
+    return scores
+
+if __name__ == "__main__":
+    parser = optparse.OptionParser(usage=usage)
+    parser.add_option('-m', '--model', metavar='DIR',
+                      help='Path to first-stage parsing model')
+    parser.add_option('-g', '--gold', metavar='FILENAME',
+                      help='Path to gold parse trees')
+    parser.add_option('-v', '--verbose', action='store_true',
+                      help='Print out more information')
+    parser.add_option('-t', '--trials',
+                      help='Number of trials (default: 10000)', default=10000)
+    opts, args = parser.parse_args()
+    if len(args) < 2:
+        parser.error('Need at least two test tree files')
+    if not opts.model:
+        parser.error("Must specify '-m model' argument.")
+    if not opts.gold:
+        parser.error("Must specify '-g gold-filename' argument.")
+
+    rrp = RerankingParser()
+    rrp.load_parser_model(opts.model)
+    if opts.verbose:
+        print("Loaded terms from parsing model: %s" % opts.model)
+
+    gold_trees = Tree.trees_from_file(opts.gold)
+    if opts.verbose:
+        print("Gold:   %s (%d trees)" % (opts.gold, len(gold_trees)))
+    scores1 = make_scores(args[0], gold_trees)
+
+    for test2_filename in args[1:]:
+        scores2 = make_scores(test2_filename, gold_trees)
+
+        print("Test 1: %s (F1: %.1f)" % (args[0], 100 * f_1(scores1)))
+        print("Test 2: %s (F1: %.1f)" % (test2_filename, 100 * f_1(scores2)))
+
+        test = ApproximateRandomizationTest(scores1, scores2, f_1,
+                                            trials=opts.trials)
+        pvalue = test.run()
+        print('Significance level: %s' % pvalue)
