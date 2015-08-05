@@ -138,7 +138,7 @@ class Tree(object):
         evaluate parses (otherwise you'll get a ValueError). This is
         because the parser models include information about which tags
         are punctuation."""
-        if not RerankingParser._parser_model_loaded:
+        if not RerankingParser._parser_terms_loaded:
             raise ValueError("You need to have loaded a parser model in "
                              "order to evaluate.")
         scorer = parser.ScoreTree()
@@ -166,7 +166,7 @@ class Tree(object):
         case it is its own head). Requires a parsing model to be loaded
         (other you'll get a ValueError) since those include head finding
         information."""
-        if not RerankingParser._parser_model_loaded:
+        if not RerankingParser._parser_heads_loaded:
             raise ValueError("You need to have loaded a parser model in "
                              "order to get the log probability.")
         return self.__class__(self._tree.headTree())
@@ -481,6 +481,8 @@ class RerankingParser:
     """Wraps the Charniak parser and Johnson reranker into a single
     object. Note that RerankingParser is not thread safe."""
     _parser_model_loaded = False
+    _parser_terms_loaded = False
+    _parser_heads_loaded = False
     def __init__(self):
         """Create an empty reranking parser. You'll need to call
         load_parser_model() at minimum and load_reranker_model() if
@@ -501,12 +503,20 @@ class RerankingParser:
                 (self.__class__.__name__, self.parser_model_dir,
                  self.reranker_model)
 
-    def load_parser_model(self, model_dir, **parser_options):
+    def load_parser_model(self, model_dir, terms_only=False,
+                          heads_only=False, **parser_options):
         """Load the parsing model from model_dir and set parsing
         options. In general, the default options should suffice but see
         the set_parser_options() method for details. Note that the parser
         does not allow loading multiple models within the same process
-        (calling this function twice will raise a RuntimeError)."""
+        (calling this function twice will raise a RuntimeError).
+
+        If terms_only is True, we will not load the full parsing model,
+        just part of speech tag information (intended for tools which
+        only call things like Tree.evaluate()). If heads_only is True,
+        we will only load head finding information (for things like
+        Tree.dependencies(). If both are set to True, both of these will
+        be loaded but the full parsing model will not."""
         if RerankingParser._parser_model_loaded:
             raise RuntimeError('Parser is already loaded and can only '
                                'be loaded once.')
@@ -518,10 +528,20 @@ class RerankingParser:
         if not exists(model_dir):
             raise ValueError('Parser model directory %r does not exist.' %
                              model_dir)
-        RerankingParser._parser_model_loaded = True
-        self.parser_model_dir = model_dir
-        parser.loadModel(model_dir)
-        self.set_parser_options(**parser_options)
+        if not (terms_only or heads_only):
+            RerankingParser._parser_model_loaded = True
+            RerankingParser._parser_heads_loaded = True
+            RerankingParser._parser_terms_loaded = True
+            self.parser_model_dir = model_dir
+            parser.loadModel(model_dir)
+            self.set_parser_options(**parser_options)
+        else:
+            if terms_only:
+                RerankingParser._parser_terms_loaded = True
+                parser.loadTermsOnly(model_dir)
+            if heads_only:
+                RerankingParser._parser_heads_loaded = True
+                parser.loadHeadInfoOnly(model_dir)
 
     def load_reranker_model(self, features_filename, weights_filename,
                             feature_class=None):

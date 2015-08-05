@@ -31,6 +31,7 @@
 #include "ewDciTokStrm.h"
 #include "extraMain.h"
 #include "GotIter.h"
+#include "headFinder.h"
 #include "InputTree.h"
 #include "Link.h"
 #include "MeChart.h"
@@ -426,6 +427,23 @@ double treeLogProb(InputTree* tree) {
     throw ParserError("Parse failed: no parses even with limited constraints");
 }
 
+/* Initialize only the terms from a model. This can be used by tools
+   that need a parsing model for POS tag information but don't want to
+   load a complete parser model. */
+void loadTermsOnly(string modelPath) {
+    modelPath = sanitizePath(modelPath);
+    Term::init(modelPath);
+}
+
+/* Initialize only the terms from a model. This can be used by tools
+   that need a parsing model for POS tag information but don't want to
+   load a complete parser model. */
+void loadHeadInfoOnly(string modelPath) {
+    modelPath = sanitizePath(modelPath);
+    readHeadInfo(modelPath);
+}
+
+/* Set options in the parser */
 void setOptions(string language, bool caseInsensitive, int nBest,
         bool smallCorpus, double overparsing, int debug,
         float smoothPosAmount) {

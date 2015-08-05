@@ -16,7 +16,7 @@ if __name__ == "__main__":
     from bllipparser import RerankingParser, Tree
 
     rrp = RerankingParser()
-    rrp.load_parser_model('first-stage/DATA/EN')
+    rrp.load_parser_model('first-stage/DATA/EN', terms_only=True)
 
     tree1 = Tree('''(S1 (INTJ (UH Oh) (JJ sure) (. !)))''')
 

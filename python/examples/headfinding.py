@@ -17,7 +17,7 @@ if __name__ == "__main__":
     from bllipparser import RerankingParser, Tree
 
     rrp = RerankingParser()
-    rrp.load_parser_model('first-stage/DATA/EN')
+    rrp.load_parser_model('first-stage/DATA/EN', heads_only=True)
 
     tree1 = Tree('''(S1 (SQ (VBZ Swears) (NP (PRP she)) (VP (VBD
     recognized) (NP (PRP$ his) (NN voice)) (, ,) (SBAR (IN that) (S

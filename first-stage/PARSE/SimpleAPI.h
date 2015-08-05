@@ -95,6 +95,9 @@ double fscore(InputTree* proposed, InputTree* gold);
 
 double treeLogProb(InputTree* tree);
 
+void loadTermsOnly(string modelPath);
+void loadHeadInfoOnly(string modelPath);
+
 void setOptions(string language, bool caseInsensitive, int nBest,
         bool smallCorpus, double overparsing, int debug,
         float smoothPosAmount);

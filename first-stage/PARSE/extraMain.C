@@ -45,9 +45,7 @@ generalInit(ECString path)
   // load locale settings from the environment
   setlocale(LC_ALL, "");
 
-  if (!endsWith(path, "/")) {
-    path += "/";
-  }
+  path = sanitizePath(path);
 
   Term::init( path );
   readHeadInfo(path);

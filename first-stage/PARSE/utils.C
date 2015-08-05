@@ -120,3 +120,11 @@ bool endsWith(ECString str, ECString pattern) {
     int index = str.rfind(pattern);
     return index == ((signed int)str.size() - (signed int)pattern.size());
 }
+
+// make sure filesystem path is good for loading
+string sanitizePath(string modelPath) {
+    if (!endsWith(modelPath, "/")) {
+        modelPath += "/";
+    }
+    return modelPath;
+}

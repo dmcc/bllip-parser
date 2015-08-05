@@ -39,5 +39,6 @@ void findAndReplace(string& text, string oldPattern, string newPattern);
 void escapeParens(string& word);
 void unescapeParens(string& word);
 bool endsWith(ECString str, ECString pattern);
+string sanitizePath(string modelPath);
 
 #endif /* ! UTILS_H */
