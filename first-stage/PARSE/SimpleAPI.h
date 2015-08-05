@@ -51,6 +51,8 @@ class ParserError {
     public:
         ParserError(string msg);
         ParserError(const char *filename, int filelinenum, const char *msg);
+
+        string description;
 };
 
 class LabeledSpan {
@@ -69,20 +71,22 @@ class LabeledSpan {
         friend ostream& operator<<(ostream& os, const LabeledSpan& span);
 };
 
-class SpanConstraints: public vector<LabeledSpan> {
+class LabeledSpans: public vector<LabeledSpan> {
     public:
         int minSizeForParsing;
-        SpanConstraints();
+        bool sorted;
+        LabeledSpans();
         void addConstraint(int start, int end, string term);
-        static void spansFromTree(InputTree* tree, SpanConstraints& spans);
+        static void spansFromTree(InputTree* tree, LabeledSpans& spans);
 
+        void ensureSorted();
         bool matches(InputTree* tree);
         bool applyToChart(ChartBase* chart, int length);
         bool disrupts(int start, int end);
 };
 
 vector<ScoredTree>* parse(SentRep* sent, ExtPos& tagConstraints,
-                          SpanConstraints* spanConstraints);
+                          LabeledSpans* spanConstraints);
 vector<ScoredTree>* parse(SentRep* sent);
 
 ParseStats* getParseStats(InputTree* proposed, InputTree* gold);

@@ -38,6 +38,7 @@ using namespace std;
 %include "std_pair.i"
 #include <assert.h>
 
+// include and wrap SimpleAPI
 %{
     #include "SimpleAPI.C"
 %}
@@ -48,7 +49,7 @@ typedef std::string ECString;
     try {
         $action
     } catch (ParserError pe) {
-        SWIG_exception(SWIG_RuntimeError, pe.description);
+        SWIG_exception(SWIG_RuntimeError, pe.description.c_str());
     }
 }
 
@@ -312,6 +313,6 @@ class ParseStats {
 %include "SimpleAPI.h"
 
 namespace std {
-    %template(LabeledSpans) vector<LabeledSpan>;
+    %template(VectorLabeledSpan) vector<LabeledSpan>;
     %template(VectorScoredTree) vector<ScoredTree>;
 }

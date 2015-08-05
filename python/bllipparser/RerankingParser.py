@@ -619,7 +619,7 @@ class RerankingParser:
             raise ValueError("tokens must be a sequence, not a string.")
 
         if constraints:
-            span_constraints = parser.SpanConstraints()
+            span_constraints = parser.LabeledSpans()
             for (start, end), terms in constraints.items():
                 if end <= start:
                     raise ValueError("End must be at least start + 1:"

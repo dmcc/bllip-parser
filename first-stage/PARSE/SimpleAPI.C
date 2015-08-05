@@ -38,212 +38,209 @@
 #include "ParseStats.h"
 #include "ScoreTree.h"
 #include "SentRep.h"
+#include "SimpleAPI.h"
 #include "TimeIt.h"
 #include "UnitRules.h"
 #include "utils.h"
 #include "Wrd.h"
 
 int sentenceCount;
-static const double log600 = log2(600.0);
 typedef pair<double,InputTree*> ScoredTree;
 
-class ParserError {
-    public:
-        const char* description;
+//
+// ParserError
+//
+ParserError::ParserError(string msg) {
+    this->description = msg;
+}
 
-        ParserError(string msg) {
-            this->description = msg.c_str();
-        }
+ParserError::ParserError(const char *filename, int filelinenum,
+                         const char *msg) {
+    stringstream description;
+    description << "[";
+    description << filename;
+    description << ":";
+    description << filelinenum;
+    description << "]: ";
+    description << msg;
 
-        ParserError(const char *filename, int filelinenum, const char *msg) {
-            stringstream description;
-            description << "[";
-            description << filename;
-            description << ":";
-            description << filelinenum;
-            description << "]: ";
-            description << msg;
+    this->description = description.str();
+}
 
-            this->description = description.str().c_str();
-        }
-};
+//
+// LabeledSpan
+//
+LabeledSpan::LabeledSpan() : start(-1), end(-1), termIndex(-1) {}
+LabeledSpan::LabeledSpan(int startIndex, int endIndex, string termName)
+    : start(startIndex), end(endIndex) {
+        assert (startIndex < endIndex);
+        termIndex = Term::get(termName)->toInt();
+}
+int LabeledSpan::size() {
+    return end - start;
+}
+bool LabeledSpan::disrupts(int otherStart, int otherEnd) {
+    assert (otherStart < otherEnd);
+    if (start == otherStart) {
+        // special case -- they only intersect if end == otherEnd
+        return end == otherEnd;
+    }
 
-class LabeledSpan {
-    public:
-        int start;
-        int end;
-        int termIndex;
+    // canonicalize order so that A is at least as early as B
+    int startB, endA, endB;
+    if (start < otherStart) {
+        endA = end;
+        startB = otherStart;
+        endB = otherEnd;
+    } else { // start > otherStart
+        endA = otherEnd;
+        startB = start;
+        endB = end;
+    }
+    /* now it's something like this:
+            [startA ----- endA)
+                [startB -?????- endB)
+       where endB could be anywhere after startB and startA might
+       be the same as startB. */
 
-        LabeledSpan() : start(-1), end(-1), termIndex(-1) {}
-        LabeledSpan(int startIndex, int endIndex, string termName)
-            : start(startIndex), end(endIndex) {
-                assert (startIndex < endIndex);
-                termIndex = Term::get(termName)->toInt();
-        }
-        int size() {
-            return end - start;
-        }
-        bool disrupts(int otherStart, int otherEnd) {
-            assert (otherStart < otherEnd);
-            if (start == otherStart) {
-                // special case -- they only intersect if end == otherEnd
-                return end == otherEnd;
-            }
-
-            // canonicalize order so that A is at least as early as B
-            int startB, endA, endB;
-            if (start < otherStart) {
-                endA = end;
-                startB = otherStart;
-                endB = otherEnd;
-            } else { // start > otherStart
-                endA = otherEnd;
-                startB = start;
-                endB = end;
-            }
-            /* now it's something like this:
-                    [startA ----- endA)
-                        [startB -?????- endB)
-               where endB could be anywhere after startB and startA might
-               be the same as startB. */
-
-            // see if Bs start is within A (startB must be > startA)
-            if (startB < endA) {
-                // fine as long as B also ends within A
-                if (endB <= endA) {
-                    return false;
-                } else {
-                    return true;
-                }
-            }
-
+    // see if Bs start is within A (startB must be > startA)
+    if (startB < endA) {
+        // fine as long as B also ends within A
+        if (endB <= endA) {
             return false;
-        }
-        bool operator==(const LabeledSpan& other) const {
-            return (start == other.start) &&
-                (end == other.end) &&
-                (termIndex == other.termIndex);
-        }
-        bool operator!=(const LabeledSpan& other) const {
-            return !(*this == other);
-        }
-        bool operator<(const LabeledSpan& other) const {
-            if (start < other.start) {
-                return true;
-            } else if (start == other.start) {
-                if (end < other.end) {
-                    return true;
-                } else if (end == other.end) {
-                    return (termIndex < other.termIndex);
-                }
-            }
-            return false;
-        }
-        friend ostream& operator<<(ostream& os, const LabeledSpan& span) {
-            os << "LabeledSpan(" << span.start << ", " << span.end << ", "
-               << span.termIndex << ")";
-            return os;
-        }
-};
-
-class SpanConstraints: public vector<LabeledSpan> {
-    public:
-        int minSizeForParsing;
-        bool sorted;
-        SpanConstraints() {
-            sorted = false;
-            minSizeForParsing = 0;
-        }
-        void addConstraint(int start, int end, string term) {
-            LabeledSpan sp(start, end, term);
-            this->push_back(sp);
-        }
-        static void spansFromTree(InputTree* tree, SpanConstraints& spans) {
-            int start = tree->start();
-            int finish = tree->finish();
-            LabeledSpan span(start, finish, tree->term());
-            spans.push_back(span);
-
-            InputTrees subtrees = tree->subTrees();
-            InputTreesIter subtreeIter = subtrees.begin();
-            for (; subtreeIter != subtrees.end() ; subtreeIter++) {
-                spansFromTree(*subtreeIter, spans);
-            }
-        }
-
-        void ensureSorted() {
-            if (!sorted) {
-                std::sort(this->begin(), this->end());
-                sorted = true;
-            }
-        }
-        bool matches(InputTree* tree) {
-            SpanConstraints treeSpans;
-            spansFromTree(tree, treeSpans);
-            treeSpans.ensureSorted();
-            this->ensureSorted();
-
-            return std::includes(treeSpans.begin(), treeSpans.end(),
-                this->begin(), this->end());
-        }
-
-        // Apply these constraints to a chart. Returns true iff parsing
-        // should be done in guided mode (if the minSizeForParsing is too
-        // high, the constraints won't actually be applied and you shouldn't
-        // do guided parsing)
-        bool applyToChart(ChartBase* chart, int length) {
-            if (length < minSizeForParsing) {
-                return false;
-            }
-            vector<LabeledSpan>::iterator spanIterator = this->begin();
-            for (; spanIterator != this->end(); spanIterator++) {
-                LabeledSpan span = *spanIterator;
-                if (span.size() >= minSizeForParsing) {
-                    chart->addConstraint(span.start, span.end, span.termIndex);
-                }
-            }
-            // leave all other spans that don't "disrupt" one of
-            // our real constraints as open
-            for (int i = 0; i < length; i++) {
-                for (int j = i + 1; j <= length; j++) {
-                    if (disrupts(i, j)) {
-                        // don't post any constraints
-                        continue;
-                    }
-
-                    // if it's a word span, can be all tags +
-                    // phrasal types
-                    int tagStart = 0;
-                    int tagEnd = Term::lastNTInt();
-                    if (j != i + 1) {
-                        // if not a word span, can only be a phrasal type
-                        // (lastTag to lastNT)
-                        tagStart = Term::lastTagInt();
-                    }
-                    for (int k = tagStart; k <= tagEnd; k++) {
-                        chart->addConstraint(i, j, k);
-                    }
-                }
-            }
+        } else {
             return true;
         }
-        bool disrupts(int start, int end) {
-            vector<LabeledSpan>::iterator spanIterator = this->begin();
-            for (; spanIterator != this->end(); spanIterator++) {
-                LabeledSpan span = *spanIterator;
-                if (span.size() < minSizeForParsing) {
-                    continue;
-                }
-                if (span.disrupts(start, end)) {
-                    return true;
-                }
-            }
-            return false;
+    }
+
+    return false;
+}
+bool LabeledSpan::operator==(const LabeledSpan& other) const {
+    return (start == other.start) &&
+        (end == other.end) &&
+        (termIndex == other.termIndex);
+}
+bool LabeledSpan::operator!=(const LabeledSpan& other) const {
+    return !(*this == other);
+}
+bool LabeledSpan::operator<(const LabeledSpan& other) const {
+    if (start < other.start) {
+        return true;
+    } else if (start == other.start) {
+        if (end < other.end) {
+            return true;
+        } else if (end == other.end) {
+            return (termIndex < other.termIndex);
         }
-};
+    }
+    return false;
+}
+ostream& operator<<(ostream& os, const LabeledSpan& span) {
+    os << "LabeledSpan(" << span.start << ", " << span.end << ", "
+       << span.termIndex << ")";
+    return os;
+}
+
+//
+// LabeledSpans
+//
+LabeledSpans::LabeledSpans() {
+    sorted = false;
+    minSizeForParsing = 0;
+}
+void LabeledSpans::addConstraint(int start, int end, string term) {
+    LabeledSpan sp(start, end, term);
+    this->push_back(sp);
+}
+void LabeledSpans::spansFromTree(InputTree* tree, LabeledSpans& spans) {
+    int start = tree->start();
+    int finish = tree->finish();
+    LabeledSpan span(start, finish, tree->term());
+    spans.push_back(span);
+
+    InputTrees subtrees = tree->subTrees();
+    InputTreesIter subtreeIter = subtrees.begin();
+    for (; subtreeIter != subtrees.end() ; subtreeIter++) {
+        spansFromTree(*subtreeIter, spans);
+    }
+}
+
+void LabeledSpans::ensureSorted() {
+    if (!sorted) {
+        std::sort(this->begin(), this->end());
+        sorted = true;
+    }
+}
+bool LabeledSpans::matches(InputTree* tree) {
+    LabeledSpans treeSpans;
+    spansFromTree(tree, treeSpans);
+    treeSpans.ensureSorted();
+    this->ensureSorted();
+
+    return std::includes(treeSpans.begin(), treeSpans.end(),
+        this->begin(), this->end());
+}
+
+// Apply these constraints to a chart. Returns true iff parsing
+// should be done in guided mode (if the minSizeForParsing is too
+// high, the constraints won't actually be applied and you shouldn't
+// do guided parsing)
+bool LabeledSpans::applyToChart(ChartBase* chart, int length) {
+    if (length < minSizeForParsing) {
+        return false;
+    }
+    vector<LabeledSpan>::iterator spanIterator = this->begin();
+    for (; spanIterator != this->end(); spanIterator++) {
+        LabeledSpan span = *spanIterator;
+        if (span.size() >= minSizeForParsing) {
+            chart->addConstraint(span.start, span.end, span.termIndex);
+        }
+    }
+    // leave all other spans that don't "disrupt" one of
+    // our real constraints as open
+    for (int i = 0; i < length; i++) {
+        for (int j = i + 1; j <= length; j++) {
+            if (disrupts(i, j)) {
+                // don't post any constraints
+                continue;
+            }
+
+            // if it's a word span, can be all tags +
+            // phrasal types
+            int tagStart = 0;
+            int tagEnd = Term::lastNTInt();
+            if (j != i + 1) {
+                // if not a word span, can only be a phrasal type
+                // (lastTag to lastNT)
+                tagStart = Term::lastTagInt();
+            }
+            for (int k = tagStart; k <= tagEnd; k++) {
+                chart->addConstraint(i, j, k);
+            }
+        }
+    }
+    return true;
+}
+bool LabeledSpans::disrupts(int start, int end) {
+    vector<LabeledSpan>::iterator spanIterator = this->begin();
+    for (; spanIterator != this->end(); spanIterator++) {
+        LabeledSpan span = *spanIterator;
+        if (span.size() < minSizeForParsing) {
+            continue;
+        }
+        if (span.disrupts(start, end)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+//
+// Helper methods
+//
 
 vector<ScoredTree>* parse(SentRep* sent, ExtPos& tagConstraints,
-                          SpanConstraints* spanConstraints) {
+                          LabeledSpans* spanConstraints) {
     if (sent->length() > MAXSENTLEN) {
         throw ParserError("Sentence is longer than maximum supported sentence length.");
     }
@@ -387,9 +384,9 @@ double treeLogProb(InputTree* tree) {
     tree->make(tokenList);
     SentRep sentRep(tokenList);
 
-    // make SpanConstraints for the spans in the tree
-    SpanConstraints treeSpans;
-    SpanConstraints::spansFromTree(tree, treeSpans);
+    // make LabeledSpans for the spans in the tree
+    LabeledSpans treeSpans;
+    LabeledSpans::spansFromTree(tree, treeSpans);
 
     ExtPos extPos; // empty POS constraints
     vector<ScoredTree>* scoredTrees = NULL;
