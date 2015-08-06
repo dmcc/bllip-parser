@@ -9,6 +9,7 @@ before_script:
 script:
   - make
   - make reranker
+  - make -C first-stage/PARSE all
   - make -C second-stage/programs/features parallel-tools
   - make sparseval
   - sudo python setup.py install

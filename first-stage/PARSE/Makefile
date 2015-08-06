@@ -12,10 +12,10 @@
 
 default: parseIt
 
-all: parseIt parseAndEval evalTree
+all: parseIt parseAndEval evalTree fusion
 
 clean:
-	rm -f *.o oparseIt parseIt parseAndEval evalTree *~ threads TAGS tags parser_wrapper.C swig/wrapper.C
+	rm -f *.o oparseIt parseIt parseAndEval evalTree fusion *~ threads TAGS tags parser_wrapper.C swig/wrapper.C
 
 .PHONY: real-clean
 real-clean: clean swig-clean
@@ -31,7 +31,7 @@ Makefile.dep:
 
 # typical usage -- the ?= sets this only if it hasn't been set previously
 # (specifically in the master ../../Makefile)
-CFLAGS ?= -Wall -O3
+CFLAGS ?= -Wall -O3 -fPIC
 # for debugging
 # CFLAGS=-g
 
@@ -81,6 +81,7 @@ PARSEANDEVAL_OBJS = $(COMMON_OBJS) parseAndEval.o
 PARSE_OBJS = $(COMMON_OBJS) parseIt.o
 OPARSE_OBJS = $(COMMON_OBJS) oparseIt.o
 EVALTREE_OBJS = $(COMMON_OBJS) SimpleAPI.o evalTree.o
+FUSION_OBJS = $(COMMON_OBJS) SimpleAPI.o Fusion.o
 
 parseAndEval: $(PARSEANDEVAL_OBJS)
 	$(CXX) $(CFLAGS) ${PARSEANDEVAL_OBJS} -o parseAndEval -D_REENTRANT -D_XOPEN_SOURCE=600 -lpthread
@@ -93,6 +94,9 @@ oparseIt: $(OPARSE_OBJS)
 
 evalTree: $(EVALTREE_OBJS)
 	$(CXX) $(CFLAGS) ${EVALTREE_OBJS} -o evalTree -D_REENTRANT -D_XOPEN_SOURCE=600 -lpthread
+
+fusion: $(FUSION_OBJS)
+	$(CXX) $(CFLAGS) $(FUSION_OBJS) -o fusion -D_REENTRANT -D_XOPEN_SOURCE=600
 
 .PHONY: valgrind-parseIt
 valgrind-parseIt: CFLAGS += -g -O0
