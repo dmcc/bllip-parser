@@ -12,13 +12,14 @@
  * under the License.
  */
 
+#include <assert.h>
 #include <fstream>
 #include <iostream>
+#include <set>
+#include <sstream>
 #include "InputTree.h"
 #include "headFinder.h"
 #include "utils.h"
-#include <assert.h>
-#include <set>
 #include "Term.h"
 
   
@@ -26,7 +27,7 @@ int              InputTree::pageWidth = 75; //used for prettyPrinting
 ECString         InputTree::tempword[MAXSENTLEN];
 int              InputTree::tempwordnum = 0;
 
-// reset internal state after reporting an error
+// reset internal state before reporting an error
 #define TREEREADINGERROR(message) \
     { InputTree::init(); error(__FILE__, __LINE__, message); }
 
@@ -93,8 +94,7 @@ readParse(istream& is)
   if(!is) return;
   if(temp != "(")
     {
-      cerr << "Saw " << temp << endl;
-      TREEREADINGERROR("Should have seen an open paren here.");
+      TREEREADINGERROR("Saw '" + temp + "' instead of open paren here.");
     }
   /* get annotated symbols like NP-OBJ.  term_ = NP ntInfo_ = OBJ */
   temp = readNext(is);
@@ -110,8 +110,7 @@ readParse(istream& is)
   if(temp == ")") return;
   if(temp != "(")
     {
-      cerr << "Saw " << temp << endl;
-      TREEREADINGERROR("Should have seen second open paren here.");
+      TREEREADINGERROR("Saw '" + temp + "' instead of second open paren here.");
     }
 
   for (;;)
@@ -125,8 +124,9 @@ readParse(istream& is)
       if (temp==")") break;
       if (temp!="(")
 	{
-	  cerr << *this << endl;
-      TREEREADINGERROR("Should have open or closed paren here.");
+      stringstream message("Saw '");
+      message << *this << "' instead of open or closed paren here.";
+      TREEREADINGERROR(message.str());
 	}
     }
 }
@@ -176,8 +176,7 @@ newParse(istream& is, int& strt, InputTree* par)
       const Term* ctrm = Term::get(trm);
       if(!ctrm)
 	{
-	  cerr << "No such term " << trm << endl;
-	  assert(ctrm);
+      TREEREADINGERROR("No such term: " + trm);
 	}
       if(wrd!="" && !(ctrm->terminal_p()))
 	{

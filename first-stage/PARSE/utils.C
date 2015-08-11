@@ -52,6 +52,13 @@ error(const char *s)
   ERROR( s ); 
 }
 
+void 
+error(const char *filename, int filelinenum, string str) 
+{ 
+  const char* s = str.c_str();
+  error(filename, filelinenum, s); 
+}
+
 ECString
 langAwareToLower(ECString str)
 {

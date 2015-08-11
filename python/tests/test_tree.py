@@ -14,7 +14,7 @@ def test_tree_errors():
         bllipparser.Tree('(())')
       File "/usr/local/lib/python2.7/dist-packages/bllipparser/RerankingParser.py", line 63, in __init__
         parser.inputTreeFromString(input_tree_or_string)
-    RuntimeError: [first-stage/PARSE/InputTree.C:260]: Saw paren rather than term
+    RuntimeError: [first-stage/PARSE/InputTree.C:259]: Saw paren rather than term
     >>> bllipparser.Tree('(S1 (S (NP (DT This)) (VP (VBZ is) (NP (DT a) (ADJP (RB fairly) (JJ simple)) (NN parse) (NN tree))) (. .)))')
     Tree('(S1 (S (NP (DT This)) (VP (VBZ is) (NP (DT a) (ADJP (RB fairly) (JJ simple)) (NN parse) (NN tree))) (. .)))')
     >>> bllipparser.Tree('(S1 (S (NP (DT This)) (VP (VBZ is) (NP (DT a) (ADJP (RB fairly) (JJ simple)) (NN parse) (NN tree))) (. .)))')
@@ -36,7 +36,7 @@ def test_tree_errors():
         bllipparser.Tree('Does not start with a paren')
       File "/usr/local/lib/python2.7/dist-packages/bllipparser/RerankingParser.py", line 63, in __init__
         parser.inputTreeFromString(input_tree_or_string)
-    RuntimeError: [first-stage/PARSE/InputTree.C:97]: Should have seen an open paren here.
+    RuntimeError: [first-stage/PARSE/InputTree.C:97]: Saw 'Does' instead of open paren here.
     >>> bllipparser.Tree('(S1 eh)')
     Traceback (most recent call last):
       File "/usr/lib/python2.7/doctest.py", line 1315, in __run
@@ -45,7 +45,7 @@ def test_tree_errors():
         bllipparser.Tree('(S1 eh)')
       File "/usr/local/lib/python2.7/dist-packages/bllipparser/RerankingParser.py", line 63, in __init__
         parser.inputTreeFromString(input_tree_or_string)
-    RuntimeError: [first-stage/PARSE/InputTree.C:114]: Should have seen second open paren here.
+    RuntimeError: [first-stage/PARSE/InputTree.C:113]: Saw 'eh' instead of second open paren here.
     >>> bllipparser.Tree('(S1')
     Traceback (most recent call last):
       File "/usr/lib/python2.7/doctest.py", line 1315, in __run
@@ -54,7 +54,7 @@ def test_tree_errors():
         bllipparser.Tree('(S1')
       File "/usr/local/lib/python2.7/dist-packages/bllipparser/RerankingParser.py", line 63, in __init__
         parser.inputTreeFromString(input_tree_or_string)
-    RuntimeError: [first-stage/PARSE/InputTree.C:114]: Should have seen second open paren here.
+    RuntimeError: [first-stage/PARSE/InputTree.C:113]: Saw '' instead of second open paren here.
     >>> bllipparser.Tree('(S1 ((')
     Traceback (most recent call last):
       File "/usr/lib/python2.7/doctest.py", line 1315, in __run
@@ -63,7 +63,7 @@ def test_tree_errors():
         bllipparser.Tree('(S1 ((')
       File "/usr/local/lib/python2.7/dist-packages/bllipparser/RerankingParser.py", line 63, in __init__
         parser.inputTreeFromString(input_tree_or_string)
-    RuntimeError: [first-stage/PARSE/InputTree.C:260]: Saw paren rather than term
+    RuntimeError: [first-stage/PARSE/InputTree.C:259]: Saw paren rather than term
     >>> bllipparser.Tree('(S1 (NP')
     Traceback (most recent call last):
       File "/usr/lib/python2.7/doctest.py", line 1315, in __run
