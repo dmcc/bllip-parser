@@ -17,30 +17,7 @@ so you don't need to interact with them directly."""
 from os.path import exists, join
 import CharniakParser as parser
 import JohnsonReranker as reranker
-
-class DeprecatedGetter:
-    """Used when a getter method has been converted to a property. All
-    attributes will be dispatched to the property's value and a warning
-    will be raised if this is called. This doesn't work if the property
-    being deprecated has its own __call__ method, since that will be
-    unreachable as a DeprecatedGetter."""
-    def __init__(self, name, value):
-        """name is the attribute name of the property. value is its
-        value."""
-        self.__name = name
-        self.__value = value
-    def __getattr__(self, attr):
-        """All attributes except __call__ are dispatched to the property's
-        value."""
-        return getattr(self.__value, attr)
-    def __call__(self, *args, **kwargs):
-        """Shouldn't be called except by deprecated code. Issues a warning
-        about the deprecation then returns the value so that deprecated
-        code will continue to work."""
-        from warnings import warn
-        warn("%r is no longer a method. It's now a property." % self.__name,
-             DeprecationWarning, stacklevel=2)
-        return self.__value
+from .Utility import DeprecatedGetter, normalize_logprobs
 
 class Tree(object):
     """Represents a single parse (sub)tree in Penn Treebank format. This
@@ -452,7 +429,35 @@ class NBestList:
         for index, nbest_list_item in enumerate(self.parses):
             nbest_list_item.reranker_rank = index
         self._reranked = True
+    def fuse(self, threshold=0.5, exponent=1, num_parses=50,
+             use_parser_scores=False):
+        """Combine the parses in this n-best list into a single Tree
+        using parse fusion. See Choe, McClosky, and Charniak (EMNLP 2015).
+        This results in a significant accuracy improvement. You may want
+        to tune the parameters for your specific parsing model.  for more
+        details. This will use the scores from the reranker unless the
+        n-best list wasn't reranked or use_parser_scores=True. If fusion
+        fails, the top parse from the list will be returned."""
+        parses = self.parses[:num_parses]
 
+        if use_parser_scores or not self._reranked:
+            scores = [scored_parse.parser_score for scored_parse in parses]
+        else:
+            scores = [scored_parse.reranker_score for scored_parse in parses]
+        norm_scores = normalize_logprobs(scores, exponent=exponent)
+
+        chart = parser.SimpleChart(len(self._sentrep))
+        for norm_score, scored_parse in zip(norm_scores, parses):
+            chart.populate(scored_parse.ptb_parse._tree, norm_score)
+        chart.prune(threshold)
+
+        tree = chart.parse()
+        if tree is None:
+            # parse failed -- use original 1-best parse
+            tree = parses[0].ptb_parse
+        else:
+            tree = Tree(tree)
+        return tree
     def __str__(self):
         """Represent the n-best list in a similar output format to the
         command-line parser and reranker."""

@@ -38,9 +38,10 @@ using namespace std;
 %include "std_pair.i"
 #include <assert.h>
 
-// include and wrap SimpleAPI
+// these lines included verbatim in wrapper
 %{
     #include "SimpleAPI.C"
+    #include "Fusion.h"
 %}
 typedef std::string ECString;
 
@@ -311,6 +312,7 @@ class ParseStats {
 };
 
 %include "SimpleAPI.h"
+%include "Fusion.h"
 
 namespace std {
     %template(VectorLabeledSpan) vector<LabeledSpan>;

@@ -69,7 +69,7 @@ parser_sources = (parser_wrapper, 'Bchart.C', 'BchartSm.C', 'Bst.C',
                   'UnitRules.C', 'ValHeap.C', 'edgeSubFns.C',
                   'ewDciTokStrm.C', 'extraMain.C', 'fhSubFns.C',
                   'headFinder.C', 'headFinderCh.C', 'utils.C',
-                  'MeChart.C')
+                  'MeChart.C', 'Fusion.C')
 parser_sources = [join(parser_base, src) for src in parser_sources]
 
 parser_module = Extension('bllipparser._CharniakParser',

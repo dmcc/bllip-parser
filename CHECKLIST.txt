@@ -1,7 +1,10 @@
 Release checklist
 -----------------
 0a. Ensure tests are passing: nosetests --with-doctest -dvx python/tests/
-0b. shell> flake8 python/bllipparser/ParsingShell.py python/bllipparser/RerankingParser.py python/bllipparser/RerankerFeatureCorpus.py
+0b. shell> flake8 python/bllipparser/ParsingShell.py \
+                  python/bllipparser/RerankingParser.py \
+                  python/bllipparser/RerankerFeatureCorpus.py \
+                  python/bllipparser/Utility.py
     (we currently set flake8's ignore = E301,E302,E261)
 1.  Version bumps in python/bllipparser/__init__.py and setup.py
 2.  Update READMEs
