@@ -218,7 +218,7 @@ ESTIMATORENV=
 # TARGETS is the list of targets built when make is called
 # without arguments
 #
-TARGETS = PARSE reranker-runtime
+TARGETS = PARSE reranker-runtime fusion
 
 .PHONY: top
 top: $(TARGETS)
@@ -231,6 +231,12 @@ ZCAT = gunzip -c
 .PHONY: PARSE
 PARSE:
 	$(MAKE) -C $(NBESTPARSERBASEDIR)/PARSE parseIt
+
+# fusion builds the syntactic parse fuser
+#
+.PHONY: fusion
+fusion:
+	$(MAKE) -C $(NBESTPARSERBASEDIR)/PARSE fusion
 
 # TRAIN builds the programs needed to train the first-stage parser.
 #
