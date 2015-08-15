@@ -432,12 +432,12 @@ class NBestList:
     def fuse(self, threshold=0.5, exponent=1, num_parses=50,
              use_parser_scores=False):
         """Combine the parses in this n-best list into a single Tree
-        using parse fusion. See Choe, McClosky, and Charniak (EMNLP 2015).
-        This results in a significant accuracy improvement. You may want
-        to tune the parameters for your specific parsing model.  for more
-        details. This will use the scores from the reranker unless the
-        n-best list wasn't reranked or use_parser_scores=True. If fusion
-        fails, the top parse from the list will be returned."""
+        using parse fusion. This results in a significant accuracy
+        improvement. You may want to tune the parameters for your specific
+        parsing model. See Choe, McClosky, and Charniak (EMNLP 2015) for
+        more details. This will use the scores from the reranker unless
+        the n-best list wasn't reranked or use_parser_scores=True. If
+        fusion fails, the top parse from the list will be returned."""
         parses = self.parses[:num_parses]
 
         if use_parser_scores or not self._reranked:
