@@ -15,21 +15,6 @@ software and any code derived from this software. Please report the
 release date of the software that you are using, as this will enable
 others to compare their results to yours.
 
-References:
-
-* Eugene Charniak and Mark Johnson. "`Coarse-to-fine n-best parsing and
-  MaxEnt discriminative reranking
-  <http://aclweb.org/anthology/P/P05/P05-1022.pdf>`_."  Proceedings of
-  the 43rd Annual Meeting on Association for Computational Linguistics.
-  `Association for Computational Linguistics, 2005
-  <http://bllip.cs.brown.edu/publications/index_bib.shtml#charniak-johnson:2005:ACL>`_.
-
-* Eugene Charniak. "`A maximum-entropy-inspired parser
-  <http://aclweb.org/anthology//A/A00/A00-2018.pdf>`_." Proceedings of
-  the 1st North American chapter of the Association for Computational
-  Linguistics conference. `Association for Computational Linguistics, 2000
-  <http://bllip.cs.brown.edu/publications/index_bib.shtml#Charniak:2000:NAACL>`_.
-
 Fetching parsing models
 -----------------------
 
@@ -95,15 +80,22 @@ To get information about the top parse (note that the ``ptb_parse``
 property is a ``Tree`` object, described in more detail later)::
 
     >>> print repr(nbest_list[0])
-    ScoredParse('(S1 (S (NP (DT This)) (VP (VBZ is) (NP (DT a) (NN sentence))) (. .)))', parser_score=-29.621201629004183, reranker_score=-7.9273829816098731)
+    ScoredParse('(S1 (S (NP (DT This)) (VP (VBZ is) (NP (DT a) (NN sentence))) (. .)))', parser_score=-29.620656470412328, reranker_score=-7.13760513405013)
     >>> print nbest_list[0].ptb_parse
     (S1 (S (NP (DT This)) (VP (VBZ is) (NP (DT a) (NN sentence))) (. .)))
     >>> print nbest_list[0].parser_score
-    -29.621201629
+    -29.6206564704
     >>> print nbest_list[0].reranker_score
-    -7.92738298161
+    -7.13760513405
     >>> print len(nbest_list)
     50
+
+You can perform syntactic fusion with the ``fuse()`` method. This
+combines the parses in the n-best list into a single ``Tree`` (which
+may be a parse already present in the n-best list or a novel one)::
+
+    >>> print nbest_list.fuse()
+    (S1 (S (NP (DT This)) (VP (VBZ is) (NP (DT a) (NN sentence))) (. .)))
 
 If you have the `PyStanfordDependencies
 <https://pypi.python.org/pypi/PyStanfordDependencies/>`_ package,
@@ -137,20 +129,20 @@ constraints). In this example, token 0 ('Time') should have tag VB and
 token 1 ('flies') should have tag NNS::
 
     >>> rrp.parse_tagged(['Time', 'flies'], possible_tags={0 : 'VB', 1 : 'NNS'})[0]
-    ScoredParse('(S1 (NP (VB Time) (NNS flies)))', parser_score=-53.94938875760073, reranker_score=-15.841407102717749)
+    ScoredParse('(S1 (NP (VB Time) (NNS flies)))', parser_score=-54.05083561918019, reranker_score=-15.079632500107973)
 
 You don't need to specify a tag for all words: Here, token 0 ('Time') should
 have tag VB and token 1 ('flies') is unconstrained::
 
     >>> rrp.parse_tagged(['Time', 'flies'], possible_tags={0 : 'VB'})[0]
-    ScoredParse('(S1 (S (VP (VB Time) (NP (VBZ flies)))))', parser_score=-54.390430751112156, reranker_score=-17.290145080887005)
+    ScoredParse('(S1 (S (VP (VB Time) (NP (VBZ flies)))))', parser_score=-54.3497715 5750189, reranker_score=-16.681734375725263)
 
 You can specify multiple tags for each token. When you do this, the
 tags for a token will be used in decreasing priority. token 0 ('Time')
 should have tag VB, JJ, or NN and token 1 ('flies') is unconstrained::
 
     >>> rrp.parse_tagged(['Time', 'flies'], possible_tags={0 : ['VB', 'JJ', 'NN']})[0]
-    ScoredParse('(S1 (NP (NN Time) (VBZ flies)))', parser_score=-42.82904107213723, reranker_score=-12.865900776775314)
+    ScoredParse('(S1 (NP (NN Time) (VBZ flies)))', parser_score=-42.9961920777843, reranker_score=-12.57069545767032)
 
 There are many parser options which can be adjusted (though the defaults
 should work well for most cases) with ``set_parser_options``. This
@@ -176,7 +168,7 @@ Use this if all you want is a tokenizer::
 Parsing shell
 -------------
 
-There is an interactive shell which can help visualize a parse::
+There is an interactive shell for visualizing parses::
 
     shell% python -mbllipparser.ParsingShell /path/to/model
 
@@ -230,8 +222,8 @@ There is more detailed help inside the shell under the ``help`` command.
 The Tree class
 --------------
 
-The parser provides a simple (immutable) Tree class which provides
-information about Penn Treebank-style trees::
+The parser provides a simple Tree class which provides information about
+Penn Treebank-style trees::
 
     >>> tree = bllipparser.Tree('(S1 (S (NP (DT This)) (VP (VBZ is) (NP (DT a) (ADJP (RB fairly) (JJ simple)) (NN parse) (NN tree))) (. .)))')
     >>> print tree
@@ -319,6 +311,41 @@ More examples and advanced features
 See the `examples
 <https://github.com/BLLIP/bllip-parser/tree/master/python/examples>`_
 directory in the repository.
+
+References
+----------
+
+* Eugene Charniak and Mark Johnson. "`Coarse-to-fine n-best parsing and
+  MaxEnt discriminative reranking
+  <http://aclweb.org/anthology/P/P05/P05-1022.pdf>`_."  Proceedings of
+  the 43rd Annual Meeting on Association for Computational Linguistics.
+  `Association for Computational Linguistics, 2005
+  <http://bllip.cs.brown.edu/publications/index_bib.shtml#charniak-johnson:2005:ACL>`_.
+
+* Eugene Charniak. "`A maximum-entropy-inspired parser
+  <http://aclweb.org/anthology//A/A00/A00-2018.pdf>`_." Proceedings of
+  the 1st North American chapter of the Association for Computational
+  Linguistics conference. `Association for Computational Linguistics, 2000
+  <http://bllip.cs.brown.edu/publications/index_bib.shtml#Charniak:2000:NAACL>`_.
+
+Self-training:
+
+* David McClosky, Eugene Charniak, and Mark Johnson.
+  "`Effective Self-Training for Parsing
+  <http://www.aclweb.org/anthology/N/N06/N06-1020.pdf>`_."
+  Proceedings of the Conference on Human Language Technology
+  and North American chapter of the `Association for
+  Computational Linguistics (HLT-NAACL 2006), 2006
+  <http://www.aclweb.org/anthology/N/N06/N06-1020.bib>`_.
+
+Syntactic fusion:
+
+* Do Kook Choe, David McClosky, and Eugene Charniak.
+  "`Syntactic Parse Fusion
+  <http://nlp.stanford.edu/~mcclosky/papers/choe-emnlp-2015.pdf>`_."
+  Proceedings of the Conference on `Empirical Methods in Natural Language
+  Processing (EMNLP 2015), 2015
+  <http://nlp.stanford.edu/~mcclosky/papers/choe-emnlp-2015.bib>`_.
 
 Release summaries
 -----------------

@@ -13,21 +13,6 @@ software and any code derived from this software. Please report the
 release date of the software that you are using, as this will enable
 others to compare their results to yours.
 
-References:
-
-* Eugene Charniak and Mark Johnson. "`Coarse-to-fine n-best parsing and
-  MaxEnt discriminative reranking
-  <http://aclweb.org/anthology/P/P05/P05-1022.pdf>`_."  Proceedings of
-  the 43rd Annual Meeting on Association for Computational Linguistics.
-  `Association for Computational Linguistics, 2005
-  <http://bllip.cs.brown.edu/publications/index_bib.shtml#charniak-johnson:2005:ACL>`_.
-
-* Eugene Charniak. "`A maximum-entropy-inspired parser
-  <http://aclweb.org/anthology//A/A00/A00-2018.pdf>`_." Proceedings of
-  the 1st North American chapter of the Association for Computational
-  Linguistics conference. `Association for Computational Linguistics, 2000
-  <http://bllip.cs.brown.edu/publications/index_bib.shtml#Charniak:2000:NAACL>`_.
-
 Overview
 ~~~~~~~~
 BLLIP Parser is a statistical natural language parser including a
@@ -102,6 +87,9 @@ The Python interface to the parser includes a mechanism for listing and
 downloading additional parsing models (some of which are more accurate,
 depending on what you're parsing).
 
+The script ``parse-and-fuse.sh`` demonstrates how to run syntactic
+parse fusion. Fusion can also be run via the Python bindings.
+
 The script ``parse-eval.sh`` takes a list of treebank files as arguments
 and extracts the terminal strings from them, runs the two-stage parser
 on those terminal strings and then evaluates the parsing accuracy with
@@ -172,3 +160,38 @@ if you're working on other platforms or languages.
   <http://www.rutumulkar.com/software.html>`_
 - `Djame's French branch <https://bitbucket.org/djame/bllip-parser-fr>`_
 - `Liang Huang's Forest Reranker <http://acl.cs.qc.edu/~lhuang/>`_  (includes forest-dumping extensions)
+
+References
+^^^^^^^^^^
+
+* Eugene Charniak and Mark Johnson. "`Coarse-to-fine n-best parsing and
+  MaxEnt discriminative reranking
+  <http://aclweb.org/anthology/P/P05/P05-1022.pdf>`_."  Proceedings of
+  the 43rd Annual Meeting on Association for Computational Linguistics.
+  `Association for Computational Linguistics, 2005
+  <http://bllip.cs.brown.edu/publications/index_bib.shtml#charniak-johnson:2005:ACL>`_.
+
+* Eugene Charniak. "`A maximum-entropy-inspired parser
+  <http://aclweb.org/anthology/A/A00/A00-2018.pdf>`_." Proceedings of
+  the 1st North American chapter of the Association for Computational
+  Linguistics conference. `Association for Computational Linguistics, 2000
+  <http://bllip.cs.brown.edu/publications/index_bib.shtml#Charniak:2000:NAACL>`_.
+
+Self-training:
+
+* David McClosky, Eugene Charniak, and Mark Johnson.
+  "`Effective Self-Training for Parsing
+  <http://www.aclweb.org/anthology/N/N06/N06-1020.pdf>`_."
+  Proceedings of the Conference on Human Language Technology
+  and North American chapter of the `Association for
+  Computational Linguistics (HLT-NAACL 2006), 2006
+  <http://www.aclweb.org/anthology/N/N06/N06-1020.bib>`_.
+
+Syntactic fusion:
+
+* Do Kook Choe, David McClosky, and Eugene Charniak.
+  "`Syntactic Parse Fusion
+  <http://nlp.stanford.edu/~mcclosky/papers/choe-emnlp-2015.pdf>`_."
+  Proceedings of the Conference on `Empirical Methods in Natural Language
+  Processing (EMNLP 2015), 2015
+  <http://nlp.stanford.edu/~mcclosky/papers/choe-emnlp-2015.bib>`_.
