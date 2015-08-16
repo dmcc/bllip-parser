@@ -17,7 +17,9 @@ import sys
 import urlparse
 import urllib
 from os import makedirs, system, chdir, getcwd
-from os.path import basename, exists, join
+from os.path import basename, exists, join, expanduser
+
+DEFAULT_MODELS_DIR = '~/.local/share/bllipparser'
 
 class ModelInfo:
     def __init__(self, model_desc, url, uncompressed_size='unknown'):
@@ -32,33 +34,36 @@ class ModelInfo:
 # also should include checksum information
 models = {
     'GENIA+PubMed': ModelInfo('Self-trained model on GENIA treebank and approx. 200k sentences from PubMed',
-                            'http://nlp.stanford.edu/~mcclosky/models/BLLIP-GENIA-PubMed.tar.bz2', 152),
-    'OntoNotes-WSJ': ModelInfo('OntoNotes portion of WSJ',
-                               'http://nlp.stanford.edu/~mcclosky/models/BLLIP-OntoNotes-WSJ.tar.bz2', 61),
+                            'https://www.dropbox.com/s/ev3h78gq7526xdj/BLLIP-GENIA-PubMed.tar.bz2?dl=1', 152),
+    'OntoNotes-WSJ': ModelInfo('WSJ portion of OntoNotes',
+                               'https://www.dropbox.com/s/aiwswoczkjow68y/BLLIP-OntoNotes-WSJ.tar.bz2?dl=1', 61),
     'SANCL2012-Uniform': ModelInfo('Self-trained model on OntoNotes-WSJ and the Google Web Treebank',
-                                   'http://nlp.stanford.edu/~mcclosky/models/BLLIP-SANCL2012-Uniform.tar.bz2', 890),
+                                   'https://www.dropbox.com/s/99wvr79o979lv7z/BLLIP-SANCL2012-Uniform.tar.bz2?dl=1', 890),
     'WSJ+Gigaword': ModelInfo('Self-trained model on PTB2-WSJ and approx. two million sentences from Gigaword (deprecated)',
-                              'http://nlp.stanford.edu/~mcclosky/models/BLLIP-WSJ-Gigaword2000.tar.bz2', 473),
+                              'https://www.dropbox.com/s/1temnpqodo3q310/BLLIP-WSJ-Gigaword2000.tar.bz2?dl=1', 473),
     'WSJ+Gigaword-v2': ModelInfo('Improved self-trained model on PTB WSJ and two million sentences from Gigaword',
-                                 'http://nlp.stanford.edu/~mcclosky/models/BLLIP-WSJ-Gigaword2000-v2.tar.bz2', 435),
+                                 'https://www.dropbox.com/s/ilf2cdlhkq6g0t4/BLLIP-WSJ-Gigaword2000-v2.tar.bz2?dl=1', 435),
     'WSJ-PTB3': ModelInfo('Wall Street Journal corpus from Penn Treebank, version 3',
-                          'http://nlp.stanford.edu/~mcclosky/models/BLLIP-WSJ-PTB3.tar.bz2', 55),
+                          'https://www.dropbox.com/s/ulcfs7my1ifriuu/BLLIP-WSJ-PTB3.tar.bz2?dl=1', 55),
     'WSJ': ModelInfo('Wall Street Journal corpus from Penn Treebank, version 2 ("AnyDomain" version)',
-                     'http://nlp.stanford.edu/~mcclosky/models/BLLIP-WSJ-no-AUX.tar.bz2', 52),
+                     'https://www.dropbox.com/s/htade2lvno56jge/BLLIP-WSJ-no-AUX.tar.bz2?dl=1', 52),
     'WSJ-with-AUX': ModelInfo('Wall Street Journal corpus from Penn Treebank, version 2 (AUXified version, deprecated)',
-                              'http://nlp.stanford.edu/~mcclosky/models/BLLIP-WSJ-with-AUX.tar.bz2', 55),
+                              'https://www.dropbox.com/s/t8pweizt4lgs8fx/BLLIP-WSJ-with-AUX.tar.bz2?dl=1', 55),
 }
 
 class UnknownParserModel(ValueError):
     def __str__(self):
         return "Unknown parser model name: " + self[0]
 
-def download_and_install_model(model_name, target_directory, verbose=False):
-    """Downloads and installs models to a specific directory. Models
-    can be specified by simple names (use list_models() for a list
-    of known models) or a URL. If the model is already installed in
-    target_directory, it won't download it again.  Returns the path to
-    the new model."""
+def download_and_install_model(model_name, models_directory=None,
+                               verbose=False):
+    """Downloads and installs models to a specific directory. Models can
+    be specified by simple names (use list_models() for a list of known
+    models) or a URL. If the model is already installed as a subdirectory
+    of models_directory, it won't download it again. By default,
+    models will be downloaded to "~/.local/share/bllipparser". Setting
+    verbose=True will print extra details and download progress. Returns
+    the path to the new model."""
 
     if model_name.lower().startswith('http'):
         parsed_url = urlparse.urlparse(model_name)
@@ -69,15 +74,25 @@ def download_and_install_model(model_name, target_directory, verbose=False):
     else:
         raise UnknownParserModel(model_name)
 
-    output_path = join(target_directory, model_name)
+    # setup a default model directory if needed
+    if models_directory is None:
+        models_directory = expanduser(DEFAULT_MODELS_DIR)
+        try:
+            makedirs(models_directory)
+        except OSError, ose:
+            if ose.errno != 17:
+                raise ose
+
+    output_path = join(models_directory, model_name)
     if verbose:
-        print "Fetching model:", model_name, "from", model_url
         print "Model directory:", output_path
 
     if exists(output_path):
         if verbose:
             print "Model directory already exists, not reinstalling"
         return output_path
+    elif verbose:
+        print "Fetching model: %s from %s" % (model_name, model_url)
 
     if verbose:
         def status_func(blocks, block_size, total_size):
@@ -95,8 +110,8 @@ def download_and_install_model(model_name, target_directory, verbose=False):
     # needed since 404s, etc. aren't handled otherwise
     class ErrorAwareOpener(urllib.FancyURLopener):
         def http_error_default(self, url, fp, errcode, errmsg, headers):
-            print "Error downloading model (%s %s)" % (errcode, errmsg)
-            raise SystemExit
+            raise SystemExit("Error downloading model (%s %s)" %
+                             (errcode, errmsg))
 
     opener = ErrorAwareOpener()
     downloaded_filename, headers = opener.retrieve(model_url,
