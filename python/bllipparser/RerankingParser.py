@@ -841,6 +841,27 @@ class RerankingParser:
         rrp.unified_model_dir = model_dir
         return rrp
 
+    @classmethod
+    def fetch_and_load(this_class, model_name, models_directory=None,
+                       verbose=False, extra_loading_options=None):
+        """Downloads, installs, and creates a RerankingParser object for
+        a specified model using ModelFetcher.download_and_install_model.
+        model_name must be one of the defined models in ModelFetcher
+        and models_directory is a directory where the model will
+        be installed. By default, models will be installed to
+        "~/.local/share/bllipparser". Setting verbose=True will
+        cause ModelFetcher to be print additional details. Finally,
+        extra_loading_options is a dictionary of keyword arguments
+        passed to RerankingParser.from_unified_model_dir to customize
+        the parsing models."""
+        from .ModelFetcher import download_and_install_model
+        model_dir = download_and_install_model(model_name,
+                                               models_directory,
+                                               verbose)
+
+        kwargs = extra_loading_options or {}
+        return this_class.from_unified_model_dir(model_dir, **kwargs)
+
 def tokenize(text):
     """Helper method to tokenize a string. Note that most methods accept
     untokenized text so you shouldn't need to run this if you intend
