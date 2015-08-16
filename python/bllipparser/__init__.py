@@ -359,8 +359,9 @@ Syntactic fusion:
   Processing (EMNLP 2015), 2015
   <http://nlp.stanford.edu/~mcclosky/papers/choe-emnlp-2015.bib>`_.
 
-Release summaries
------------------
+Release highlights
+------------------
+- 2015.08.15: Add syntactic fusion, sigeval, and new self-trained model
 - 2015.07.23: Fix build error, other build system improvements
 - 2015.07.08: Constrained parsing, reranker can now be built with optimization (30% faster), other API additions
 - 2015.01.11: Improved ``PyStanfordDependencies`` support, memory leak fixed, API additions, bugfixes
@@ -373,6 +374,6 @@ from RerankingParser import RerankingParser, Tree, Sentence, tokenize
 
 __authors__ = 'Eugene Charniak, Mark Johnson, David McClosky, many others'
 __license__ = 'Apache 2.0'
-__version__ = '2015.07.23'
+__version__ = '2015.08.15'
 __maintainer__ = 'David McClosky'
 __email__ = 'notsoweird+pybllipparser@gmail.com'
