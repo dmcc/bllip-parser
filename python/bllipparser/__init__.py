@@ -27,55 +27,54 @@ software and any code derived from this software. Please report the
 release date of the software that you are using, as this will enable
 others to compare their results to yours.
 
-Fetching parsing models
------------------------
+Quickstart
+----------
 
-Before you can parse, you'll need some parsing models. ``ModelFetcher``
-will help you download and install parsing models. It can be invoked
-from the command line. For example, this will download and install the
-standard WSJ model::
+Install ``bllipparser`` with `pip
+<https://pip.pypa.io/en/stable/installing.html#install-pip>`_::
 
-    shell% python -mbllipparser.ModelFetcher -i WSJ-PTB3
+    shell% pip install --user bllipparser
 
-Run ``python -mbllipparser.ModelFetcher`` with no arguments for a full
-listing of options and available parsing models. It can also be invoked
-as a Python library::
+or (if you have ``sudo`` access)::
 
-    >>> from bllipparser.ModelFetcher import download_and_install_model
-    >>> download_and_install_model('WSJ-PTB3', '/tmp/models')
-    '/tmp/models/WSJ-PTB3'
+    shell% sudo pip install bllipparser
 
-In this case, it would download WSJ and install it to
-``/tmp/models/WSJ-PTB3``. Note that it returns the
-path to the downloaded model. See `BLLIP Parser models
+To fetch a parsing model and start parsing::
+
+    >>> from bllipparser import RerankingParser
+    >>> rrp = RerankingParser.fetch_and_load('WSJ-PTB3', verbose=True)
+    [downloads, installs, and loads the model]
+    >>> rrp.simple_parse("It's that easy.")
+    "(S1 (S (NP (PRP It)) (VP (VBZ 's) (ADJP (RB that) (JJ easy))) (. .)))"
+
+The first time this is called, this will download and install a parsing
+model trained from Wall Street Journal in ``~/.local/share/bllipparser``
+(it will only be loaded on subsequent calls).
+
+For a list of installable parsing models, run::
+
+    shell% python -mbllipparser.ModelFetcher -l
+
+See `BLLIP Parser models
 <https://github.com/BLLIP/bllip-parser/blob/master/MODELS.rst>`_ for
-information about which parsing model to use.
+information about picking the best parsing model for your text.
 
 Basic usage
 -----------
 
-The easiest way to construct a parser is with the
-``from_unified_model_dir`` class method. A unified model is a directory
-that contains two subdirectories: ``parser/`` and ``reranker/``, each
-with the respective model files::
+The main class in ``bllipparser`` is the ``RerankingParser`` parser class
+which provides an interface to the first stage parser and the second stage
+reranker. The easiest way to construct a ``RerankingParser`` object is
+with the ``fetch_and_load`` (see above) or ``from_unified_model_dir``
+class methods. A unified model is a directory that contains two
+subdirectories: ``parser/`` and ``reranker/``, each with the respective
+model files::
 
-    >>> from bllipparser import RerankingParser, tokenize
+    >>> from bllipparser import RerankingParser
     >>> rrp = RerankingParser.from_unified_model_dir('/path/to/model/')
 
-This can be integrated with ModelFetcher (if the model is already
-installed, ``download_and_install_model`` is a no-op)::
-
-    >>> model_dir = download_and_install_model('WSJ-PTB3', '/tmp/models')
-    >>> rrp = RerankingParser.from_unified_model_dir(model_dir)
-
-You can also load parser and reranker models manually::
-
-    >>> rrp = RerankingParser()
-    >>> rrp.load_parser_model('/tmp/models/WSJ-PTB3/parser')
-    >>> rrp.load_reranker_model('/tmp/models/WSJ-PTB3/reranker/features.gz', '/tmp/models/WSJ-PTB3/reranker/weights.gz')
-
-If you only want the top parse of a sentence in Penn Treebank format, use
-the ``simple_parse()`` method::
+If you only want the most likely parse of a sentence in Penn Treebank
+format, use the ``simple_parse()`` method::
 
     >>> rrp.simple_parse('This is simple.')
     '(S1 (S (NP (DT This)) (VP (VBZ is) (ADJP (JJ simple))) (. .)))'
@@ -132,7 +131,8 @@ by passing a list of strings::
 
     >>> nbest_list = rrp.parse(['This', 'is', 'a', 'pretokenized', 'sentence', '.'])
 
-The reranker can be disabled by setting ``rerank=False``::
+If you'd like to disable the reranker (lowers accuracy, so not normally
+done), set ``rerank=False``::
 
     >>> nbest_list = rrp.parse('Parser only!', rerank=False)
 
@@ -156,6 +156,19 @@ should have tag VB, JJ, or NN and token 1 ('flies') is unconstrained::
     >>> rrp.parse_tagged(['Time', 'flies'], possible_tags={0 : ['VB', 'JJ', 'NN']})[0]
     ScoredParse('(S1 (NP (NN Time) (VBZ flies)))', parser_score=-42.9961920777843, reranker_score=-12.57069545767032)
 
+If you have labeled span constraints, you can require that all parses follow them with ``parse_constrained``. The following requires that the parse contain
+a VP covering ``left`` to ``Falklands``::
+
+    >>> rrp.parse_constrained('British left waffles on Falklands .'.split(),
+    ...                       constraints={(1, 5) : ['VP']})[0]
+    ScoredParse('(S1 (S (NP (NNPS British)) (VP (VBD left) (NP (NNS waffles)) (PP (IN on) (NP (NNP Falklands)))) (. .)))', parser_score=-93.73622897543436, reranker_score=-25.60347808581542)
+
+To force ``British left`` to be a noun phrase::
+
+    >> rrp.parse_constrained('British left waffles on Falklands .'.split(),
+    ...                      constraints={(0, 2): ['NP']})[0]
+    ScoredParse('(S1 (S (NP (JJ British) (NN left)) (VP (VBZ waffles) (PP (IN on) (NP (NNP Falklands)))) (. .)))', parser_score=-89.59447837562135, reranker_score=-25.480236524298025)
+
 There are many parser options which can be adjusted (though the defaults
 should work well for most cases) with ``set_parser_options``. This
 will change the size of the n-best list and pick the defaults for all
@@ -172,17 +185,23 @@ The parser can also be used as a tagger::
     >>> rrp.tag("Time flies while you're having fun.")
     [('Time', 'NNP'), ('flies', 'VBZ'), ('while', 'IN'), ('you', 'PRP'), ("'re", 'VBP'), ('having', 'VBG'), ('fun', 'NN'), ('.', '.')]
 
-Use this if all you want is a tokenizer::
+Use this if all you want is a Penn Treebank-style tokenizer::
 
+    >>> from bllipparser import tokenize
     >>> tokenize("Tokenize this sentence, please.")
     ['Tokenize', 'this', 'sentence', ',', 'please', '.']
 
 Parsing shell
 -------------
 
-There is an interactive shell for visualizing parses::
+BLLIP Parser includes an interactive shell for visualizing parses::
 
-    shell% python -mbllipparser.ParsingShell /path/to/model
+    shell% python -mbllipparser model
+
+Model can be a unified parsing model or first-stage parsing model on
+disk or the name of a model known by ModelFetcher, in which case it will
+be downloaded and installed if it hasn't been already. If no model is
+specified, it will list installable parsing models.
 
 Once in the shell, type a sentence to have the parser parse it::
 
@@ -277,9 +296,9 @@ You can navigate within the trees and more::
     Tree('(NP (DT This))')
     >>> tree[0][0].label
     'NP'
-    >>> tree[0][0].span()
+    >>> tree[0][0].span() # [start, end) indices for the span
     (0, 1)
-    >>> tree[0][0].tags()
+    >>> tree[0][0].tags() # tags within this span
     ('DT',)
     >>> tree[0][0].tokens() # tuple of all tokens in this span
     ('This',)
@@ -293,7 +312,7 @@ You can navigate within the trees and more::
     True
     >>> len(tree[0]) # number of subtrees
     3
-    >>> for subtree in tree[0]:
+    >>> for subtree in tree[0]: # iteration works
     ...    print subtree
     ... 
     (NP (DT This))
@@ -320,12 +339,14 @@ You can navigate within the trees and more::
 More examples and advanced features
 -----------------------------------
 
-See the `examples
+See the documentation and the `examples
 <https://github.com/BLLIP/bllip-parser/tree/master/python/examples>`_
 directory in the repository.
 
 References
 ----------
+
+Parser and reranker:
 
 * Eugene Charniak and Mark Johnson. "`Coarse-to-fine n-best parsing and
   MaxEnt discriminative reranking
@@ -340,7 +361,7 @@ References
   Linguistics conference. `Association for Computational Linguistics, 2000
   <http://bllip.cs.brown.edu/publications/index_bib.shtml#Charniak:2000:NAACL>`_.
 
-Self-training:
+Self-trained parsing models:
 
 * David McClosky, Eugene Charniak, and Mark Johnson.
   "`Effective Self-Training for Parsing
