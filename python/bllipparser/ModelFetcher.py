@@ -22,7 +22,7 @@ from os.path import basename, exists, join, expanduser
 DEFAULT_MODELS_DIR = '~/.local/share/bllipparser'
 
 class ModelInfo:
-    def __init__(self, model_desc, url, uncompressed_size='unknown'):
+    def __init__(self, model_desc, url, uncompressed_size):
         """uncompressed_size is approximate size in megabytes."""
         self.model_desc = model_desc
         self.url = url
@@ -74,14 +74,8 @@ def download_and_install_model(model_name, models_directory=None,
     else:
         raise UnknownParserModel(model_name)
 
-    # setup a default model directory if needed
-    if models_directory is None:
-        models_directory = expanduser(DEFAULT_MODELS_DIR)
-        try:
-            makedirs(models_directory)
-        except OSError, ose:
-            if ose.errno != 17:
-                raise ose
+    models_directory = models_directory or DEFAULT_MODELS_DIR
+    models_directory = expanduser(models_directory)
 
     output_path = join(models_directory, model_name)
     if verbose:
@@ -140,9 +134,12 @@ def download_and_install_model(model_name, models_directory=None,
     return output_path
 
 def list_models():
+    import textwrap
     print len(models), "known unified parsing models: [uncompressed size]"
     for key, model_info in sorted(models.items()):
-        print '\t%-20s\t%s' % (key, model_info)
+        print '%s:' % key
+        print textwrap.fill(str(model_info), initial_indent='    ',
+                            subsequent_indent='    ')
 
 def main():
     from optparse import OptionParser
@@ -153,7 +150,8 @@ Tool to help you download and install BLLIP Parser models.""")
                       help="List known parsing models.")
     parser.add_option("-i", "--install", metavar="NAME", action='append',
                       help="Install a unified parser model.")
-    parser.add_option("-d", "--directory", default='./models', metavar="PATH",
+    parser.add_option("-d", "--directory", default=DEFAULT_MODELS_DIR,
+                      metavar="PATH",
                       help="Directory to install parsing models in (will be "
                            "created if it doesn't exist). Default: %default")
 
