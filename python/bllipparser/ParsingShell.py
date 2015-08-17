@@ -12,7 +12,11 @@
 
 """Simple interactive shell for viewing parses. To run:
 
-    python -mbllipparser.ParsingShell /path/to/model/
+    python -mbllipparser /path/to/model/
+
+Model can be a unified parsing model or first-stage parsing model on disk
+or the name of a model known by ModelFetcher, in which case it will be
+downloaded and installed if it hasn't been already.
 
 Optional dependencies:
 If you have NLTK installed, you'll be able to use the 'visual' command
@@ -23,8 +27,10 @@ trees will be shown if you have the asciitree package."""
 import sys
 from cmd import Cmd
 import importlib
+from os.path import exists
 
-from bllipparser.RerankingParser import RerankingParser
+from .RerankingParser import RerankingParser
+from .ModelFetcher import list_models
 
 def import_maybe(module_name):
     "Import a module and return it if available, otherwise returns None."
@@ -50,34 +56,51 @@ except AttributeError: # handle NLTK API changes
 StanfordDependencies = import_maybe('StanfordDependencies')
 asciitree = import_maybe('asciitree')
 
-# TODO should integrate with bllipparser.ModelFetcher
-
 class ParsingShell(Cmd):
-    def __init__(self, model):
+    def __init__(self, model_dir):
         Cmd.__init__(self)
         self.prompt = 'bllip> '
-        if model is None:
-            print "Warning: no parsing model to load."
-            print "Specify with: python -mbllipparser.ParsingShell " + \
-                  "/path/to/model/"
-            self.rrp = None
-        else:
-            sys.stdout.write("Loading models... ")
-            sys.stdout.flush()
-            self.rrp = RerankingParser.from_unified_model_dir(model)
-            try:
-                self.rrp.check_models_loaded_or_error(False)
-            except ValueError:
-                sys.stdout.write("unified model didn't load -- trying "
-                                 "it as just a parser model... ")
-                sys.stdout.flush()
-                self.rrp = RerankingParser()
-                self.rrp.load_parser_model(model)
-            print "done!"
+        self.rrp = self.get_rrp(model_dir)
         print "Enter a sentence to see its parse or 'help' for more options."
         self.last_nbest_list = []
         self.options = {}
         self.sd = None
+
+    def get_rrp(self, model_dir):
+        if model_dir is None:
+            print "Warning: no parsing model specified."
+            print "Specify with: python -mbllipparser /path/to/model/"
+            print "Or one of these to download and install:"
+            list_models()
+            raise SystemExit
+
+        sys.stdout.write("Loading models... ")
+        sys.stdout.flush()
+        if exists(model_dir):
+            # try to load the model as a unified model first, fall back
+            # to just trying to load it as a parser model
+            rrp = RerankingParser.from_unified_model_dir(model_dir)
+            try:
+                rrp.check_models_loaded_or_error(False)
+            except ValueError:
+                sys.stdout.write("unified model didn't load -- trying "
+                                 "it as just a parser model... ")
+                sys.stdout.flush()
+                rrp = RerankingParser()
+                rrp.load_parser_model(model_dir)
+            print "done!"
+        else:
+            # if it's not a valid path, but it is a known model name,
+            # download and install it instead
+            from .ModelFetcher import models
+            if model_dir in models:
+                print
+                rrp = RerankingParser.fetch_and_load(model_dir, verbose=True)
+            else:
+                print "Model directory %r doesn't exist." % model_dir
+                rrp = None
+
+        return rrp
 
     def do_visual(self, text):
         """Use reranking parser to parse text.  Visualize top parses from
@@ -107,6 +130,10 @@ class ParsingShell(Cmd):
     def do_parse(self, text):
         """Use reranking parser to parse text.  Show top parses from
         parser and reranker."""
+        if not self.rrp:
+            print "Can't parse without a model loaded."
+            return
+
         self.parse(text)
         self.print_parses()
 
@@ -244,6 +271,10 @@ class ParsingShell(Cmd):
             print
             print 'Reranker:'
             self.visualize_sd_tokens(reranker_tokens)
+
+    def do_listmodels(self, text):
+        """List known unified parsing models."""
+        list_models()
 
     def default(self, text):
         if text == 'EOF':
