@@ -382,6 +382,7 @@ Syntactic fusion:
 
 Release highlights
 ------------------
+- 2015.08.18: New APIs for easier use, integrated ModelFetcher with ParsingShell, automatically organize models
 - 2015.08.15: Add syntactic fusion, sigeval, and new self-trained model
 - 2015.07.23: Fix build error, other build system improvements
 - 2015.07.08: Constrained parsing, reranker can now be built with optimization (30% faster), other API additions
@@ -395,6 +396,6 @@ from RerankingParser import RerankingParser, Tree, Sentence, tokenize
 
 __authors__ = 'Eugene Charniak, Mark Johnson, David McClosky, many others'
 __license__ = 'Apache 2.0'
-__version__ = '2015.08.15'
+__version__ = '2015.08.18'
 __maintainer__ = 'David McClosky'
 __email__ = 'notsoweird+pybllipparser@gmail.com'

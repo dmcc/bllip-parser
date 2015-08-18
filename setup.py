@@ -100,7 +100,7 @@ reranker_module = Extension('bllipparser._JohnsonReranker',
                                                 '-DSWIGFIX'])
 
 setup(name='bllipparser',
-      version='2015.08.15',
+      version='2015.08.18',
       description='Python bindings for the BLLIP natural language parser',
       long_description=file('README-python.rst').read(),
       author='Eugene Charniak, Mark Johnson, David McClosky, many others',
