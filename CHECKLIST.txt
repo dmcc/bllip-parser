@@ -1,6 +1,6 @@
 Release checklist
 -----------------
-0a. Ensure tests are passing: nosetests --with-doctest -dvx python/tests/
+0a. Ensure tests are passing: nosetests-2.7 --with-doctest -dvx python/tests/
 0b. shell> flake8 python/bllipparser/ParsingShell.py \
                   python/bllipparser/RerankingParser.py \
                   python/bllipparser/RerankerFeatureCorpus.py \
