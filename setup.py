@@ -24,7 +24,7 @@ def run(args):
     except AssertionError, exc:
         message = "Bad exit code from %r" % cmd
     if message:
-        raise SystemExit("Error while running command: %s\nBuild failed!" % \
+        raise SystemExit("Error while running command: %s\nBuild failed!" %
                          message)
 
 parser_base = 'first-stage/PARSE/'
