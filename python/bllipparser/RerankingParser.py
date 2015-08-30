@@ -168,6 +168,14 @@ class Tree(object):
                         yield (head, subhead)
             else:
                 tree_to_heads[tree.span()] = tree
+    def visualize_nltk(self):
+        from .Utility import get_nltk_tree_reader_maybe
+        read_nltk_tree = get_nltk_tree_reader_maybe()
+        if not read_nltk_tree:
+            raise ValueError("Unable to import nltk tree reading.")
+        nltk_tree = read_nltk_tree(str(self))
+        import nltk
+        nltk.draw.tree.draw_trees(nltk_tree)
 
     #
     # properties
@@ -244,6 +252,10 @@ class Tree(object):
             self._sd_tokens = sd_converter.convert_tree(str(self),
                                                         **conversion_kwargs)
         return self._sd_tokens
+
+    #
+    # readers
+    #
 
     @classmethod
     def trees_from_string(this_class, text):

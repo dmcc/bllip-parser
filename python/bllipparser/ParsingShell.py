@@ -26,35 +26,16 @@ If you have PyStanfordDependencies installed, you'll be able to use the
 trees will be shown if you have the asciitree package."""
 import sys
 from cmd import Cmd
-import importlib
 from os.path import exists
 
 from .RerankingParser import RerankingParser
 from .ModelFetcher import list_models
-
-def import_maybe(module_name):
-    "Import a module and return it if available, otherwise returns None."
-    try:
-        return importlib.import_module(module_name)
-    except ImportError:
-        return None
-
-try:
-    import nltk.tree
-    import nltk.draw.tree
-    read_nltk_tree = nltk.tree.Tree.parse
-    have_nltk_tree_drawing = True
-except ImportError:
-    have_nltk_tree_drawing = False
-except AttributeError: # handle NLTK API changes
-    try:
-        read_nltk_tree = nltk.tree.Tree.fromstring
-        have_nltk_tree_drawing = True
-    except AttributeError:
-        have_nltk_tree_drawing = False
+from .Utility import import_maybe, get_nltk_tree_reader_maybe
 
 StanfordDependencies = import_maybe('StanfordDependencies')
 asciitree = import_maybe('asciitree')
+nltk = import_maybe('nltk')
+read_nltk_tree = get_nltk_tree_reader_maybe()
 
 class ParsingShell(Cmd):
     def __init__(self, model_dir):
@@ -68,7 +49,7 @@ class ParsingShell(Cmd):
 
     def get_rrp(self, model_dir):
         if model_dir is None:
-            print "Warning: no parsing model specified."
+            print "Error: no parsing model specified."
             print "Specify with: python -mbllipparser /path/to/model/"
             print "Or one of these to download and install:"
             list_models()
@@ -105,7 +86,7 @@ class ParsingShell(Cmd):
     def do_visual(self, text):
         """Use reranking parser to parse text.  Visualize top parses from
         parser and reranker."""
-        if not have_nltk_tree_drawing:
+        if not read_nltk_tree:
             print "Can't visualize without NLTK installation."
             return
 
@@ -153,7 +134,7 @@ class ParsingShell(Cmd):
         """Usage: visualnbest [start] stop
         Visualizes all parses from start-stop in the n-best list.
         Sentence must already be parsed."""
-        if not have_nltk_tree_drawing:
+        if not read_nltk_tree:
             print "Can't visualize without NLTK installation."
             return
 

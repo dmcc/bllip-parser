@@ -11,6 +11,7 @@
 # under the License.
 
 import math
+import importlib
 
 # now part of waterworks.Tools
 class DeprecatedGetter:
@@ -36,6 +37,29 @@ class DeprecatedGetter:
         warn("%r is no longer a method. It's now a property." % self.__name,
              DeprecationWarning, stacklevel=2)
         return self.__value
+
+def import_maybe(module_name):
+    "Import a module and return it if available, otherwise returns None."
+    try:
+        return importlib.import_module(module_name)
+    except ImportError:
+        return None
+
+def get_nltk_tree_reader_maybe():
+    """Attempts to find the NLTK tree reader for various versions of NLTK.
+    Returns False if it fails or a function which takes a string and
+    returns an NLTK tree object otherwise."""
+    try:
+        import nltk.tree
+        import nltk.draw.tree
+        return nltk.tree.Tree.parse
+    except ImportError:
+        return False
+    except AttributeError: # handle NLTK API changes
+        try:
+            return nltk.tree.Tree.fromstring
+        except AttributeError:
+            return False
 
 def normalize_logprobs(logprobs, exponent=1):
     """Sum probs stored as log probs in a (more) numerically stable
