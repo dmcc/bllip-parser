@@ -88,6 +88,25 @@ class Tree(object):
     def pretty_string(self):
         """Represent the tree in Penn Treebank format with line wrapping."""
         return self._tree.toStringPrettyPrint()
+    def format_asciitree(self):
+        """Return a string representing this tree using asciitree
+        (requires the 'asciitree' package)."""
+        import asciitree
+        def child_iter(tree):
+            return tree.subtrees()
+        def text_str(tree):
+            return ' %s%s %s' % (tree.label, tree.label_suffix,
+                                 tree.token or '')
+        return asciitree.draw_tree(self, child_iter=child_iter,
+                                   text_str=text_str)
+    def as_nltk_tree(self):
+        """Returns this tree as an NLTK Tree object."""
+        from .Utility import get_nltk_tree_reader_maybe
+        read_nltk_tree = get_nltk_tree_reader_maybe()
+        if not read_nltk_tree:
+            raise ImportError("Unable to import nltk tree reading.")
+        nltk_tree = read_nltk_tree(str(self))
+        return nltk_tree
     def tokens(self):
         """Return a tuple of the word tokens in this tree."""
         return tuple(self._tree.getWords())
@@ -168,12 +187,17 @@ class Tree(object):
                         yield (head, subhead)
             else:
                 tree_to_heads[tree.span()] = tree
-    def visualize_nltk(self):
-        from .Utility import get_nltk_tree_reader_maybe
-        read_nltk_tree = get_nltk_tree_reader_maybe()
-        if not read_nltk_tree:
-            raise ValueError("Unable to import nltk tree reading.")
-        nltk_tree = read_nltk_tree(str(self))
+    def visualize(self, method='nltk'):
+        """Visualize this tree. The method argument determines the
+        method used for visualization. Currently 'nltk' is supported
+        (requires NLTK to be installed)."""
+        if method == 'nltk':
+            self._visualize_nltk()
+        else:
+            raise ValueError("Unknown visualization method: %r" % method)
+    def _visualize_nltk(self):
+        """Visualize this tree using NLTK."""
+        nltk_tree = self.as_nltk_tree()
         import nltk
         nltk.draw.tree.draw_trees(nltk_tree)
 
