@@ -16,10 +16,12 @@ Contributors
 ^^^^^^^^^^^^
 
 - `Do Kook Choe <https://cs.brown.edu/people/dc65/home.html>`__
+- `Shay Cohen <http://homepages.inf.ed.ac.uk/scohen/>`__
 - `Micha Elsner <http://www.ling.ohio-state.edu/~melsner/>`__
 - `William P. Headden III <https://github.com/headdenw>`__
 - `Kristy Hollingshead <http://www.ihmc.us/groups/khollingshead/>`__
 - `Matthew Lease <https://www.ischool.utexas.edu/~ml/>`__
+- `Shashi Narayan <http://homepages.inf.ed.ac.uk/snaraya2/>`__
 - `Vlad Niculae <https://github.com/vene>`__
 - `Ben Swanson <https://github.com/chonger>`__
 - Jenine Turner-Trauring
