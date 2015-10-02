@@ -18,6 +18,7 @@ Contributors
 - `Do Kook Choe <https://cs.brown.edu/people/dc65/home.html>`__
 - `Shay Cohen <http://homepages.inf.ed.ac.uk/scohen/>`__
 - `Micha Elsner <http://www.ling.ohio-state.edu/~melsner/>`__
+- `Matthew Gerber <http://ptl.sys.virginia.edu/ptl/members/matthew-gerber>`__
 - `William P. Headden III <https://github.com/headdenw>`__
 - `Kristy Hollingshead <http://www.ihmc.us/groups/khollingshead/>`__
 - `Matthew Lease <https://www.ischool.utexas.edu/~ml/>`__
@@ -26,3 +27,5 @@ Contributors
 - `Ben Swanson <https://github.com/chonger>`__
 - Jenine Turner-Trauring
 - `Jim White <https://github.com/jimwhite>`__
+
+(and many others with helpful bug reports and questions!)
