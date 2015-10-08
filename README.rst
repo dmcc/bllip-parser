@@ -57,10 +57,11 @@ Compiling the parser
 
 Obtaining parser models
 ~~~~~~~~~~~~~~~~~~~~~~~
-The GitHub repository includes parsing and reranker models, though
-these are mostly around for historical purposes.  See `BLLIP Parser
-models <https://github.com/BLLIP/bllip-parser/blob/master/MODELS.rst>`_
-for information about obtaining newer and more accurate parsing models.
+The `GitHub repository <https://github.com/BLLIP/bllip-parser/>`_
+includes parsing and reranker models, though these are mostly around
+for historical purposes.  See this page on `BLLIP Parser models
+<https://github.com/BLLIP/bllip-parser/blob/master/MODELS.rst>`_ for
+information about obtaining newer and more accurate parsing models.
 
 Running the parser
 ~~~~~~~~~~~~~~~~~~
@@ -150,19 +151,28 @@ different reranker components.
 
 Other versions of the parser
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-We haven't tested these and can't support them, but they may be useful
-if you're working on other platforms or languages.
+We haven't tested these all of these and can't support them, but they
+may be useful if you're working on other platforms or languages.
 
 - `Native Charniak parser for Windows
-  <https://github.com/dorony/CharniakParserWindows>`_ (doesn't need cygwin,
-  no reranker)
+  <https://github.com/dorony/CharniakParserWindows>`_ (doesn't need
+  cygwin, no reranker)
 - `Rutu Mulkar-Mehta's Windows version
   <http://www.rutumulkar.com/software.html>`_
-- `Djame's French branch <https://bitbucket.org/djame/bllip-parser-fr>`_
-- `Liang Huang's Forest Reranker <http://acl.cs.qc.edu/~lhuang/>`_  (includes forest-dumping extensions)
+- `French branch <https://bitbucket.org/djame/bllip-parser-fr>`_ by
+  `Djame Seddah <http://pauillac.inria.fr/~seddah/>`_
+- `Liang Huang's forest reranker
+  <http://web.engr.oregonstate.edu/~huanlian/>`_  (includes forest-dumping
+  extensions)
+- `Javascript (emscripten) version
+  <https://github.com/antimatter15/charniak-emscripten/>`_
+  by `Kevin Kwok <http://antimatter15.com>`_ (`live
+  demo, <http://antimatter15.com/charniak-emscripten/index.html>`_ no reranker)
 
 References
 ^^^^^^^^^^
+
+Parser and reranker:
 
 * Eugene Charniak and Mark Johnson. "`Coarse-to-fine n-best parsing and
   MaxEnt discriminative reranking
