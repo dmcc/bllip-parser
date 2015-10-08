@@ -382,8 +382,8 @@ Syntactic fusion:
 
 Release highlights
 ------------------
-- 2015.08.18: New APIs for easier use, integrated ModelFetcher with ParsingShell, automatically organize models
-- 2015.08.15: Add syntactic fusion, sigeval, and new self-trained model
+- 2015.08.18: New APIs for easier use, integrated ``ModelFetcher`` with ``ParsingShell``, automatically organize models
+- 2015.08.15: Add syntactic fusion, ``sigeval``, and new self-trained model
 - 2015.07.23: Fix build error, other build system improvements
 - 2015.07.08: Constrained parsing, reranker can now be built with optimization (30% faster), other API additions
 - 2015.01.11: Improved ``PyStanfordDependencies`` support, memory leak fixed, API additions, bugfixes
