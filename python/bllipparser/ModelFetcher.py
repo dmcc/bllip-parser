@@ -13,9 +13,10 @@
 
 """Simple BLLIP Parser unified parsing model repository and installer."""
 from __future__ import division
+from __future__ import print_function
 import sys
-import urlparse
-import urllib
+from six.moves.urllib.request import FancyURLopener
+from six.moves.urllib.parse import urlparse
 from os import makedirs, system, chdir, getcwd
 from os.path import basename, exists, join, expanduser
 
@@ -66,7 +67,7 @@ def download_and_install_model(model_name, models_directory=None,
     the path to the new model."""
 
     if model_name.lower().startswith('http'):
-        parsed_url = urlparse.urlparse(model_name)
+        parsed_url = urlparse(model_name)
         model_url = model_name
         model_name = basename(parsed_url.path).split('.')[0]
     elif model_name in models:
@@ -79,14 +80,14 @@ def download_and_install_model(model_name, models_directory=None,
 
     output_path = join(models_directory, model_name)
     if verbose:
-        print "Model directory:", output_path
+        print("Model directory:", output_path)
 
     if exists(output_path):
         if verbose:
-            print "Model directory already exists, not reinstalling"
+            print("Model directory already exists, not reinstalling")
         return output_path
     elif verbose:
-        print "Fetching model: %s from %s" % (model_name, model_url)
+        print("Fetching model: %s from %s" % (model_name, model_url))
 
     if verbose:
         def status_func(blocks, block_size, total_size):
@@ -102,7 +103,7 @@ def download_and_install_model(model_name, models_directory=None,
         status_func = None
 
     # needed since 404s, etc. aren't handled otherwise
-    class ErrorAwareOpener(urllib.FancyURLopener):
+    class ErrorAwareOpener(FancyURLopener):
         def http_error_default(self, url, fp, errcode, errmsg, headers):
             raise SystemExit("Error downloading model (%s %s)" %
                              (errcode, errmsg))
@@ -112,11 +113,11 @@ def download_and_install_model(model_name, models_directory=None,
                                                    reporthook=status_func)
     if verbose:
         sys.stdout.write('\rDownload complete' + (' ' * 20) + '\n')
-        print 'Downloaded to temporary file', downloaded_filename
+        print('Downloaded to temporary file', downloaded_filename)
 
     try:
         makedirs(output_path)
-    except OSError, ose:
+    except OSError as ose:
         if ose.errno != 17:
             raise
 
@@ -127,7 +128,7 @@ def download_and_install_model(model_name, models_directory=None,
     assert downloaded_filename.lower().endswith('.bz2')
     command = 'tar xvjf %s' % downloaded_filename
     if verbose:
-        print "Extracting with %r to %s" % (command, output_path)
+        print("Extracting with %r to %s" % (command, output_path))
     system(command)
     chdir(orig_path)
 
@@ -135,11 +136,11 @@ def download_and_install_model(model_name, models_directory=None,
 
 def list_models():
     import textwrap
-    print len(models), "known unified parsing models: [uncompressed size]"
+    print(len(models), "known unified parsing models: [uncompressed size]")
     for key, model_info in sorted(models.items()):
-        print '%s:' % key
-        print textwrap.fill(str(model_info), initial_indent='    ',
-                            subsequent_indent='    ')
+        print('%s:' % key)
+        print(textwrap.fill(str(model_info), initial_indent='    ',
+                            subsequent_indent='    '))
 
 def main():
     from optparse import OptionParser
@@ -161,18 +162,18 @@ Tool to help you download and install BLLIP Parser models.""")
         parser.print_help()
         # flip this on to make 'list' the default action
         options.list = True
-        print
+        print()
     if options.list:
         list_models()
     if options.install:
         for i, model in enumerate(options.install):
             if i:
-                print
+                print()
             try:
                 download_and_install_model(model, options.directory,
                                            verbose=True)
-            except UnknownParserModel, u:
-                print u
+            except UnknownParserModel as u:
+                print(u)
                 list_models()
                 sys.exit(1)
 

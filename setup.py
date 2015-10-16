@@ -1,7 +1,11 @@
 #!/usr/bin/env python
 
 from __future__ import print_function
-from distutils.core import setup, Command, Extension
+
+try:
+    from setuptools import setup, Command, Extension
+except ImportError:
+    from distutils.core import setup, Command, Extension
 import os
 import subprocess
 from os.path import join, exists
@@ -17,12 +21,12 @@ def run(*args):
     message = None
     try:
         assert subprocess.check_call(args) == 0
-    except OSError, exc:
+    except OSError as exc:
         if exc.errno == 2:
             message = "Command %r not found." % args[0]
         else:
             message = "OSError: %r" % exc
-    except AssertionError, exc:
+    except AssertionError as exc:
         message = "Bad exit code from %r" % cmd
     if message:
         raise SystemExit("Error while running command: %s\nBuild failed!" %
@@ -50,6 +54,10 @@ class Test(Command):
         run('flake8', *python_files)
         run('nosetests-2.7', '-dvx', '--with-doctest', 'python/tests')
 
+        # TODO once doctests are converted to unittests, we can run tests
+        # on Python 3
+        # run('nosetests-3.4', '-dvx', '--with-doctest', 'python/tests')
+
 def is_newer(filename1, filename2):
     """Returns True if filename1 has a newer modification time than
     filename2."""
@@ -69,7 +77,7 @@ def maybe_run_swig(wrapper_filename, module_name, base_directory,
 
     print('Generating ' + module_name + ' SWIG wrapper files')
     run('swig', '-python', '-c++', '-module', module_name,
-        '-I' + base_directory, '-Wall', '-classic',
+        '-I' + base_directory, '-Wall', '-builtin',
         '-outdir', 'python/bllipparser',
         '-o', wrapper_filename, swig_filename)
 
@@ -131,9 +139,9 @@ reranker_module = Extension('bllipparser._JohnsonReranker',
                                                 '-DSWIGFIX'])
 
 setup(name='bllipparser',
-      version='2015.08.18',
+      version='2015.10.15',
       description='Python bindings for the BLLIP natural language parser',
-      long_description=file('README-python.rst').read(),
+      long_description=open('README-python.rst').read(),
       author='Eugene Charniak, Mark Johnson, David McClosky, many others',
       maintainer='David McClosky',
       maintainer_email='notsoweird+pybllipparser@gmail.com',
@@ -151,4 +159,9 @@ setup(name='bllipparser',
       ext_modules=[parser_module, reranker_module],
       packages=['bllipparser'],
       package_dir={'bllipparser': 'python/bllipparser'},
+      install_requires=['six'],
+      extras_require={
+          'StanfordDependencies': ['PyStanfordDependencies'],
+          'visualization': ['nltk', 'asciitree'],
+      },
       cmdclass={'test': Test})

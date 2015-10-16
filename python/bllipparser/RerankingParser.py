@@ -15,9 +15,10 @@ lower-level (SWIG-generated) CharniakParser and JohnsonReranker modules
 so you don't need to interact with them directly."""
 
 from os.path import exists, join
-import CharniakParser as parser
-import JohnsonReranker as reranker
-from .Utility import DeprecatedGetter, normalize_logprobs
+from six import string_types
+from . import CharniakParser as parser
+from . import JohnsonReranker as reranker
+from .Utility import normalize_logprobs
 
 class Tree(object):
     """Represents a single parse (sub)tree in Penn Treebank format. This
@@ -32,7 +33,7 @@ class Tree(object):
         Or from an existing InputTree (internal SWIG object). Users will
         generally want the former."""
         if not isinstance(input_tree_or_string, parser.InputTree):
-            if not isinstance(input_tree_or_string, basestring):
+            if not isinstance(input_tree_or_string, string_types):
                 raise TypeError("input_tree_or_string (%r) must be "
                                 "an InputTree or string." %
                                 input_tree_or_string)
@@ -84,7 +85,7 @@ class Tree(object):
         return '%s(%r)' % (self.__class__.__name__, str(self))
     def __str__(self):
         """Represent the tree in Penn Treebank format on one line."""
-        return str(self._tree)
+        return self._tree.toString()
     def pretty_string(self):
         """Represent the tree in Penn Treebank format with line wrapping."""
         return self._tree.toStringPrettyPrint()
@@ -115,7 +116,7 @@ class Tree(object):
         return tuple(self._tree.getTags())
     def tokens_and_tags(self):
         """Return a list of (word, tag) pairs."""
-        return zip(self.tokens(), self.tags())
+        return list(zip(self.tokens(), self.tags()))
     def span(self):
         """Returns indices of the span for this tree: (start, end)"""
         return (int(self._tree.start()), int(self._tree.finish()))
@@ -232,10 +233,9 @@ class Tree(object):
         doc = """The label at the top of this subtree as a string. If
         this tree is a preterminal, this will be its part of speech,
         otherwise it will be the phrasal category. This property was
-        previously a method. It now returns a DeprecatedGetter as an
-        intermediate solution to help you find deprecated calls."""
+        previously a method."""
         def fget(self):
-            return DeprecatedGetter('label', self._tree.term())
+            return self._tree.term()
         def fset(self, new_label):
             self._tree.setTerm(new_label)
         return locals()
@@ -269,7 +269,7 @@ class Tree(object):
             try:
                 import StanfordDependencies
             except ImportError:
-                raise ImportError("For sd_tokens(), you need to install"
+                raise ImportError("For sd_tokens(), you need to install "
                                   "PyStanfordDependencies from PyPI")
             sd_converter = sd_converter or StanfordDependencies.get_instance()
             conversion_kwargs = conversion_kwargs or {}
@@ -295,7 +295,7 @@ class Tree(object):
         trees = list(parser.inputTreesFromString(text))
         for tree in trees:
             tree.this.acquire()
-        return map(this_class, trees)
+        return list(map(this_class, trees))
 
     @classmethod
     def trees_from_file(this_class, filename):
@@ -306,7 +306,7 @@ class Tree(object):
         trees = list(parser.inputTreesFromFile(filename))
         for tree in trees:
             tree.this.acquire()
-        return map(this_class, trees)
+        return list(map(this_class, trees))
 
 class ScoredParse:
     """Represents a single parse and its associated parser
@@ -348,7 +348,7 @@ class Sentence:
             self.sentrep = text_or_tokens
         elif isinstance(text_or_tokens, Sentence):
             self.sentrep = text_or_tokens.sentrep
-        elif isinstance(text_or_tokens, basestring):
+        elif isinstance(text_or_tokens, string_types):
             self.sentrep = parser.tokenize('<s> ' + text_or_tokens + ' </s>')
         else:
             # text_or_tokens is a sequence -- need to make sure that each
@@ -358,7 +358,7 @@ class Sentence:
             self.sentrep = parser.SentRep(text_or_tokens)
     def __repr__(self):
         """Represent the Sentence as a string."""
-        return "%s(%s)" % (self.__class__, self.tokens())
+        return "%s(%s)" % (self.__class__.__name__, self.tokens())
     def __len__(self):
         """Returns the number of tokens in this sentence."""
         return len(self.sentrep)
@@ -390,7 +390,7 @@ class Sentence:
         # Note that the native method below leaks. We work around this
         # by acquiring its pointer in __init__
         sentReps = parser.sentRepsFromString(text)
-        return map(this_class, sentReps)
+        return list(map(this_class, sentReps))
 
     @classmethod
     def sentences_from_file(this_class, filename):
@@ -400,9 +400,9 @@ class Sentence:
         # Note that the native method below leaks. We work around this
         # by acquiring its pointer in __init__
         sentReps = parser.sentRepsFromFile(filename)
-        return map(this_class, sentReps)
+        return list(map(this_class, sentReps))
 
-class NBestList:
+class NBestList(object):
     """Represents an n-best list of parses of the same sentence."""
     def __init__(self, sentrep, parses, sentence_id=None):
         # we keep this around since it's our key to converting our input
@@ -420,9 +420,18 @@ class NBestList:
         # (but doesn't necessarily imply that we're sorted by them)
         self._reranked = False
 
-    def __getattr__(self, key):
-        """Delegate everything else to our list of ScoredParse objects."""
-        return getattr(self.parses, key)
+    def __iter__(self):
+        """Return an iterator over all the parses in this list."""
+        return iter(self.parses)
+    def __getitem__(self, index):
+        """Get a specific parse by index."""
+        return self.parses[index]
+    def __len__(self):
+        """Return the number of parses in this list."""
+        return len(self.parses)
+    def __repr__(self):
+        """Represent this NBestList as a string."""
+        return repr(self.parses)
 
     def sort_by_reranker_scores(self):
         """Sort the parses by the reranker's score (highest to lowest).
@@ -499,8 +508,8 @@ class NBestList:
         command-line parser and reranker."""
         sentence_id = self.sentence_id or 'x'
         if self._reranked:
-            from cStringIO import StringIO
-            combined = StringIO()
+            from six.moves import cStringIO
+            combined = cStringIO()
             combined.write('%d %s\n' % (len(self.parses), sentence_id))
             for parse in self.parses:
                 combined.write('%s %s\n%s\n' % (parse.reranker_score,
@@ -561,14 +570,7 @@ class RerankingParser:
         if RerankingParser._parser_model_loaded:
             raise RuntimeError('Parser is already loaded and can only '
                                'be loaded once.')
-        try:
-            model_dir = str(model_dir)
-        except UnicodeEncodeError:
-            raise ValueError('Parser model directory %r must be an ASCII '
-                             'string.' % model_dir)
-        if not exists(model_dir):
-            raise ValueError('Parser model directory %r does not exist.' %
-                             model_dir)
+        self._check_path_or_error(model_dir, 'Parser model directory')
         if not (terms_only or heads_only):
             RerankingParser._parser_model_loaded = True
             RerankingParser._parser_heads_loaded = True
@@ -588,23 +590,10 @@ class RerankingParser:
                             feature_class=None):
         """Load the reranker model from its feature and weights files. A
         feature class may optionally be specified."""
-        try:
-            features_filename = str(features_filename)
-        except UnicodeEncodeError:
-            raise ValueError('Reranker features filename %r must be an ASCII '
-                             'string.' % features_filename)
-        try:
-            weights_filename = str(weights_filename)
-        except UnicodeEncodeError:
-            raise ValueError('Reranker weights filename %r must be an ASCII '
-                             'string.' % weights_filename)
-
-        if not exists(features_filename):
-            raise ValueError('Reranker features filename %r does not exist.' %
-                             features_filename)
-        if not exists(weights_filename):
-            raise ValueError('Reranker weights filename %r does not exist.' %
-                             weights_filename)
+        self._check_path_or_error(features_filename,
+                                  'Reranker features filename')
+        self._check_path_or_error(weights_filename,
+                                  'Reranker weights filename')
         self.reranker_model = reranker.RerankerModel(feature_class,
                                                      features_filename,
                                                      weights_filename)
@@ -676,7 +665,7 @@ class RerankingParser:
 
         The rerank flag is the same as in parse()."""
         rerank = self.check_models_loaded_or_error(rerank)
-        if isinstance(tokens, basestring):
+        if isinstance(tokens, string_types):
             raise ValueError("tokens must be a sequence, not a string.")
 
         if constraints:
@@ -685,10 +674,7 @@ class RerankingParser:
                 if end <= start:
                     raise ValueError("End must be at least start + 1:"
                                      "(%r, %r) -> %r" % (start, end, terms))
-                # since Tree.label currently returns a DeprecatedGetter,
-                # we take some extra steps to get these back to strings
-                # to avoid type errors
-                if isinstance(terms, (basestring, DeprecatedGetter)):
+                if isinstance(terms, string_types):
                     terms = [str(terms)]
                 for term in terms:
                     span_constraints.addConstraint(int(start), int(end),
@@ -753,7 +739,7 @@ class RerankingParser:
             sentence = Sentence(text_or_tokens)
             tokens = sentence.tokens()
             tags = sentence.independent_tags()
-            tokens_and_tags = zip(tokens, tags)
+            tokens_and_tags = list(zip(tokens, tags))
         else:
             raise ValueError('Parse failed while tagging: %r' % text_or_tokens)
         return tokens_and_tags
@@ -764,9 +750,9 @@ class RerankingParser:
             return ext_pos
         for index in range(len(tokens)):
             tags = possible_tags.get(index, [])
-            if isinstance(tags, basestring):
+            if isinstance(tags, string_types):
                 tags = [tags]
-            tags = map(str, tags)
+            tags = list(map(str, tags))
             valid_tags = ext_pos.addTagConstraints(parser.StringVector(tags))
             if not valid_tags:
                 # at least one of the tags is bad -- find out which ones
@@ -799,6 +785,16 @@ class RerankingParser:
             return bool(self.reranker_model)
         else:
             return rerank
+
+    def _check_path_or_error(self, filename, description):
+        try:
+            filename.encode('ascii')
+        except UnicodeEncodeError:
+            raise ValueError("%s '%s' must be an ASCII string." %
+                             (description, filename))
+        if not exists(filename):
+            raise ValueError("%s '%s' does not exist." %
+                             (description, filename))
 
     def set_parser_options(self, language='En', case_insensitive=False,
                            nbest=50, small_corpus=True, overparsing=21,
@@ -927,7 +923,7 @@ def get_unified_model_parameters(model_dir):
         features
     """
     if not exists(model_dir):
-        raise IOError("Model directory %r does not exist" % model_dir)
+        raise IOError("Model directory '%s' does not exist" % model_dir)
 
     parser_model_dir = join(model_dir, 'parser')
     if not exists(parser_model_dir):

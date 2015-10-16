@@ -13,31 +13,6 @@
 import math
 import importlib
 
-# now part of waterworks.Tools
-class DeprecatedGetter:
-    """Used when a getter method has been converted to a property. All
-    attributes will be dispatched to the property's value and a warning
-    will be raised if this is called. This doesn't work if the property
-    being deprecated has its own __call__ method, since that will be
-    unreachable as a DeprecatedGetter."""
-    def __init__(self, name, value):
-        """name is the attribute name of the property. value is its
-        value."""
-        self.__name = name
-        self.__value = value
-    def __getattr__(self, attr):
-        """All attributes except __call__ are dispatched to the property's
-        value."""
-        return getattr(self.__value, attr)
-    def __call__(self, *args, **kwargs):
-        """Shouldn't be called except by deprecated code. Issues a warning
-        about the deprecation then returns the value so that deprecated
-        code will continue to work."""
-        from warnings import warn
-        warn("%r is no longer a method. It's now a property." % self.__name,
-             DeprecationWarning, stacklevel=2)
-        return self.__value
-
 def import_maybe(module_name):
     "Import a module and return it if available, otherwise returns None."
     try:

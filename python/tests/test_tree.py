@@ -79,22 +79,22 @@ def test_tree_basics():
     """
     >>> import bllipparser
     >>> tree = bllipparser.Tree('(S1 (S (NP (DT This)) (VP (VBZ is) (NP (DT a) (ADJP (RB fairly) (JJ simple)) (NN parse) (NN tree))) (. .)))')
-    >>> print tree
+    >>> print(tree)
     (S1 (S (NP (DT This)) (VP (VBZ is) (NP (DT a) (ADJP (RB fairly) (JJ simple)) (NN parse) (NN tree))) (. .)))
-    >>> print tree.pretty_string()
+    >>> print(tree.pretty_string())
     (S1 (S (NP (DT This))
          (VP (VBZ is)
           (NP (DT a) (ADJP (RB fairly) (JJ simple)) (NN parse) (NN tree)))
          (. .)))
-    >>> print tree.tokens()
+    >>> print(tree.tokens())
     ('This', 'is', 'a', 'fairly', 'simple', 'parse', 'tree', '.')
-    >>> print tree.tags()
+    >>> print(tree.tags())
     ('DT', 'VBZ', 'DT', 'RB', 'JJ', 'NN', 'NN', '.')
-    >>> print tree.tokens_and_tags()
+    >>> print(tree.tokens_and_tags())
     [('This', 'DT'), ('is', 'VBZ'), ('a', 'DT'), ('fairly', 'RB'), ('simple', 'JJ'), ('parse', 'NN'), ('tree', 'NN'), ('.', '.')]
-    >>> print tree.span()
+    >>> print(tree.span())
     (0, 8)
-    >>> print tree.label
+    >>> print(str(tree.label))
     S1
     >>> tree.subtrees()
     [Tree('(S (NP (DT This)) (VP (VBZ is) (NP (DT a) (ADJP (RB fairly) (JJ simple)) (NN parse) (NN tree))) (. .))')]
@@ -123,13 +123,13 @@ def test_tree_basics():
     >>> len(tree[0]) # number of subtrees
     3
     >>> for subtree in tree[0]:
-    ...    print subtree
+    ...    print(subtree)
     ... 
     (NP (DT This))
     (VP (VBZ is) (NP (DT a) (ADJP (RB fairly) (JJ simple)) (NN parse) (NN tree)))
     (. .)
     >>> for subtree in tree.all_subtrees(): # all subtrees (recursive)
-    ...     print subtree.is_preterminal(), subtree
+    ...     print('%s %s' % (subtree.is_preterminal(), subtree))
     ...
     False (S1 (S (NP (DT This)) (VP (VBZ is) (NP (DT a) (ADJP (RB fairly) (JJ simple)) (NN parse) (NN tree))) (. .)))
     False (S (NP (DT This)) (VP (VBZ is) (NP (DT a) (ADJP (RB fairly) (JJ simple)) (NN parse) (NN tree))) (. .))

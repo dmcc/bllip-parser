@@ -90,22 +90,22 @@ are available as well::
 To get information about the top parse (note that the ``ptb_parse``
 property is a ``Tree`` object, described in more detail later)::
 
-    >>> print repr(nbest_list[0])
+    >>> print(repr(nbest_list[0]))
     ScoredParse('(S1 (S (NP (DT This)) (VP (VBZ is) (NP (DT a) (NN sentence))) (. .)))', parser_score=-29.620656470412328, reranker_score=-7.13760513405013)
-    >>> print nbest_list[0].ptb_parse
+    >>> print(nbest_list[0].ptb_parse)
     (S1 (S (NP (DT This)) (VP (VBZ is) (NP (DT a) (NN sentence))) (. .)))
-    >>> print nbest_list[0].parser_score
+    >>> print(nbest_list[0].parser_score)
     -29.6206564704
-    >>> print nbest_list[0].reranker_score
+    >>> print(nbest_list[0].reranker_score)
     -7.13760513405
-    >>> print len(nbest_list)
+    >>> print(len(nbest_list))
     50
 
 You can perform syntactic fusion with the ``fuse()`` method. This
 combines the parses in the n-best list into a single ``Tree`` (which
 may be a parse already present in the n-best list or a novel one)::
 
-    >>> print nbest_list.fuse()
+    >>> print(nbest_list.fuse())
     (S1 (S (NP (DT This)) (VP (VBZ is) (NP (DT a) (NN sentence))) (. .)))
 
 If you have the `PyStanfordDependencies
@@ -115,7 +115,7 @@ you can parse straight to `Stanford Dependencies
 
     >>> tokens = nbest_list[0].ptb_parse.sd_tokens()
     >>> for token in tokens:
-    ...     print token
+    ...     print(token)
     ...
     Token(index=1, form=u'This', cpos=u'DT', pos=u'DT', head=4, deprel=u'nsubj')
     Token(index=2, form=u'is', cpos=u'VBZ', pos=u'VBZ', head=4, deprel=u'cop')
@@ -257,12 +257,12 @@ The parser provides a simple Tree class which provides information about
 Penn Treebank-style trees::
 
     >>> tree = bllipparser.Tree('(S1 (S (NP (DT This)) (VP (VBZ is) (NP (DT a) (ADJP (RB fairly) (JJ simple)) (NN parse) (NN tree))) (. .)))')
-    >>> print tree
+    >>> print(tree)
     (S1 (S (NP (DT This)) (VP (VBZ is) (NP (DT a) (ADJP (RB fairly) (JJ simple)) (NN parse) (NN tree))) (. .)))
 
 ``pretty_string()`` provides a line-wrapped stringification::
 
-    >>> print tree.pretty_string()
+    >>> print(tree.pretty_string())
     (S1 (S (NP (DT This))
          (VP (VBZ is)
           (NP (DT a) (ADJP (RB fairly) (JJ simple)) (NN parse) (NN tree)))
@@ -270,18 +270,18 @@ Penn Treebank-style trees::
 
 You can obtain the tokens and tags of the tree::
 
-    >>> print tree.tokens()
+    >>> print(tree.tokens())
     ('This', 'is', 'a', 'fairly', 'simple', 'parse', 'tree', '.')
-    >>> print tree.tags()
+    >>> print(tree.tags())
     ('DT', 'VBZ', 'DT', 'RB', 'JJ', 'NN', 'NN', '.')
-    >>> print tree.tokens_and_tags()
+    >>> print(tree.tokens_and_tags())
     [('This', 'DT'), ('is', 'VBZ'), ('a', 'DT'), ('fairly', 'RB'), ('simple', 'JJ'), ('parse', 'NN'), ('tree', 'NN'), ('.', '.')]
 
 Or get information about the labeled spans in the tree::
 
-    >>> print tree.span()
+    >>> print(tree.span())
     (0, 8)
-    >>> print tree.label
+    >>> print(tree.label)
     S1
 
 You can navigate within the trees and more::
@@ -313,13 +313,13 @@ You can navigate within the trees and more::
     >>> len(tree[0]) # number of subtrees
     3
     >>> for subtree in tree[0]: # iteration works
-    ...    print subtree
+    ...    print(subtree)
     ... 
     (NP (DT This))
     (VP (VBZ is) (NP (DT a) (ADJP (RB fairly) (JJ simple)) (NN parse) (NN tree)))
     (. .)
     >>> for subtree in tree.all_subtrees(): # all subtrees (recursive)
-    ...     print subtree.is_preterminal(), subtree
+    ...     print('%s %s' % (subtree.is_preterminal(), subtree))
     ...
     False (S1 (S (NP (DT This)) (VP (VBZ is) (NP (DT a) (ADJP (RB fairly) (JJ simple)) (NN parse) (NN tree))) (. .)))
     False (S (NP (DT This)) (VP (VBZ is) (NP (DT a) (ADJP (RB fairly) (JJ simple)) (NN parse) (NN tree))) (. .))
@@ -392,10 +392,10 @@ Release highlights
 - 2013.10.16: ``distutils`` support, initial PyPI release
 """
 
-from RerankingParser import RerankingParser, Tree, Sentence, tokenize
+from .RerankingParser import RerankingParser, Tree, Sentence, tokenize
 
 __authors__ = 'Eugene Charniak, Mark Johnson, David McClosky, many others'
 __license__ = 'Apache 2.0'
-__version__ = '2015.08.18'
+__version__ = '2015.10.15'
 __maintainer__ = 'David McClosky'
 __email__ = 'notsoweird+pybllipparser@gmail.com'

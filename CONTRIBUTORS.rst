@@ -16,6 +16,7 @@ Contributors
 ^^^^^^^^^^^^
 
 - `Do Kook Choe <https://cs.brown.edu/people/dc65/home.html>`__
+- `Patrick Claus <http://www.h-its.org/en/research/nlp/>`__
 - `Shay Cohen <http://homepages.inf.ed.ac.uk/scohen/>`__
 - `Micha Elsner <http://www.ling.ohio-state.edu/~melsner/>`__
 - `Matthew Gerber <http://ptl.sys.virginia.edu/ptl/members/matthew-gerber>`__

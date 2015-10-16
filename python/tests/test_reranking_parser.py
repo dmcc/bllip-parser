@@ -1,3 +1,4 @@
+from __future__ import print_function
 # TODO: untested:
 #   NBestList.sort_by_reranker_scores, sort_by_parser_scores,
 #       get_parser_best, get_reranker_best, tokens, rerank,
@@ -7,21 +8,30 @@
 #   RerankingParser.from_unified_model_dir, parse_tagged with
 #       invalid tags, set_parser_options
 
+def stringify_dict(d):
+    """Yeah, we should really stop using doctests."""
+    def format(obj):
+        if isinstance(obj, float):
+            return '%.2f' % obj
+        else:
+            return repr(obj)
+    return ', '.join('%s=%s' % (k, format(v)) for (k, v) in sorted(d.items()))
+
 def test_reranking_parser_sentences():
     """
     >>> from bllipparser import Sentence
     >>> s = Sentence('Hi there.')
     >>> s
-    bllipparser.RerankingParser.Sentence(['Hi', 'there', '.'])
+    Sentence(['Hi', 'there', '.'])
     >>> s.tokens()
     ['Hi', 'there', '.']
     >>> len(s)
     3
     >>> sentences = Sentence.sentences_from_string('<s> Test </s>')
     >>> sentences
-    [bllipparser.RerankingParser.Sentence(['Test'])]
+    [Sentence(['Test'])]
     >>> sentences[0]
-    bllipparser.RerankingParser.Sentence(['Test'])
+    Sentence(['Test'])
     >>> sentences[0].tokens()
     ['Test']
     >>> sentences[0].tokens()[0]
@@ -31,9 +41,9 @@ def test_reranking_parser_sentences():
     ... <s last> The last sentence </s>
     ... <s> Just kidding. </s>''')
     >>> sentences2
-    [bllipparser.RerankingParser.Sentence(['Sentence', '1']), bllipparser.RerankingParser.Sentence(['Can', "n't", 'have', 'just', 'one', '.']), bllipparser.RerankingParser.Sentence(['The', 'last', 'sentence']), bllipparser.RerankingParser.Sentence(['Just', 'kidding', '.'])]
+    [Sentence(['Sentence', '1']), Sentence(['Can', "n't", 'have', 'just', 'one', '.']), Sentence(['The', 'last', 'sentence']), Sentence(['Just', 'kidding', '.'])]
     >>> for s in sentences2:
-    ...     print s.tokens()
+    ...     print(s.tokens())
     ['Sentence', '1']
     ['Can', "n't", 'have', 'just', 'one', '.']
     ['The', 'last', 'sentence']
@@ -65,12 +75,12 @@ def test_reranking_parser_loading_errors():
       File "/usr/local/lib/python2.7/dist-packages/bllipparser/RerankingParser.py", line 483, in load_parser_model
         model_dir)
     ValueError: Parser model directory '/path/to/nowhere/hopefully' does not exist.
-    >>> print rrp.check_models_loaded_or_error(False)
+    >>> print(rrp.check_models_loaded_or_error(False))
     Traceback (most recent call last):
       File "/usr/lib/python2.7/doctest.py", line 1315, in __run
         compileflags, 1) in test.globs
       File "<doctest test_reranking_parser_loading_errors[3]>", line 1, in <module>
-        print rrp.check_models_loaded_or_error(False)
+        print(rrp.check_models_loaded_or_error(False))
       File "/usr/local/lib/python2.7/dist-packages/bllipparser/RerankingParser.py", line 674, in check_models_loaded_or_error
         raise ValueError("Parser model has not been loaded.")
     ValueError: Parser model has not been loaded.
@@ -82,13 +92,13 @@ def test_reranking_parser_loading_errors():
         rrp.load_parser_model(u'\u2602')
       File "/usr/local/lib/python2.7/dist-packages/bllipparser/RerankingParser.py", line 480, in load_parser_model
         'string.' % model_dir)
-    ValueError: Parser model directory u'\u2602' must be an ASCII string.
-    >>> print rrp.check_models_loaded_or_error(False)
+    ValueError: Parser model directory '\u2602' must be an ASCII string.
+    >>> print(rrp.check_models_loaded_or_error(False))
     Traceback (most recent call last):
       File "/usr/lib/python2.7/doctest.py", line 1315, in __run
         compileflags, 1) in test.globs
       File "<doctest test_reranking_parser_loading_errors[3]>", line 1, in <module>
-        print rrp.check_models_loaded_or_error(False)
+        print(rrp.check_models_loaded_or_error(False))
       File "/usr/local/lib/python2.7/dist-packages/bllipparser/RerankingParser.py", line 674, in check_models_loaded_or_error
         raise ValueError("Parser model has not been loaded.")
     ValueError: Parser model has not been loaded.
@@ -101,7 +111,7 @@ def test_reranking_parser_loading_errors():
         'second-stage/models/ec50spfinal/cvlm-l1c10P1-weights.gz')
       File "/usr/local/lib/python2.7/dist-packages/bllipparser/RerankingParser.py", line 497, in load_reranker_model
         'string.' % features_filename)
-    ValueError: Reranker features filename u'\u2602' must be an ASCII string.
+    ValueError: Reranker features filename '\u2602' must be an ASCII string.
     >>> rrp.load_reranker_model('second-stage/models/ec50spfinal/features.gz',
     ...                         u'\u2602')
     Traceback (most recent call last):
@@ -111,13 +121,13 @@ def test_reranking_parser_loading_errors():
         u'\u2602')
       File "/usr/local/lib/python2.7/dist-packages/bllipparser/RerankingParser.py", line 502, in load_reranker_model
         'string.' % weights_filename)
-    ValueError: Reranker weights filename u'\u2602' must be an ASCII string.
-    >>> print rrp.check_models_loaded_or_error(True)
+    ValueError: Reranker weights filename '\u2602' must be an ASCII string.
+    >>> print(rrp.check_models_loaded_or_error(True))
     Traceback (most recent call last):
       File "/usr/lib/python2.7/doctest.py", line 1315, in __run
         compileflags, 1) in test.globs
       File "<doctest test_reranking_parser_loading_errors[3]>", line 1, in <module>
-        print rrp.check_models_loaded_or_error(False)
+        print(rrp.check_models_loaded_or_error(False))
       File "/usr/local/lib/python2.7/dist-packages/bllipparser/RerankingParser.py", line 674, in check_models_loaded_or_error
         raise ValueError("Parser model has not been loaded.")
     ValueError: Parser model has not been loaded.
@@ -128,7 +138,7 @@ def test_reranking_parser_basics():
     >>> from bllipparser import RerankingParser
     >>> rrp = RerankingParser()
     >>> rrp.load_parser_model('first-stage/DATA/EN')
-    >>> print rrp.check_models_loaded_or_error(False)
+    >>> print(rrp.check_models_loaded_or_error(False))
     False
     >>> rrp.check_models_loaded_or_error(True)
     Traceback (most recent call last):
@@ -141,7 +151,7 @@ def test_reranking_parser_basics():
     ValueError: Reranker model has not been loaded.
     >>> rrp.load_reranker_model('second-stage/models/ec50spfinal/features.gz',
     ...                         'second-stage/models/ec50spfinal/cvlm-l1c10P1-weights.gz')
-    >>> print rrp.check_models_loaded_or_error(False)
+    >>> print(rrp.check_models_loaded_or_error(False))
     False
     >>> rrp.check_models_loaded_or_error(True)
     True
@@ -152,7 +162,7 @@ def test_reranking_parser_basics():
     >>> rrp.simple_parse('This is simple.')
     '(S1 (S (NP (DT This)) (VP (AUX is) (ADJP (JJ simple))) (. .)))'
     >>> nbest_list = rrp.parse('This is a sentence.')
-    >>> print str(nbest_list).strip()
+    >>> print(str(nbest_list).strip())
     13 x
     -8.88655845608 -30.3981669701
     (S1 (S (NP (DT This)) (VP (AUX is) (NP (DT a) (NN sentence))) (. .)))
@@ -180,24 +190,24 @@ def test_reranking_parser_basics():
     (S1 (S (ADVP (DT This)) (VP (AUX is) (S (NP (DT a) (NN sentence)))) (. .)))
     -26.7808410125 -68.4818143615
     (S1 (SBARQ (WHNP (DT This)) (SQ (VP (AUX is) (S (NP (DT a) (NN sentence))))) (. .)))
-    >>> print nbest_list[0].ptb_parse
+    >>> print(nbest_list[0].ptb_parse)
     (S1 (S (NP (DT This)) (VP (AUX is) (NP (DT a) (NN sentence))) (. .)))
-    >>> print nbest_list[0].parser_score
+    >>> print(nbest_list[0].parser_score)
     -30.3981669701
-    >>> print nbest_list[0].reranker_score
+    >>> print(nbest_list[0].reranker_score)
     -8.88655845608
-    >>> print len(nbest_list)
+    >>> print(len(nbest_list))
     13
-    >>> print nbest_list[0].ptb_parse.log_prob()
+    >>> print(nbest_list[0].ptb_parse.log_prob())
     -30.3981669701
     >>> nbest_list[0].ptb_parse.log_prob() == nbest_list[0].parser_score
     True
-    >>> print nbest_list.fuse()
+    >>> print(nbest_list.fuse())
     (S1 (S (NP (DT This)) (VP (AUX is) (NP (DT a) (NN sentence))) (. .)))
-    >>> print nbest_list.fuse(use_parser_scores=True)
+    >>> print(nbest_list.fuse(use_parser_scores=True))
     (S1 (S (NP (DT This)) (VP (AUX is) (NP (DT a) (NN sentence))) (. .)))
     >>> nbest_list2 = rrp.parse(['This', 'is', 'a', 'pretokenized', 'sentence', '.'])
-    >>> print str(nbest_list2).strip()
+    >>> print(str(nbest_list2).strip())
     50 x
     -13.9140458986 -49.4538516291
     (S1 (S (NP (DT This)) (VP (AUX is) (NP (DT a) (JJ pretokenized) (NN sentence))) (. .)))
@@ -300,7 +310,7 @@ def test_reranking_parser_basics():
     -28.0026072817 -76.0416349799
     (S1 (S (NP (DT This)) (VP (AUX is) (NP (NP (DT a)) (ADJP (JJ pretokenized)) (NN sentence))) (. .)))
     >>> nbest_list3 = rrp.parse('Parser only!', rerank=False, sentence_id='parser_only')
-    >>> print str(nbest_list3).strip()
+    >>> print(str(nbest_list3).strip())
     50 parser_only
     -52.57783414
     (S1 (S (VP (VB Parser) (ADVP (RB only))) (. !)))
@@ -414,8 +424,8 @@ def test_reranking_parser_basics():
     Tree('(S1 (S (VP (VB Time) (NP (VBZ flies)))))')
     >>> rrp.parse_tagged(['Time', 'flies'], possible_tags={0 : ['VB', 'JJ', 'NN']})[0].ptb_parse
     Tree('(S1 (NP (NN Time) (VBZ flies)))')
-    >>> rrp.set_parser_options(nbest=10)
-    {'language': 'En', 'case_insensitive': False, 'debug': 0, 'small_corpus': True, 'overparsing': 21, 'smooth_pos': 0, 'nbest': 10}
+    >>> stringify_dict(rrp.set_parser_options(nbest=10))
+    "case_insensitive=False, debug=0, language='En', nbest=10, overparsing=21, small_corpus=True, smooth_pos=0"
     >>> nbest_list = rrp.parse('The list is smaller now.', rerank=False)
     >>> len(nbest_list)
     10
@@ -428,7 +438,7 @@ def test_reranking_parser_basics():
     ('JJ', 'VBN', 'NNS', 'IN', 'NNP', '.')
     >>> constraints = {(1, 5) : ['VP']}
     >>> nbest_list = rrp.parse_constrained('British left waffles on Falklands .'.split(), constraints)
-    >>> print str(nbest_list).strip()
+    >>> print(str(nbest_list).strip())
     10 x
     -25.836244321 -93.6286744642
     (S1 (S (NP (NNPS British)) (VP (VBD left) (NP (NNS waffles)) (PP (IN on) (NP (NNP Falklands)))) (. .)))
@@ -451,7 +461,7 @@ def test_reranking_parser_basics():
     -29.122754708 -95.4136351589
     (S1 (S (NP (NNS British)) (VP (VBD left) (NP (NP (NNS waffles)) (PP (IN on) (NP (NNP Falklands))))) (. .)))
     >>> nbest_list2 = rrp.parse_constrained('British left waffles on Falklands .'.split(), {})
-    >>> print str(nbest_list2).strip()
+    >>> print(str(nbest_list2).strip())
     10 x
     -25.8126695909 -90.2342444645
     (S1 (S (NP (JJ British) (NN left)) (VP (VBZ waffles) (PP (IN on) (NP (NNP Falklands)))) (. .)))
@@ -476,7 +486,7 @@ def test_reranking_parser_basics():
     >>> nbest_list3 = rrp.parse_constrained('British left waffles on Falklands .'.split(), constraints, possible_tags={1: 'VBD'})
     >>> assert str(nbest_list).strip() == str(nbest_list3).strip()
     >>> nbest_list4 = rrp.parse_constrained('British left waffles on Falklands .'.split(), constraints, possible_tags={1: 'VBZ'})
-    >>> print str(nbest_list4).strip()
+    >>> print(str(nbest_list4).strip())
     10 x
     -30.0747237573 -106.808764217
     (S1 (S (NP (NNP British)) (VP (VBZ left) (NP (NNS waffles)) (PP (IN on) (NP (NNP Falklands)))) (. .)))
@@ -503,7 +513,7 @@ def test_reranking_parser_basics():
     >>> assert str(nbest_list4).strip() == str(nbest_list5).strip()
     >>> constraints = {(2, 4): ['NP'], (0, 1): ['VP']}
     >>> nbest_list6 = rrp.parse_constrained('British left waffles on Falklands .'.split(), constraints)
-    >>> print str(nbest_list6).strip()
+    >>> print(str(nbest_list6).strip())
     0 x
     >>> assert len(nbest_list6) == 0
     >>> constraints = {(1, 5) : 'VP'}
@@ -540,13 +550,13 @@ def test_reranking_parser_basics():
     ValueError: Parse failed while tagging: '# ! ? : -'
     >>> rrp.tag('# ! ? : -', allow_failures=False)
     [('#', '#'), ('!', '.'), ('?', '.'), (':', ':'), ('-', ':')]
-    >>> rrp.set_parser_options(nbest=50)
-    {'language': 'En', 'case_insensitive': False, 'debug': 0, 'small_corpus': True, 'overparsing': 21, 'smooth_pos': 0, 'nbest': 50}
+    >>> stringify_dict(rrp.set_parser_options(nbest=50))
+    "case_insensitive=False, debug=0, language='En', nbest=50, overparsing=21, small_corpus=True, smooth_pos=0"
     >>> complex_sentence = 'Economists are divided as to how much manufacturing strength they expect to see in September reports on industrial production and capacity utilization, also due tomorrow.'
-    >>> print rrp.simple_parse(complex_sentence)
+    >>> print(rrp.simple_parse(complex_sentence))
     (S1 (S (NP (NNS Economists)) (VP (AUX are) (VP (VBN divided) (PP (IN as) (PP (TO to) (SBAR (WHNP (WHADJP (WRB how) (JJ much)) (NN manufacturing) (NN strength)) (S (NP (PRP they)) (VP (VBP expect) (S (VP (TO to) (VP (VB see) (PP (IN in) (NP (NNP September))) (NP (NP (NNS reports)) (PP (IN on) (NP (NP (JJ industrial) (NN production)) (CC and) (NP (NP (NN capacity) (NN utilization)) (, ,) (NP (ADJP (ADVP (RB also)) (JJ due)) (NN tomorrow)))))))))))))))) (. .)))
     >>> nbest_list_complex = rrp.parse(complex_sentence)
-    >>> print str(nbest_list_complex).strip()
+    >>> print(str(nbest_list_complex).strip())
     50 x
     -82.7890527858 -256.862754458
     (S1 (S (NP (NNS Economists)) (VP (AUX are) (VP (VBN divided) (PP (IN as) (PP (TO to) (SBAR (WHNP (WHADJP (WRB how) (JJ much)) (NN manufacturing) (NN strength)) (S (NP (PRP they)) (VP (VBP expect) (S (VP (TO to) (VP (VB see) (PP (IN in) (NP (NNP September))) (NP (NP (NNS reports)) (PP (IN on) (NP (NP (JJ industrial) (NN production)) (CC and) (NP (NP (NN capacity) (NN utilization)) (, ,) (NP (ADJP (ADVP (RB also)) (JJ due)) (NN tomorrow)))))))))))))))) (. .)))
@@ -648,21 +658,17 @@ def test_reranking_parser_basics():
     (S1 (S (NP (NNS Economists)) (VP (AUX are) (VP (VBN divided) (PP (IN as) (PP (TO to) (SBAR (WHNP (WRB how) (JJ much) (NN manufacturing) (NN strength)) (S (NP (PRP they)) (VP (VBP expect) (S (VP (TO to) (VP (VB see) (PP (IN in) (NP (NNP September))) (NP (NP (NNS reports)) (PP (IN on) (NP (NP (JJ industrial) (NN production) (CC and) (NN capacity)) (NP (NN utilization) (, ,) (ADJP (ADVP (RB also)) (JJ due)) (NN tomorrow))))))))))))))) (. .)))
     -87.3086615755 -257.213101637
     (S1 (S (NP (NNS Economists)) (VP (AUX are) (VP (VBN divided) (PP (IN as) (PP (TO to) (SBAR (WHNP (WRB how) (JJ much) (NN manufacturing) (NN strength)) (S (NP (PRP they)) (VP (VBP expect) (S (VP (TO to) (VP (VB see) (PP (IN in) (NP (NNP September))) (NP (NP (NNS reports)) (PP (IN on) (NP (NP (JJ industrial) (NN production) (CC and) (NN capacity)) (NP (NN utilization) (, ,) (ADJP (RB also) (JJ due)) (NN tomorrow))))))))))))))) (. .)))
-    >>> print nbest_list_complex.fuse()
+    >>> print(nbest_list_complex.fuse())
     (S1 (S (NP (NNS Economists)) (VP (AUX are) (VP (VBN divided) (PP (IN as) (PP (TO to) (SBAR (WHNP (WRB how) (JJ much) (NN manufacturing) (NN strength)) (S (NP (PRP they)) (VP (VBP expect) (S (VP (TO to) (VP (VB see) (PP (IN in) (NP (NNP September))) (NP (NP (NNS reports)) (PP (IN on) (NP (NP (NP (JJ industrial) (NN production)) (CC and) (NP (NN capacity) (NN utilization))) (, ,) (ADVP (RB also)) (JJ due) (NN tomorrow)))))))))))))) (. .)))
-    >>> print nbest_list_complex.fuse(use_parser_scores=True)
+    >>> print(nbest_list_complex.fuse(use_parser_scores=True))
     (S1 (S (NP (NNS Economists)) (VP (AUX are) (VP (VBN divided) (PP (IN as) (PP (TO to) (SBAR (WHNP (WRB how) (JJ much) (NN manufacturing) (NN strength)) (S (NP (PRP they)) (VP (VBP expect) (S (VP (TO to) (VP (VB see) (PP (IN in) (NP (NNP September))) (NP (NP (NNS reports)) (PP (IN on) (NP (NP (NP (JJ industrial) (NN production)) (CC and) (NP (NN capacity) (NN utilization))) (, ,) (ADVP (RB also)) (NP (JJ due) (NN tomorrow))))))))))))))) (. .)))
-    >>> print nbest_list_complex.fuse(num_parses=10)
+    >>> print(nbest_list_complex.fuse(num_parses=10))
     (S1 (S (NP (NNS Economists)) (VP (AUX are) (VP (VBN divided) (PP (IN as) (PP (TO to) (SBAR (WHNP (WRB how) (JJ much) (NN manufacturing) (NN strength)) (S (NP (PRP they)) (VP (VBP expect) (S (VP (TO to) (VP (VB see) (PP (IN in) (NP (NNP September))) (NP (NP (NNS reports)) (PP (IN on) (NP (NP (NP (JJ industrial) (NN production)) (CC and) (NP (NN capacity) (NN utilization))) (, ,) (NP (ADJP (ADVP (RB also)) (JJ due)) (NN tomorrow))))))))))))))) (. .)))
-    >>> print nbest_list_complex.fuse(num_parses=10, threshold=0.75)
+    >>> print(nbest_list_complex.fuse(num_parses=10, threshold=0.75))
     (S1 (S (NP (NNS Economists)) (VP (AUX are) (VP (VBN divided) (PP (IN as) (PP (TO to) (SBAR (WHNP (WRB how) (JJ much) (NN manufacturing) (NN strength)) (S (NP (PRP they)) (VP (VBP expect) (S (VP (TO to) (VP (VB see) (PP (IN in) (NP (NNP September))) (NP (NNS reports)) (IN on) (NP (JJ industrial) (NN production)) (CC and) (NP (NN capacity) (NN utilization)) (, ,) (ADVP (RB also)) (JJ due) (NN tomorrow))))))))))) (. .)))
-    >>> print nbest_list_complex.fuse(num_parses=10, threshold=0.75, exponent=1.3)
+    >>> print(nbest_list_complex.fuse(num_parses=10, threshold=0.75, exponent=1.3))
     (S1 (S (NP (NNS Economists)) (VP (AUX are) (VP (VBN divided) (PP (IN as) (PP (TO to) (SBAR (WHNP (WRB how) (JJ much) (NN manufacturing) (NN strength)) (S (NP (PRP they)) (VP (VBP expect) (S (VP (TO to) (VP (VB see) (PP (IN in) (NP (NNP September))) (NP (NP (NNS reports)) (IN on) (NP (JJ industrial) (NN production)) (CC and) (NP (NN capacity) (NN utilization)) (, ,) (ADVP (RB also)) (JJ due) (NN tomorrow)))))))))))) (. .)))
     """
-
-def stringify_dict(d):
-    """Yeah, we should really stop using doctests."""
-    return ', '.join('%s=%.2f' % item for item in sorted(d.items()))
 
 def test_tree_eval():
     """
@@ -674,12 +680,12 @@ def test_tree_eval():
     >>> tree2 = bllipparser.Tree('(S1 (S (NP (NNP This)) (VP (AUX is) (NP (DT a) (NN sentence))) (. .)))')
     >>> tree3 = bllipparser.Tree('(S1 (SBARQ (WHNP (DT This)) (SQ (VP (AUX is) (NP (DT a) (NN sentence)))) (. .)))')
     >>> eval1 = tree1.evaluate(tree2)
-    >>> print stringify_dict(eval1)
-    fscore=1.00, gold=4.00, matched=4.00, precision=1.00, recall=1.00, test=4.00
+    >>> print(stringify_dict(eval1))
+    fscore=1.00, gold=4, matched=4, precision=1.00, recall=1.00, test=4
     >>> eval2 = tree2.evaluate(tree1)
-    >>> print stringify_dict(eval2)
-    fscore=1.00, gold=4.00, matched=4.00, precision=1.00, recall=1.00, test=4.00
+    >>> print(stringify_dict(eval2))
+    fscore=1.00, gold=4, matched=4, precision=1.00, recall=1.00, test=4
     >>> eval3 = tree3.evaluate(tree1)
-    >>> print stringify_dict(eval3)
-    fscore=0.44, gold=4.00, matched=2.00, precision=0.40, recall=0.50, test=5.00
+    >>> print(stringify_dict(eval3))
+    fscore=0.44, gold=4, matched=2, precision=0.40, recall=0.50, test=5
     """

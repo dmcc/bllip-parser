@@ -62,3 +62,4 @@ glob:second-stage/programs/features/swig/wrapper.C
 glob:python/bllipparser/CharniakParser.py
 glob:python/bllipparser/JohnsonReranker.py
 glob:MANIFEST
+glob:bllipparser.egg-info

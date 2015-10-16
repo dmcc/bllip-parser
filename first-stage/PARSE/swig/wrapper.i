@@ -25,10 +25,6 @@ using namespace std;
 
 #ifdef SWIGPYTHON
 %include "std_list.i"
-// make default stringification work in Python even though we use Java
-// names here
-%rename(__str__) toString;
-%rename(__len__) length;
 #endif
 #ifdef SWIGJAVA
 %include "swig/java/include/std_list.i"
@@ -96,6 +92,7 @@ namespace std {
 %rename(loadModel) generalInit;
 void generalInit(ECString path);
 
+%feature("python:slot", "sq_length", functype="lenfunc") SentRep::length;
 class SentRep {
     public:
         SentRep(list<ECString> wtList);
@@ -147,6 +144,7 @@ class SentRep {
         }
 };
 
+%feature("python:slot", "sq_length", functype="lenfunc") InputTree::length;
 class InputTree {
     public:
         short num() const;

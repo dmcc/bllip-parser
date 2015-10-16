@@ -24,8 +24,8 @@ Example:
 
 >>> corpus = RerankerFeatureCorpus('path/to/filename.gz')
 >>> for sentence in corpus:
-...     print 'index', sentence.index, 'num parses', len(sentence.parses)
-...     print 'num parse0 features', len(sentence.parses[0].features)
+...     print('index', sentence.index, 'num parses', len(sentence.parses))
+...     print('num parse0 features', len(sentence.parses[0].features))
 
 """
 from collections import defaultdict
@@ -299,7 +299,7 @@ class RerankerFeatureCorpus:
         initialize(self, locals())
 
         self.reader = iter(possibly_compressed_file(filename))
-        self.header = parse_kv_list(self.reader.next())
+        self.header = parse_kv_list(next(self.reader))
         assert 'S' in self.header
         self.num_sentences = self.header['S']
 
