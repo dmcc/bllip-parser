@@ -17,7 +17,7 @@ install:
 before_script:
   - swig -version
 script:
-  - bash -c "[ $BLLIPINTERFACE == "cmd" ] && make world"
-  - bash -c "[ $BLLIPINTERFACE == "python" ] && tox"
+  - bash -c "[ $BLLIPINTERFACE != "python" ] || make world"
+  - bash -c "[ $BLLIPINTERFACE != "cmd" ] || tox"
 after_success:
   - coveralls
