@@ -3,7 +3,9 @@ compiler: gcc
 before_install:
   - sudo add-apt-repository --yes ppa:ktm5j/uva-cs-ppa
   - sudo apt-get update
-install: sudo apt-get install libboost-dev liblbfgs-dev swig flex python-nose
+install:
+  - sudo apt-get install libboost-dev liblbfgs-dev swig flex python-nose
+  - sudo pip install python-coveralls
 before_script:
   - swig -version
 script:
@@ -14,3 +16,5 @@ script:
   - make sparseval
   - sudo python setup.py install
   - nosetests --with-doctest -dv python/tests/
+after_success:
+  - coveralls

@@ -63,3 +63,4 @@ python/bllipparser/CharniakParser.py
 python/bllipparser/JohnsonReranker.py
 MANIFEST
 bllipparser.egg-info
+.coverage

@@ -52,11 +52,8 @@ class Test(Command):
         python_files.append('setup.py')
 
         run('flake8', *python_files)
-        run('nosetests-2.7', '-dvx', '--with-doctest', 'python/tests')
-
-        # TODO once doctests are converted to unittests, we can run tests
-        # on Python 3
-        # run('nosetests-3.4', '-dvx', '--with-doctest', 'python/tests')
+        run('nosetests', '-dvx', '--with-coverage',
+            '--cover-package=bllipparser', 'python/tests')
 
 def is_newer(filename1, filename2):
     """Returns True if filename1 has a newer modification time than

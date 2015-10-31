@@ -3,7 +3,7 @@ Release checklist
 0.  Ensure tests are passing:
         python setup.py test
     Or manually:
-        nosetests-2.7 --with-doctest -dvx python/tests/
+        nosetests -dvx python/tests/
         flake8 python/bllipparser/ParsingShell.py \
                python/bllipparser/RerankingParser.py \
                python/bllipparser/RerankerFeatureCorpus.py \
