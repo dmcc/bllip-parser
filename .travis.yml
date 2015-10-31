@@ -3,6 +3,8 @@ dist: trusty
 
 language: cpp
 compiler: gcc
+before_install:
+  - sudo apt-get update
 install:
   - sudo apt-get install libboost-dev liblbfgs-dev swig flex python-nose
   - sudo pip install python-coveralls
