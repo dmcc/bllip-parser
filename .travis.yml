@@ -1,6 +1,10 @@
 sudo: required
 dist: trusty
 
+env:
+  - BLLIPINTERFACE=cmd
+  - BLLIPINTERFACE=python
+
 language: cpp
 compiler: gcc
 before_install:
@@ -13,7 +17,7 @@ install:
 before_script:
   - swig -version
 script:
-  - make world
-  - tox
+  - [ $BLLIPINTERFACE == "cmd" ] && make world
+  - [ $BLLIPINTERFACE == "python" ] && tox
 after_success:
   - coveralls
