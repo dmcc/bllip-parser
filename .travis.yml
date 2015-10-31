@@ -13,11 +13,7 @@ install:
 before_script:
   - swig -version
 script:
-  - make
-  - make reranker
-  - make -C first-stage/PARSE all
-  - make -C second-stage/programs/features parallel-tools
-  - make sparseval
+  - make world
   - tox
 after_success:
   - coveralls

@@ -37,6 +37,7 @@
 # make train-reranker  # trains reranker model
 # make train-clean     # removes all temporary files used in training
 # make sparseval       # download and install SParseval
+# make world           # build everything currently supported
 #
 # I typically run nbesttrain to produce the n-best parses 
 
@@ -222,6 +223,14 @@ TARGETS = PARSE reranker-runtime fusion
 
 .PHONY: top
 top: $(TARGETS)
+
+.PHONY: world
+world:
+	$(MAKE)
+	$(MAKE) reranker
+	$(MAKE) -C first-stage/PARSE all
+	$(MAKE) -C second-stage/programs/features parallel-tools
+	$(MAKE) sparseval
 
 # zcat on OS X behaves differently in some cases
 ZCAT = gunzip -c
