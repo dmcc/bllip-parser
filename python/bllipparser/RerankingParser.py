@@ -512,9 +512,9 @@ class NBestList(object):
             combined = cStringIO()
             combined.write('%d %s\n' % (len(self.parses), sentence_id))
             for parse in self.parses:
-                combined.write('%s %s\n%s\n' % (parse.reranker_score,
-                                                parse.parser_score,
-                                                parse.ptb_parse))
+                combined.write('%.12f %.12f\n%s\n' % (parse.reranker_score,
+                                                      parse.parser_score,
+                                                      parse.ptb_parse))
             combined.seek(0)
             return combined.read()
         else:
