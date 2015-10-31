@@ -9,6 +9,7 @@ before_install:
 install:
   - sudo apt-get install libboost-dev liblbfgs-dev swig flex python-nose
   - sudo pip install python-coveralls
+  - sudo pip install tox
 before_script:
   - swig -version
 script:
@@ -17,7 +18,6 @@ script:
   - make -C first-stage/PARSE all
   - make -C second-stage/programs/features parallel-tools
   - make sparseval
-  - sudo python setup.py install
-  - nosetests --with-doctest -dv python/tests/
+  - tox
 after_success:
   - coveralls

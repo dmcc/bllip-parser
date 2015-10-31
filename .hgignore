@@ -65,3 +65,4 @@ python/bllipparser/JohnsonReranker.py
 MANIFEST
 bllipparser.egg-info
 .coverage
+.tox/
