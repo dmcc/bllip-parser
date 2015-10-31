@@ -400,7 +400,7 @@ double treeLogProb(InputTree* tree) {
         try {
             scoredTrees = parse(&sentRep, extPos, &treeSpans);
         } catch (ParserError) {
-            // ignore it time since we may retry
+            // ignore it this time since we may retry
         }
 
         // restore old parameters
