@@ -51,7 +51,7 @@ class Test(Command):
                         and filename.endswith('.py')]
         python_files.append('setup.py')
 
-        run('flake8', *python_files)
+        run('flake8', '--ignore=E301,E302,E261', *python_files)
         run('nosetests', '-dvx', '--with-coverage',
             '--cover-package=bllipparser', 'python/tests')
 

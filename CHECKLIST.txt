@@ -4,13 +4,13 @@ Release checklist
         python setup.py test
     Or manually:
         nosetests -dvx python/tests/
-        flake8 python/bllipparser/ParsingShell.py \
+        flake8 --ignore=E301,E302,E261 \
+               python/bllipparser/ParsingShell.py \
                python/bllipparser/RerankingParser.py \
                python/bllipparser/RerankerFeatureCorpus.py \
                python/bllipparser/Utility.py \
                python/bllipparser/__main__.py \
                setup.py
-        (we currently set flake8's ignore = E301,E302,E261)
 1.  Version bumps in python/bllipparser/__init__.py and setup.py
 2.  Update READMEs
 3.  Sync README-python.rst content with python/bllipparser/__init__.py
