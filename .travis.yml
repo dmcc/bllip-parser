@@ -9,6 +9,7 @@ install:
   - sudo apt-get install -y libboost-dev liblbfgs-dev swig flex python-nose
   - sudo pip install python-coveralls
   - sudo pip install tox
+  - sudo pip install flake8
 before_script:
   - swig -version
 script:
