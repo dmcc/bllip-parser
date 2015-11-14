@@ -10,14 +10,13 @@ compiler: gcc
 before_install:
   - sudo apt-get update
 install:
-  - sudo apt-get install -y libboost-dev liblbfgs-dev swig flex python-nose
-  - sudo pip install python-coveralls
-  - sudo pip install tox
-  - sudo pip install flake8
+  - sudo apt-get install -y libboost-dev liblbfgs-dev flex
+  - bash -c "[ $BLLIPINTERFACE != "python" ] || sudo apt-get install -y swig python-nose"
+  - bash -c "[ $BLLIPINTERFACE != "python" ] || sudo pip install python-coveralls tox flake8 nltk asciitree"
 before_script:
-  - swig -version
+  - bash -c "[ $BLLIPINTERFACE != "python" ] || swig -version"
 script:
-  - bash -c "[ $BLLIPINTERFACE != "python" ] || make world"
-  - bash -c "[ $BLLIPINTERFACE != "cmd" ] || tox"
+  - bash -c "[ $BLLIPINTERFACE != "cmd" ]    || make world"
+  - bash -c "[ $BLLIPINTERFACE != "python" ] || tox"
 after_success:
-  - coveralls
+  - bash -c "[ $BLLIPINTERFACE != "python" ] || coveralls"
