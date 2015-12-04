@@ -863,7 +863,7 @@ class RerankingParserTests(unittest.TestCase):
         self.assertEqual(dep.token, 'a')
 
     def assertDictAlmostEqual(self, d1, d2, places=2):
-        self.assertEqual(d1.keys(), d2.keys())
+        self.assertEqual(sorted(d1.keys()), sorted(d2.keys()))
         for k, v1 in d1.items():
             v2 = d2[k]
             self.assertAlmostEqual(v1, v2, places=places)
